@@ -1,0 +1,7 @@
+#!/bin/bash
+
+## Description: Run fresh migrations with seeders
+## Usage: fresh
+## Example: "ddev fresh"
+
+ddev artisan migrate:fresh --seed
