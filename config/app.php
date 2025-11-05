@@ -13,7 +13,8 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    // Nombre de la aplicación (valor por defecto si no está en .env)
+    'name' => env('APP_NAME', "Polleria P'rdos"),
 
     /*
     |--------------------------------------------------------------------------
