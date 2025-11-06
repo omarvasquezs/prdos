@@ -29,7 +29,9 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
+            /** @var \App\Models\User|null $user */
             $user = Auth::user();
+            
             $roles = $user->roles()->pluck('name')->toArray();
 
             // If user has only one role, set it as active immediately
@@ -72,6 +74,7 @@ class AuthController extends Controller
      */
     public function user(Request $request)
     {
+        /** @var \App\Models\User|null $user */
         $user = $request->user();
 
         if (! $user) {
@@ -94,6 +97,7 @@ class AuthController extends Controller
             'role' => ['required', 'string'],
         ]);
 
+        /** @var \App\Models\User|null $user */
         $user = $request->user();
 
         if (! $user) {
