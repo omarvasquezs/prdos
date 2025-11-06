@@ -1,5 +1,14 @@
 <template>
   <div class="login-container" id="login">
+    <!-- Fullscreen Loading Overlay -->
+    <div v-if="authenticating" class="fullscreen-loading-overlay">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <h3 class="loading-text">Iniciando sesión...</h3>
+        <p class="loading-subtext">Por favor espera un momento</p>
+      </div>
+    </div>
+    
     <form @submit.prevent="handleSubmit" class="login-form">
       <div class="text-center mb-4">
         <h1 class="app-title">POLLERIA P'RDOS</h1>
@@ -52,9 +61,15 @@
       <button 
         type="submit" 
         class="btn btn-primary w-100 login-button" 
-        :disabled="isLoading"
+        :disabled="isLoading || authenticating"
+        :class="{ 'loading': authenticating }"
       >
-        {{ isLoading ? 'CARGANDO...' : 'ACCEDER' }}
+        <span v-if="!isLoading && !authenticating">ACCEDER</span>
+        <span v-else-if="isLoading && !authenticating">CARGANDO...</span>
+        <span v-else class="button-loading">
+          <i class="fas fa-spinner fa-spin"></i>
+          INICIANDO SESIÓN...
+        </span>
       </button>
 
       <div v-if="errorMessage" class="alert alert-danger mt-3 mb-0" role="alert">
@@ -75,7 +90,8 @@ export default {
       password: '',
       remember: false,
       errorMessage: '',
-      isLoading: false
+      isLoading: false,
+      authenticating: false
     }
   },
   methods: {
@@ -91,6 +107,9 @@ export default {
         // First, get CSRF cookie
         await axios.get('/sanctum/csrf-cookie');
         
+        // Show fullscreen loading before making login request
+        this.authenticating = true;
+        
         // Realizar login
         const response = await axios.post('/login', {
           username: this.username,
@@ -100,8 +119,13 @@ export default {
 
         // If backend indicates a redirect (single role or selection), follow it.
         const redirect = response.data?.redirect || '/dashboard';
+        
+        // Keep the spinner visible during navigation
         window.location.href = redirect;
       } catch (error) {
+        // Hide fullscreen loading on error
+        this.authenticating = false;
+        
         if (error.response?.status === 422) {
           // Error de validación
           const errors = error.response.data.errors;
@@ -114,6 +138,7 @@ export default {
       } finally {
         this.isLoading = false;
       }
+      // Note: No finally block for authenticating - we want the spinner to stay visible until page navigation
     }
   },
   async mounted() {
@@ -276,5 +301,79 @@ export default {
     max-width: 520px;
     padding: 3rem;
   }
+}
+
+/* Fullscreen Loading Overlay */
+.fullscreen-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.loading-content {
+  text-align: center;
+  color: white;
+}
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 30px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.loading-subtext {
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+/* Button loading state */
+.login-button.loading {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+.button-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.button-loading i {
+  font-size: 1rem;
 }
 </style>
