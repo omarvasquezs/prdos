@@ -61,7 +61,7 @@ const authStore = useAuthStore();
 
 const handleLogout = async () => {
   await authStore.logout();
-  router.push({ name: 'login' });
+  window.location.href = '/login';
 };
 </script>
 
