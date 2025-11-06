@@ -5,9 +5,13 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 
 // Rutas de autenticación
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout']);
+Route::get('/sanctum/csrf-cookie', function () {
+    return response()->json(['message' => 'CSRF cookie set']);
+})->name('csrf-cookie');
+
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
+Route::post('/login', [AuthController::class, 'login'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+Route::post('/logout', [AuthController::class, 'logout'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 // Rutas protegidas (requieren autenticación)
 Route::middleware('auth')->group(function () {
@@ -19,7 +23,8 @@ Route::middleware('auth')->group(function () {
 });
 
 // API routes para Vue
-Route::middleware('auth')->group(function () {
+Route::middleware('auth')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])->group(function () {
     Route::get('/api/user', [AuthController::class, 'user']);
     Route::post('/select-role', [AuthController::class, 'setActiveRole']);
+    Route::post('/api/set-active-role', [AuthController::class, 'setActiveRole']);
 });
