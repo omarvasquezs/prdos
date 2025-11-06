@@ -33,15 +33,23 @@ const router = createRouter({
 });
 
 // Navigation guards
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
   
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    // Redirigir a login si la ruta requiere autenticación
-    window.location.href = '/login';
-  } else {
-    next();
+  if (to.meta.requiresAuth) {
+    // Check authentication status before deciding
+    if (authStore.user === null) {
+      await authStore.checkAuth();
+    }
+    
+    if (!authStore.isAuthenticated) {
+      // Only redirect if truly not authenticated
+      window.location.href = '/login';
+      return;
+    }
   }
+  
+  next();
 });
 
 export default router;
