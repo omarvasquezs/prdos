@@ -18,6 +18,13 @@ const routes = [
     component: () => import('@/pages/TestPage.vue'),
     meta: { requiresAuth: true }
   }
+  ,
+  {
+    path: '/select-role',
+    name: 'select-role',
+    component: () => import('@/pages/SelectRole.vue'),
+    meta: { requiresAuth: true }
+  }
 ];
 
 const router = createRouter({

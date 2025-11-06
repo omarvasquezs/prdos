@@ -29,8 +29,21 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
+            $user = Auth::user();
+            $roles = $user->roles()->pluck('name')->toArray();
+
+            // If user has only one role, set it as active immediately
+            if (count($roles) === 1) {
+                $request->session()->put('active_role', $roles[0]);
+                $redirect = '/dashboard';
+            } else {
+                $redirect = '/select-role';
+            }
+
             return response()->json([
-                'message' => 'Logged in successfully'
+                'message' => 'Logged in successfully',
+                'roles' => $roles,
+                'redirect' => $redirect,
             ]);
         }
 
@@ -59,6 +72,46 @@ class AuthController extends Controller
      */
     public function user(Request $request)
     {
-        return response()->json($request->user());
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json(null, 204);
+        }
+
+        $data = $user->toArray();
+        $data['roles'] = $user->roles()->pluck('name')->toArray();
+        $data['active_role'] = session('active_role');
+
+        return response()->json($data);
+    }
+
+    /**
+     * Set the active role for the current session.
+     */
+    public function setActiveRole(Request $request)
+    {
+        $request->validate([
+            'role' => ['required', 'string'],
+        ]);
+
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        $role = $request->input('role');
+
+        // Ensure the user actually has this role
+        if (! $user->roles()->where('name', $role)->exists()) {
+            return response()->json(['message' => 'Role not available for user.'], 403);
+        }
+
+        $request->session()->put('active_role', $role);
+
+        return response()->json([
+            'message' => 'Active role set.',
+            'redirect' => '/dashboard'
+        ]);
     }
 }

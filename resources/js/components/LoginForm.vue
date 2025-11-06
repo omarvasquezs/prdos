@@ -89,14 +89,15 @@ export default {
 
       try {
         // Realizar login
-        await axios.post('/login', {
+        const response = await axios.post('/login', {
           username: this.username,
           password: this.password,
           remember: this.remember
         });
 
-        // Redirigir al dashboard
-        window.location.href = '/dashboard';
+        // If backend indicates a redirect (single role or selection), follow it.
+        const redirect = response.data?.redirect || '/dashboard';
+        window.location.href = redirect;
       } catch (error) {
         if (error.response?.status === 422) {
           // Error de validación
@@ -116,7 +117,25 @@ export default {
     // Si ya está autenticado, redirigir al dashboard
     axios.get('/api/user')
       .then(() => {
-        window.location.href = '/dashboard';
+        // If the session already has an active role, go to dashboard
+        axios.get('/api/user').then((res) => {
+          const active = res.data?.active_role;
+          if (active) {
+            window.location.href = '/dashboard';
+          } else if (res.data?.roles?.length === 1) {
+            // backend might not have set active_role; go set it by hitting select-role endpoint
+            axios.post('/select-role', { role: res.data.roles[0] }).then(() => {
+              window.location.href = '/dashboard';
+            }).catch(() => {
+              window.location.href = '/dashboard';
+            });
+          } else {
+            // multiple roles: go to selection page
+            window.location.href = '/select-role';
+          }
+        }).catch(() => {
+          window.location.href = '/dashboard';
+        });
       })
       .catch(() => {
         // No autenticado, mostrar login

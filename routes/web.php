@@ -13,10 +13,13 @@ Route::post('/logout', [AuthController::class, 'logout']);
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index']);
+    // Route to show the role selection SPA route (served by the admin SPA)
+    Route::get('/select-role', [DashboardController::class, 'index']);
     Route::get('/test', [DashboardController::class, 'index']);
 });
 
 // API routes para Vue
 Route::middleware('auth')->group(function () {
     Route::get('/api/user', [AuthController::class, 'user']);
+    Route::post('/select-role', [AuthController::class, 'setActiveRole']);
 });
