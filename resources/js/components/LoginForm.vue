@@ -88,6 +88,9 @@ export default {
       this.errorMessage = '';
 
       try {
+        // First, get CSRF cookie
+        await axios.get('/sanctum/csrf-cookie');
+        
         // Realizar login
         const response = await axios.post('/login', {
           username: this.username,
@@ -113,33 +116,13 @@ export default {
       }
     }
   },
-  mounted() {
-    // Si ya está autenticado, redirigir al dashboard
-    axios.get('/api/user')
-      .then(() => {
-        // If the session already has an active role, go to dashboard
-        axios.get('/api/user').then((res) => {
-          const active = res.data?.active_role;
-          if (active) {
-            window.location.href = '/dashboard';
-          } else if (res.data?.roles?.length === 1) {
-            // backend might not have set active_role; go set it by hitting select-role endpoint
-            axios.post('/select-role', { role: res.data.roles[0] }).then(() => {
-              window.location.href = '/dashboard';
-            }).catch(() => {
-              window.location.href = '/dashboard';
-            });
-          } else {
-            // multiple roles: go to selection page
-            window.location.href = '/select-role';
-          }
-        }).catch(() => {
-          window.location.href = '/dashboard';
-        });
-      })
-      .catch(() => {
-        // No autenticado, mostrar login
-      });
+  async mounted() {
+    try {
+      // Get CSRF cookie for future requests
+      await axios.get('/sanctum/csrf-cookie');
+    } catch (error) {
+      console.log('Could not get CSRF cookie');
+    }
   }
 }
 </script>
