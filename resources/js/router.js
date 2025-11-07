@@ -24,6 +24,18 @@ const routes = [
     name: 'select-role',
     component: () => import('@/pages/SelectRole.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/caja',
+    name: 'caja',
+    component: () => import('@/pages/CajaPage.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/caja/pedido/:id',
+    name: 'pedido',
+    component: () => import('@/pages/PedidoPage.vue'),
+    meta: { requiresAuth: true }
   }
 ];
 
