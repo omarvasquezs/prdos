@@ -1,0 +1,654 @@
+<template>
+  <div class="pedido-page">
+    <!-- Loading Screen -->
+    <div v-if="isLoading" class="fullscreen-loading">
+      <div class="loading-content">
+        <div class="spinner-border text-warning" role="status" style="width: 4rem; height: 4rem;">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="loading-text mt-3">Cargando pedido...</p>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div v-else class="container-fluid px-4 py-3 flex-fill d-flex flex-column">
+      <!-- Header Section -->
+      <div class="header-section mb-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap">
+          <div class="d-flex align-items-center">
+            <button 
+              @click="volverAMesas" 
+              class="btn btn-outline-secondary btn-lg me-3"
+            >
+              <i class="fas fa-arrow-left me-2"></i>
+              Volver
+            </button>
+            <div>
+              <div class="d-flex align-items-center mb-1">
+                <h1 class="page-title mb-0 me-3">
+                  <i class="fas fa-receipt text-warning me-2"></i>
+                  Pedido - Mesa {{ pedido?.mesa?.num_mesa }}
+                </h1>
+                <span class="badge bg-danger px-3 py-2">
+                  <i class="fas fa-users me-1"></i>
+                  Ocupada
+                </span>
+              </div>
+              <p class="page-subtitle mb-0 text-muted">
+                {{ pedido?.comensales }} {{ pedido?.comensales === 1 ? 'comensal' : 'comensales' }} • 
+                Iniciado {{ formatearTiempo(pedido?.fecha_apertura) }}
+              </p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <span class="badge bg-success fs-5 px-3 py-2 me-2">
+              <i class="fas fa-clock me-1"></i>
+              Abierto
+            </span>
+            <span class="badge bg-primary fs-5 px-3 py-2">
+              <i class="fas fa-money-bill me-1"></i>
+              S/ {{ parseFloat(pedido.total || 0).toFixed(2) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div v-if="error" class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        {{ error }}
+      </div>
+
+      <!-- Pedido Content -->
+      <div v-else-if="pedido" class="row g-4 flex-fill-content">
+        <!-- Items del Pedido -->
+        <div class="col-lg-8 d-flex">
+          <div class="card shadow-sm flex-fill">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0">
+                <i class="fas fa-list me-2"></i>
+                Items del Pedido
+              </h5>
+              <button class="btn btn-outline-primary btn-sm" @click="agregarItem">
+                <i class="fas fa-plus me-2"></i>
+                Agregar Item
+              </button>
+            </div>
+            <div class="card-body p-0 d-flex flex-column">
+              <div v-if="pedido.items && pedido.items.length > 0" class="list-group list-group-flush flex-fill">
+                <div 
+                  v-for="item in pedido.items" 
+                  :key="item.id"
+                  class="list-group-item py-3"
+                >
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                      <h6 class="mb-1">{{ item.producto }}</h6>
+                      <p class="mb-0 text-muted small">
+                        S/ {{ parseFloat(item.precio_unitario).toFixed(2) }} × {{ item.cantidad }}
+                      </p>
+                    </div>
+                    <div class="text-end">
+                      <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-primary fs-6">
+                          {{ item.cantidad }}
+                        </span>
+                        <button 
+                          class="btn btn-outline-danger btn-sm"
+                          @click="eliminarItem(item.id)"
+                          style="padding: 0.25rem 0.5rem;"
+                        >
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                      <div class="fw-bold">
+                        S/ {{ parseFloat(item.subtotal).toFixed(2) }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="p-4 text-center text-muted d-flex flex-column justify-content-center flex-fill">
+                <i class="fas fa-inbox display-1 mb-3" style="opacity: 0.3;"></i>
+                <h5>No hay items en este pedido</h5>
+                <p>El pedido está vacío. Agrega productos para comenzar.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen -->
+        <div class="col-lg-4 d-flex">
+          <div class="card shadow-sm flex-fill">
+            <div class="card-header bg-warning">
+              <h5 class="card-title mb-0 text-dark">
+                <i class="fas fa-calculator me-2"></i>
+                Resumen del Pedido
+              </h5>
+            </div>
+            <div class="card-body d-flex flex-column">
+              <div class="flex-grow-1">
+                <div class="d-flex justify-content-between mb-2">
+                  <span>Mesa:</span>
+                  <span class="fw-bold">{{ pedido.mesa?.num_mesa }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                  <span>Comensales:</span>
+                  <span class="fw-bold">{{ pedido.comensales }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                  <span>Hora inicio:</span>
+                  <span class="fw-bold">{{ formatearHora(pedido.fecha_apertura) }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                  <span>Tiempo:</span>
+                  <span class="fw-bold">{{ formatearTiempo(pedido.fecha_apertura) }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                  <span>Items:</span>
+                  <span class="fw-bold">{{ totalItems }}</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-4">
+                  <span class="fs-5 fw-bold">Total:</span>
+                  <span class="fs-4 fw-bold text-success">S/ {{ parseFloat(pedido.total || 0).toFixed(2) }}</span>
+                </div>
+              </div>
+              
+              <!-- Actions - Always at bottom -->
+              <div class="d-grid gap-2 mt-auto">
+                <button class="btn btn-success btn-lg" @click="cobrarPedido">
+                  <i class="fas fa-money-bill me-2"></i>
+                  Cobrar Pedido
+                </button>
+                <button class="btn btn-outline-danger btn-lg" @click="cancelarPedido">
+                  <i class="fas fa-times me-2"></i>
+                  Cancelar Pedido
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Not Found State -->
+      <div v-else class="text-center py-5">
+        <i class="fas fa-search display-1 text-muted mb-3" style="opacity: 0.3;"></i>
+        <h3 class="text-muted">Pedido no encontrado</h3>
+        <p class="text-muted">El pedido solicitado no existe o ha sido eliminado.</p>
+        <button @click="volverAMesas" class="btn btn-primary">
+          <i class="fas fa-arrow-left me-2"></i>
+          Volver a Mesas
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal de Productos -->
+    <div v-if="mostrarModalProductos" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-plus-circle me-2"></i>
+              Agregar Producto
+            </h5>
+            <button type="button" class="btn-close" @click="cerrarModalProductos"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Filtro por categoría -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="categoriaSelect" class="form-label">Filtrar por categoría:</label>
+                <select 
+                  id="categoriaSelect" 
+                  class="form-select" 
+                  v-model="categoriaSeleccionada"
+                >
+                  <option value="">Todas las categorías</option>
+                  <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
+                    {{ categoria.nombre }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="cantidadInput" class="form-label">Cantidad:</label>
+                <input 
+                  id="cantidadInput"
+                  type="number" 
+                  class="form-control" 
+                  v-model.number="cantidadItem"
+                  min="1"
+                  max="99"
+                >
+              </div>
+            </div>
+
+            <!-- Lista de productos -->
+            <div class="row">
+              <div 
+                v-for="producto in filtrarProductos()" 
+                :key="producto.id" 
+                class="col-md-6 mb-3"
+              >
+                <div class="card h-100 producto-card" @click="confirmarAgregarItem(producto)">
+                  <div class="card-body">
+                    <h6 class="card-title">{{ producto.nombre }}</h6>
+                    <p class="card-text text-muted small">{{ producto.descripcion || 'Sin descripción' }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="badge bg-secondary">{{ producto.categoria?.nombre }}</span>
+                      <strong class="text-success">S/ {{ parseFloat(producto.precio).toFixed(2) }}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="filtrarProductos().length === 0" class="text-center text-muted py-4">
+              <i class="fas fa-search display-4 mb-3" style="opacity: 0.3;"></i>
+              <h5>No hay productos disponibles</h5>
+              <p>No se encontraron productos en esta categoría.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="cerrarModalProductos">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import axios from 'axios'
+
+export default {
+  name: 'PedidoPage',
+  data() {
+    return {
+      pedido: null,
+      isLoading: true,
+      error: null,
+      productos: [],
+      categorias: [],
+      mostrarModalProductos: false,
+      cantidadItem: 1,
+      categoriaSeleccionada: ''
+    }
+  },
+
+  computed: {
+    totalItems() {
+      if (!this.pedido?.items) return 0
+      return this.pedido.items.reduce((total, item) => total + parseInt(item.cantidad || 0), 0)
+    }
+  },
+
+  async mounted() {
+    await this.cargarPedido()
+  },
+
+  methods: {
+    async cargarPedido() {
+      try {
+        this.isLoading = true
+        const pedidoId = this.$route.params.id
+        
+        // Obtener el pedido directamente
+        const response = await axios.get(`/api/pedidos/${pedidoId}`)
+        this.pedido = response.data
+        
+      } catch (error) {
+        console.error('Error al cargar pedido:', error)
+        if (error.response?.status === 404) {
+          this.error = 'Pedido no encontrado'
+        } else {
+          this.error = 'Error al cargar el pedido. Intenta nuevamente.'
+        }
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    volverAMesas() {
+      this.$router.push('/caja')
+    },
+
+    async cobrarPedido() {
+      if (!confirm(`¿Confirmar el cobro de S/ ${parseFloat(this.pedido.total).toFixed(2)}?`)) {
+        return
+      }
+
+      try {
+        this.isLoading = true
+        const response = await axios.post(`/api/pedidos/${this.pedido.id}/cobrar`)
+        
+        if (response.data.success) {
+          alert('Pedido cobrado exitosamente')
+          this.$router.push('/caja')
+        }
+      } catch (error) {
+        console.error('Error al cobrar pedido:', error)
+        alert('Error al procesar el cobro. Intenta nuevamente.')
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    async cancelarPedido() {
+      if (!confirm('¿Estás seguro de cancelar este pedido? Esta acción no se puede deshacer.')) {
+        return
+      }
+
+      try {
+        this.isLoading = true
+        const response = await axios.post(`/api/pedidos/${this.pedido.id}/cancelar`)
+        
+        if (response.data.success) {
+          alert('Pedido cancelado exitosamente')
+          this.$router.push('/caja')
+        }
+      } catch (error) {
+        console.error('Error al cancelar pedido:', error)
+        alert('Error al cancelar el pedido. Intenta nuevamente.')
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    formatearTiempo(fechaApertura) {
+      const ahora = new Date()
+      const apertura = new Date(fechaApertura)
+      const diffMs = ahora - apertura
+      const diffMinutos = Math.floor(diffMs / 60000)
+      
+      if (diffMinutos < 60) {
+        return `hace ${diffMinutos} min`
+      } else {
+        const horas = Math.floor(diffMinutos / 60)
+        const minutos = diffMinutos % 60
+        return `hace ${horas}h ${minutos}m`
+      }
+    },
+
+    formatearHora(fecha) {
+      return new Date(fecha).toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    },
+
+    async agregarItem() {
+      try {
+        this.mostrarModalProductos = true
+        // Cargar productos si no están cargados
+        if (this.productos.length === 0) {
+          await this.cargarProductos()
+        }
+      } catch (error) {
+        console.error('Error al abrir modal de productos:', error)
+        alert('Error al cargar los productos')
+      }
+    },
+
+    async cargarProductos() {
+      try {
+        const response = await axios.get('/api/productos')
+        this.productos = response.data
+
+        // También cargar categorías
+        const categoriasResponse = await axios.get('/api/productos/categorias')
+        this.categorias = categoriasResponse.data
+      } catch (error) {
+        console.error('Error al cargar productos:', error)
+        throw error
+      }
+    },
+
+    async confirmarAgregarItem(producto) {
+      const cantidad = parseInt(this.cantidadItem) || 1
+      
+      try {
+        this.isLoading = true
+        const response = await axios.post(`/api/pedidos/${this.pedido.id}/items`, {
+          producto_id: producto.id,
+          cantidad: cantidad
+        })
+
+        if (response.data.success) {
+          // Recargar el pedido para mostrar los cambios
+          await this.cargarPedido()
+          this.cerrarModalProductos()
+        }
+      } catch (error) {
+        console.error('Error al agregar item:', error)
+        alert('Error al agregar el producto al pedido')
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    async eliminarItem(itemId) {
+      if (!confirm('¿Eliminar este producto del pedido?')) {
+        return
+      }
+
+      try {
+        this.isLoading = true
+        const response = await axios.delete(`/api/pedidos/${this.pedido.id}/items/${itemId}`)
+
+        if (response.data.success) {
+          // Recargar el pedido para mostrar los cambios
+          await this.cargarPedido()
+        }
+      } catch (error) {
+        console.error('Error al eliminar item:', error)
+        alert('Error al eliminar el producto del pedido')
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    cerrarModalProductos() {
+      this.mostrarModalProductos = false
+      this.cantidadItem = 1
+      this.categoriaSeleccionada = ''
+    },
+
+    filtrarProductos() {
+      if (!this.categoriaSeleccionada) return this.productos
+      return this.productos.filter(p => p.categoria_id == this.categoriaSeleccionada)
+    }
+  }
+}
+</script>
+
+<style scoped>
+/* === ESTILOS PRINCIPALES === */
+.pedido-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* === FLEX FILL CONTENT === */
+.flex-fill-content {
+  flex: 1;
+  min-height: 0;
+}
+
+.flex-fill {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-fill .card-body {
+  flex: 1;
+}
+
+/* === LOADING SCREEN === */
+.fullscreen-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.loading-text {
+  font-size: 1.2rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+/* === HEADER === */
+.header-section {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #212529;
+  margin: 0;
+}
+
+.page-subtitle {
+  font-size: 1.1rem;
+  color: #6c757d;
+  font-weight: 400;
+}
+
+/* === CARDS === */
+.card {
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.card-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 1.25rem 1.5rem;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* === LIST ITEMS === */
+.list-group-item {
+  border-left: none;
+  border-right: none;
+  border-top: none;
+}
+
+.list-group-item:last-child {
+  border-bottom: none;
+}
+
+/* === BUTTONS === */
+.btn {
+  border-radius: 12px;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+}
+
+.btn-lg {
+  padding: 1rem 2rem;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 1.75rem;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  .header-actions .badge {
+    margin: 0 0.25rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .d-flex.align-items-center.mb-1 {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.5rem;
+  }
+  
+  .container-fluid {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+}
+
+/* === MODAL PRODUCTOS === */
+.modal.show {
+  display: block !important;
+}
+
+.producto-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.producto-card:hover {
+  border-color: #007bff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+}
+
+.producto-card .card-body {
+  padding: 1rem;
+}
+
+.producto-card .card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.producto-card .card-text {
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+  max-height: 2.4em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+</style>
