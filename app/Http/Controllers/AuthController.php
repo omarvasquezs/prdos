@@ -113,9 +113,16 @@ class AuthController extends Controller
 
         $request->session()->put('active_role', $role);
 
+        // Determinar redirección basada en el rol
+        $redirect = match($role) {
+            'caja' => '/caja',
+            'administrador' => '/dashboard',
+            default => '/dashboard'
+        };
+
         return response()->json([
             'message' => 'Active role set.',
-            'redirect' => '/dashboard'
+            'redirect' => $redirect
         ]);
     }
 }
