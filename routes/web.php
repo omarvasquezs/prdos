@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Api\MesaController;
+use App\Http\Controllers\Api\ProductController;
 
 // Rutas de autenticación
 Route::get('/sanctum/csrf-cookie', function () {
@@ -20,11 +22,31 @@ Route::middleware('auth')->group(function () {
     // Route to show the role selection SPA route (served by the admin SPA)
     Route::get('/select-role', [DashboardController::class, 'index']);
     Route::get('/test', [DashboardController::class, 'index']);
+    // Caja page routes
+    Route::get('/caja', [DashboardController::class, 'index']);
+    Route::get('/caja/pedido/{id}', [DashboardController::class, 'index']);
 });
 
 // API routes para Vue
-Route::middleware('auth')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])->group(function () {
+Route::middleware(['web', 'auth'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])->group(function () {
     Route::get('/api/user', [AuthController::class, 'user']);
     Route::post('/select-role', [AuthController::class, 'setActiveRole']);
     Route::post('/api/set-active-role', [AuthController::class, 'setActiveRole']);
+    
+    // API routes for mesas
+    Route::get('/api/mesas', [MesaController::class, 'index']);
+    Route::get('/api/mesas/{mesa}', [MesaController::class, 'show']);
+    Route::post('/api/mesas/{mesa}/ocupar', [MesaController::class, 'ocupar']);
+    Route::post('/api/mesas/{mesa}/liberar', [MesaController::class, 'liberar']);
+    
+    // API routes for pedidos
+    Route::get('/api/pedidos/{pedido}', [MesaController::class, 'getPedido']);
+    Route::post('/api/pedidos/{pedido}/items', [MesaController::class, 'agregarItem']);
+    Route::delete('/api/pedidos/{pedido}/items/{item}', [MesaController::class, 'eliminarItem']);
+    Route::post('/api/pedidos/{pedido}/cobrar', [MesaController::class, 'cobrarPedido']);
+    Route::post('/api/pedidos/{pedido}/cancelar', [MesaController::class, 'cancelarPedido']);
+    
+    // API routes for products
+    Route::get('/api/products', [ProductController::class, 'index']);
+    Route::get('/api/categories', [ProductController::class, 'categories']);
 });
