@@ -459,7 +459,7 @@ export default {
 
     filtrarProductos() {
       if (!this.categoriaSeleccionada) return this.productos
-      return this.productos.filter(p => p.categoria_id == this.categoriaSeleccionada)
+      return this.productos.filter(p => p.categoria.id == this.categoriaSeleccionada)
     }
   }
 }

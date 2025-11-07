@@ -26,22 +26,22 @@ class ProductController extends Controller
                 ->ordered()
                 ->get();
 
-            return response()->json([
-                'products' => $products->map(function ($product) {
+            return response()->json(
+                $products->map(function ($product) {
                     return [
                         'id' => $product->id,
-                        'name' => $product->name,
-                        'description' => $product->description,
-                        'price' => $product->price,
-                        'formatted_price' => $product->formatted_price,
-                        'category' => [
+                        'nombre' => $product->name,
+                        'descripcion' => $product->description,
+                        'precio' => $product->price,
+                        'precio_formateado' => $product->formatted_price,
+                        'categoria' => [
                             'id' => $product->category->id,
-                            'name' => $product->category->name
+                            'nombre' => $product->category->name
                         ],
-                        'is_available' => $product->is_available
+                        'disponible' => $product->is_available
                     ];
                 })
-            ]);
+            );
 
         } catch (\Exception $e) {
             return response()->json([
@@ -64,26 +64,26 @@ class ProductController extends Controller
             ->ordered()
             ->get();
 
-            return response()->json([
-                'categories' => $categories->map(function ($category) {
+            return response()->json(
+                $categories->map(function ($category) {
                     return [
                         'id' => $category->id,
-                        'name' => $category->name,
-                        'description' => $category->description,
-                        'order' => $category->order,
-                        'products' => $category->activeProducts->map(function ($product) {
+                        'nombre' => $category->name,
+                        'descripcion' => $category->description,
+                        'orden' => $category->order,
+                        'productos' => $category->activeProducts->map(function ($product) {
                             return [
                                 'id' => $product->id,
-                                'name' => $product->name,
-                                'description' => $product->description,
-                                'price' => $product->price,
-                                'formatted_price' => $product->formatted_price,
-                                'is_available' => $product->is_available
+                                'nombre' => $product->name,
+                                'descripcion' => $product->description,
+                                'precio' => $product->price,
+                                'precio_formateado' => $product->formatted_price,
+                                'disponible' => $product->is_available
                             ];
                         })
                     ];
                 })
-            ]);
+            );
 
         } catch (\Exception $e) {
             return response()->json([

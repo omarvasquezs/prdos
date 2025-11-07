@@ -47,6 +47,6 @@ Route::middleware(['web', 'auth'])->withoutMiddleware([\Illuminate\Foundation\Ht
     Route::post('/api/pedidos/{pedido}/cancelar', [MesaController::class, 'cancelarPedido']);
     
     // API routes for products
-    Route::get('/api/products', [ProductController::class, 'index']);
-    Route::get('/api/categories', [ProductController::class, 'categories']);
+    Route::get('/api/productos', [ProductController::class, 'index']);
+    Route::get('/api/productos/categorias', [ProductController::class, 'categories']);
 });
