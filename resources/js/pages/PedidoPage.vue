@@ -229,13 +229,13 @@
               <div 
                 v-for="producto in filtrarProductos()" 
                 :key="producto.id" 
-                class="col-md-6 mb-3"
+                class="col-lg-4 col-md-6 mb-3"
               >
                 <div class="card h-100 producto-card" @click="confirmarAgregarItem(producto)">
-                  <div class="card-body">
+                  <div class="card-body d-flex flex-column">
                     <h6 class="card-title">{{ producto.nombre }}</h6>
-                    <p class="card-text text-muted small">{{ producto.descripcion || 'Sin descripción' }}</p>
-                    <div class="d-flex justify-content-between align-items-center">
+                    <p class="card-text text-muted small flex-grow-1 mb-3">{{ producto.descripcion || 'Sin descripción' }}</p>
+                    <div class="d-flex justify-content-between align-items-center mt-auto">
                       <span class="badge bg-secondary">{{ producto.categoria?.nombre }}</span>
                       <strong class="text-success">S/ {{ parseFloat(producto.precio).toFixed(2) }}</strong>
                     </div>
@@ -321,14 +321,19 @@ export default {
         return
       }
 
+    async cobrarPedido() {
+      if (!confirm(`¿Confirmar el cobro de S/ ${parseFloat(this.pedido.total).toFixed(2)}?`)) {
+        return
+      }
+
       try {
         this.isLoading = true
         const response = await axios.post(`/api/pedidos/${this.pedido.id}/cobrar`)
         
-        if (response.data.success) {
-          alert('Pedido cobrado exitosamente')
-          this.$router.push('/caja')
-        }
+        // Si llegamos aquí, la respuesta fue exitosa
+        alert('Pedido cobrado exitosamente')
+        this.$router.push('/caja')
+        
       } catch (error) {
         console.error('Error al cobrar pedido:', error)
         alert('Error al procesar el cobro. Intenta nuevamente.')
@@ -346,16 +351,17 @@ export default {
         this.isLoading = true
         const response = await axios.post(`/api/pedidos/${this.pedido.id}/cancelar`)
         
-        if (response.data.success) {
-          alert('Pedido cancelado exitosamente')
-          this.$router.push('/caja')
-        }
+        // Si llegamos aquí, la respuesta fue exitosa
+        alert('Pedido cancelado exitosamente')
+        this.$router.push('/caja')
+        
       } catch (error) {
         console.error('Error al cancelar pedido:', error)
         alert('Error al cancelar el pedido. Intenta nuevamente.')
       } finally {
         this.isLoading = false
       }
+    },
     },
 
     formatearTiempo(fechaApertura) {
@@ -411,22 +417,22 @@ export default {
       const cantidad = parseInt(this.cantidadItem) || 1
       
       try {
-        this.isLoading = true
         const response = await axios.post(`/api/pedidos/${this.pedido.id}/items`, {
           producto_id: producto.id,
           cantidad: cantidad
         })
 
-        if (response.data.success) {
-          // Recargar el pedido para mostrar los cambios
-          await this.cargarPedido()
-          this.cerrarModalProductos()
-        }
+        // Si llegamos aquí, la respuesta fue exitosa (código 200)
+        // Recargar el pedido para mostrar los cambios
+        await this.cargarPedido()
+        this.cerrarModalProductos()
+        
+        // Mostrar mensaje de éxito opcional
+        // alert(`${producto.nombre} agregado al pedido`)
+
       } catch (error) {
         console.error('Error al agregar item:', error)
         alert('Error al agregar el producto al pedido')
-      } finally {
-        this.isLoading = false
       }
     },
 
@@ -436,18 +442,15 @@ export default {
       }
 
       try {
-        this.isLoading = true
         const response = await axios.delete(`/api/pedidos/${this.pedido.id}/items/${itemId}`)
 
-        if (response.data.success) {
-          // Recargar el pedido para mostrar los cambios
-          await this.cargarPedido()
-        }
+        // Si llegamos aquí, la respuesta fue exitosa (código 200)
+        // Recargar el pedido para mostrar los cambios
+        await this.cargarPedido()
+        
       } catch (error) {
         console.error('Error al eliminar item:', error)
         alert('Error al eliminar el producto del pedido')
-      } finally {
-        this.isLoading = false
       }
     },
 
@@ -612,6 +615,20 @@ export default {
   .card-body {
     padding: 1rem;
   }
+  
+  /* Productos en móvil - 2 columnas */
+  .modal-body .row .col-lg-4 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  /* Tablets - 2 columnas */
+  .modal-body .row .col-lg-4 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
 }
 
 /* === MODAL PRODUCTOS === */
@@ -643,12 +660,6 @@ export default {
 
 .producto-card .card-text {
   font-size: 0.85rem;
-  margin-bottom: 0.75rem;
-  max-height: 2.4em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  line-height: 1.4;
 }
 </style>
