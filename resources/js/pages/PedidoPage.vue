@@ -233,10 +233,10 @@
               >
                 <div class="card h-100 producto-card" @click="confirmarAgregarItem(producto)">
                   <div class="card-body d-flex flex-column">
+                    <span class="badge bg-secondary mb-2 align-self-start">{{ producto.categoria?.nombre }}</span>
                     <h6 class="card-title">{{ producto.nombre }}</h6>
                     <p class="card-text text-muted small flex-grow-1 mb-3">{{ producto.descripcion || 'Sin descripción' }}</p>
-                    <div class="d-flex justify-content-between align-items-center mt-auto">
-                      <span class="badge bg-secondary">{{ producto.categoria?.nombre }}</span>
+                    <div class="d-flex justify-content-end align-items-center mt-auto">
                       <strong class="text-success">S/ {{ parseFloat(producto.precio).toFixed(2) }}</strong>
                     </div>
                   </div>
@@ -317,14 +317,6 @@ export default {
     },
 
     async cobrarPedido() {
-      if (!confirm(`¿Confirmar el cobro de S/ ${parseFloat(this.pedido.total).toFixed(2)}?`)) {
-        return
-      }
-
-    async cobrarPedido() {
-      if (!confirm(`¿Confirmar el cobro de S/ ${parseFloat(this.pedido.total).toFixed(2)}?`)) {
-        return
-      }
 
       try {
         this.isLoading = true
@@ -358,10 +350,9 @@ export default {
       } catch (error) {
         console.error('Error al cancelar pedido:', error)
         alert('Error al cancelar el pedido. Intenta nuevamente.')
-      } finally {
+            } finally {
         this.isLoading = false
       }
-    },
     },
 
     formatearTiempo(fechaApertura) {
