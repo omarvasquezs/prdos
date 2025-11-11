@@ -11,135 +11,142 @@
             box-sizing: border-box;
         }
         
+        @page {
+            margin: 3mm;
+        }
+
         html, body {
             width: 58mm;
             height: auto;
             margin: 0;
             padding: 0;
         }
-        
+
         body {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 8px;
             background: white;
             padding: 0;
-            line-height: 1;
+            line-height: 1.1;
         }
-        
+
         .ticket {
             width: 100%;
             max-width: 58mm;
-            margin: 0;
-            padding: 1.5mm;
+            margin: 0 auto;
+            padding: 0;
             background: white;
         }
         
         .header {
             text-align: center;
             border-bottom: 1px dashed #000;
-            padding-bottom: 1mm;
-            margin-bottom: 1mm;
+            padding-bottom: 1.5mm;
+            margin-bottom: 1.5mm;
         }
         
         .header h2 {
-            font-size: 9px;
+            font-size: 10px;
             margin: 0;
             padding: 0;
-            line-height: 1.1;
+            line-height: 1.2;
             font-weight: bold;
         }
         
         .header h3 {
-            font-size: 8px;
-            margin: 0.3mm 0 0 0;
+            font-size: 8.5px;
+            margin: 0.8mm 0 0 0;
             padding: 0;
             font-weight: bold;
-            line-height: 1.1;
+            line-height: 1.2;
         }
         
         .header p {
-            font-size: 7px;
+            font-size: 7.5px;
             margin: 0;
             padding: 0;
-            line-height: 1;
+            line-height: 1.3;
         }
         
         .divider {
             border-bottom: 1px dashed #000;
-            margin: 0.5mm 0;
+            margin: 1mm 0;
         }
         
         .info-line {
             font-size: 7px;
             margin: 0.3mm 0;
-            line-height: 1;
+            line-height: 1.3;
         }
         
         .detalle-title {
             font-weight: bold;
-            font-size: 8px;
-            margin: 0.5mm 0 0.3mm 0;
-            padding: 0;
+            font-size: 8.5px;
+            margin: 0.8mm 0 0.3mm 0;
+            padding: 0 0 0.3mm;
+            text-transform: uppercase;
         }
         
         /* Compact table for items */
         table.items {
             width: 100%;
             border-collapse: collapse;
-            font-size: 7px;
-            margin: 0.3mm 0;
+            font-size: 7.5px;
+            margin: 0.5mm 0 1mm 0;
         }
         table.items thead th {
             font-weight: bold;
             border-bottom: 1px solid #000;
-            padding: 0.2mm 0.3mm;
-            text-align: left;
+            padding: 0.4mm 0.2mm;
+            text-align: center;
+            background-color: #f5f5f5;
+            text-transform: uppercase;
         }
         table.items td {
-            padding: 0.15mm 0.3mm;
+            padding: 0.35mm 0.2mm;
             vertical-align: top;
+            border-bottom: 1px dotted #ccc;
         }
-        .col-desc { width: 30mm; word-wrap: break-word; overflow-wrap: break-word; }
-        .col-cant { width: 9mm; text-align: right; white-space: nowrap; }
-        .col-total { width: 14mm; text-align: right; white-space: nowrap; }
-    .item-desc-line { font-size:7px; line-height:1.1; }
-        .item-name { font-weight: bold; }
+        .col-desc { width: 32mm; word-wrap: break-word; overflow-wrap: break-word; }
+        .col-cant { width: 8mm; text-align: center; white-space: nowrap; }
+        .col-total { width: 13mm; text-align: right; white-space: nowrap; }
+        .item-desc-line { font-size:7px; line-height:1.2; }
+        .item-name { font-weight: bold; display:block; margin-bottom:0.3mm; }
         
         .totales-section {
-            border-top: 1px dashed #000;
-            margin: 0.5mm 0;
-            padding: 0.3mm 0;
-            font-size: 7px;
+            border-top: 2px solid #000;
+            margin: 1mm 0 0.5mm;
+            padding-top: 0.5mm;
+            font-size: 7.5px;
         }
-        
+
         .totales-row {
             display: flex;
             justify-content: space-between;
-            margin: 0.2mm 0;
-            padding: 0;
+            margin: 0.4mm 0;
         }
-        
+
         .total-final {
             font-weight: bold;
-            font-size: 8px;
+            font-size: 8.5px;
             border-top: 1px solid #000;
             border-bottom: 1px solid #000;
-            margin: 0.3mm 0;
-            padding: 0.2mm 0;
+            margin: 0.6mm 0 0;
+            padding: 0.3mm 0;
         }
         
         .footer {
             text-align: center;
-            margin-top: 0.5mm;
+            margin-top: 1mm;
             padding-top: 0.5mm;
             border-top: 1px dashed #000;
-            font-size: 6px;
+            font-size: 7px;
         }
-        
+
         .footer p {
-            margin: 0.2mm 0;
+            margin: 0.3mm 0;
             padding: 0;
-            line-height: 1;
+            line-height: 1.2;
         }
     </style>
 </head>
@@ -212,16 +219,16 @@
         <!-- Totales -->
         <div class="totales-section">
             <div class="totales-row">
-                <span>SUBTOTAL</span>
-                <span style="text-align: right;">S/ {{ number_format($pedido->total ?? 0, 2) }}</span>
+                <span>Subtotal</span>
+                <span>S/ {{ number_format($pedido->total ?? 0, 2) }}</span>
             </div>
             <div class="totales-row">
                 <span>IGV (0%)</span>
-                <span style="text-align: right;">S/ 0.00</span>
+                <span>S/ 0.00</span>
             </div>
             <div class="total-final">
                 <div style="display: flex; justify-content: space-between;">
-                    <span>TOTAL</span>
+                    <span>Total</span>
                     <span>S/ {{ number_format($pedido->total ?? 0, 2) }}</span>
                 </div>
             </div>
