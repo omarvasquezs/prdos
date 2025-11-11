@@ -6,7 +6,7 @@
         <div class="spinner-border text-warning" role="status" style="width: 4rem; height: 4rem;">
           <span class="visually-hidden">Cargando...</span>
         </div>
-        <p class="loading-text mt-3">Cargando mesas...</p>
+        <p class="loading-text mt-3">Preparando caja...</p>
       </div>
     </div>
 
@@ -44,7 +44,7 @@
             <button 
               @click="refreshMesas" 
               class="btn btn-outline-secondary btn-lg me-3"
-              :disabled="isRefreshing"
+              :disabled="isRefreshing || !cajaEstaAbierta"
             >
               <i class="fas fa-sync-alt" :class="{ 'fa-spin': isRefreshing }"></i>
               <span class="ms-2 d-none d-md-inline">Actualizar</span>
@@ -70,79 +70,337 @@
         <button type="button" class="btn-close" @click="clearAlert"></button>
       </div>
 
-      <!-- Mesas Grid -->
-      <div class="mesas-grid">
-        <div 
-          v-for="mesa in mesas" 
-          :key="mesa.id"
-          class="mesa-card"
-          :class="mesaCardClass(mesa)"
-          @click="seleccionarMesa(mesa)"
-        >
-          <!-- Mesa Icon -->
-          <div class="mesa-icon">
-            <i class="fas fa-utensils"></i>
+      <!-- Caja Status -->
+      <div class="caja-status-card mb-4" :class="{ 'caja-open': cajaEstaAbierta, 'caja-closed': !cajaEstaAbierta }">
+        <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center">
+          <div class="status-icon me-0 me-lg-4 mb-3 mb-lg-0">
+            <i :class="cajaEstaAbierta ? 'fas fa-cash-register' : 'fas fa-lock'"></i>
           </div>
-
-          <!-- Mesa Info -->
-          <div class="mesa-info">
-            <h3 class="mesa-numero">Mesa {{ mesa.num_mesa }}</h3>
-            
-            <!-- Estado Badge -->
-            <div class="mesa-estado">
-              <span class="badge" :class="estadoBadgeClass(mesa.estado)">
-                <i :class="estadoIcon(mesa.estado)" class="me-1"></i>
-                {{ estadoTexto(mesa.estado) }}
+          <div class="flex-grow-1">
+            <h2 class="status-title mb-2">
+              {{ cajaEstaAbierta ? 'Caja abierta' : cajaStatus.hasRecordToday ? 'Caja cerrada' : 'Caja pendiente de apertura' }}
+            </h2>
+            <p class="status-description mb-2">
+              <template v-if="cajaEstaAbierta && cajaRegistro">
+                La caja se abrió el {{ formatDateTime(cajaRegistro.datetime_apertura) }} por
+                {{ cajaRegistro.usuario_apertura || 'usuario desconocido' }} con un monto inicial de
+                {{ formatCurrency(cajaRegistro.monto_apertura) }}.
+              </template>
+              <template v-else-if="cajaStatus.hasRecordToday && cajaRegistro">
+                La caja está cerrada. La última apertura fue el {{ formatDateTime(cajaRegistro.datetime_apertura) }}.
+                <span v-if="cajaRegistro.datetime_cierre">
+                  Se cerró el {{ formatDateTime(cajaRegistro.datetime_cierre) }}<span v-if="cajaRegistro.usuario_cierre"> por {{ cajaRegistro.usuario_cierre }}</span><span v-else-if="cajaRegistro.usuario_apertura"> por {{ cajaRegistro.usuario_apertura }}</span>.
+                </span>
+                <span v-else>
+                  Aún no registra un cierre.
+                </span>
+              </template>
+              <template v-else>
+                Debes abrir la caja para registrar las operaciones del día actual.
+              </template>
+            </p>
+            <div class="status-meta" v-if="cajaRegistro">
+              <span class="me-3">
+                <i class="fas fa-hourglass-start me-1"></i>
+                Apertura: {{ formatDateTime(cajaRegistro.datetime_apertura) }}
+              </span>
+              <span class="me-3">
+                <i class="fas fa-coins me-1"></i>
+                Monto apertura: {{ formatCurrency(cajaRegistro.monto_apertura) }}
+              </span>
+              <span v-if="cajaRegistro.datetime_cierre" class="me-3">
+                <i class="fas fa-hourglass-end me-1"></i>
+                Cierre: {{ formatDateTime(cajaRegistro.datetime_cierre) }}
+              </span>
+              <span v-if="cajaRegistro.monto_cierre !== null">
+                <i class="fas fa-wallet me-1"></i>
+                Monto cierre: {{ formatCurrency(cajaRegistro.monto_cierre) }}
               </span>
             </div>
-
-            <!-- Pedido Activo Info -->
-            <div v-if="mesa.pedido_activo" class="pedido-info">
-              <div class="comensales">
-                <i class="fas fa-users text-muted me-1"></i>
-                {{ mesa.pedido_activo.comensales }} {{ mesa.pedido_activo.comensales === 1 ? 'comensal' : 'comensales' }}
-              </div>
-              <div class="tiempo">
-                <i class="fas fa-clock text-muted me-1"></i>
-                {{ formatearTiempo(mesa.pedido_activo.fecha_apertura) }}
-              </div>
-              <div class="total" v-if="mesa.pedido_activo.total > 0">
-                <i class="fas fa-money-bill text-success me-1"></i>
-                S/ {{ mesa.pedido_activo.total.toFixed(2) }}
-              </div>
-            </div>
           </div>
-
-          <!-- Action Button -->
-          <div class="mesa-action">
-            <button 
-              class="btn btn-sm"
-              :class="actionButtonClass(mesa)"
-              v-if="mesa.estado === 'D'"
+          <div class="status-actions ms-lg-4 mt-3 mt-lg-0">
+            <button
+              v-if="cajaEstaAbierta"
+              class="btn btn-danger btn-lg"
+              @click="abrirModalCierre"
+              :disabled="isProcessingCierre"
             >
-              <i class="fas fa-plus me-1"></i>
-              Ocupar
+              <span v-if="isProcessingCierre">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Cerrando...
+              </span>
+              <span v-else>
+                <i class="fas fa-lock me-2"></i>
+                Cerrar Caja
+              </span>
             </button>
-            <button 
-              class="btn btn-sm btn-outline-warning"
-              v-else-if="mesa.estado === 'O'"
-              @click.stop="verPedido(mesa)"
+            <button
+              v-else
+              class="btn btn-success btn-lg"
+              @click="abrirModalApertura"
+              :disabled="isProcessingApertura"
             >
-              <i class="fas fa-eye me-1"></i>
-              Ver Pedido
+              <span v-if="isProcessingApertura">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Abriendo...
+              </span>
+              <span v-else>
+                <i class="fas fa-cash-register me-2"></i>
+                Abrir Caja
+              </span>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Empty State -->
-      <div v-if="mesas.length === 0 && !isLoading" class="empty-state text-center py-5">
-        <i class="fas fa-table display-1 text-muted mb-3"></i>
-        <h3 class="text-muted">No hay mesas configuradas</h3>
-        <p class="text-muted">Contacta al administrador para configurar las mesas del restaurante.</p>
+      <!-- Placeholder when caja is closed -->
+      <div v-if="!cajaEstaAbierta" class="caja-closed-placeholder text-center py-5">
+        <i class="fas fa-cash-register display-4 text-muted mb-3"></i>
+        <h3 class="mb-3">La caja no está abierta</h3>
+        <p class="text-muted mb-4">
+          Abre la caja para gestionar pedidos y movimientos del día.
+        </p>
+        <button
+          class="btn btn-success btn-lg"
+          @click="abrirModalApertura"
+          :disabled="isProcessingApertura"
+        >
+          <span v-if="isProcessingApertura">
+            <span class="spinner-border spinner-border-sm me-2"></span>
+            Abriendo...
+          </span>
+          <span v-else>
+            <i class="fas fa-cash-register me-2"></i>
+            Abrir Caja
+          </span>
+        </button>
       </div>
+
+      <template v-else>
+        <!-- Mesas Grid -->
+        <div class="mesas-grid">
+          <div 
+            v-for="mesa in mesas" 
+            :key="mesa.id"
+            class="mesa-card"
+            :class="mesaCardClass(mesa)"
+            @click="seleccionarMesa(mesa)"
+          >
+            <!-- Mesa Icon -->
+            <div class="mesa-icon">
+              <i class="fas fa-utensils"></i>
+            </div>
+
+            <!-- Mesa Info -->
+            <div class="mesa-info">
+              <h3 class="mesa-numero">Mesa {{ mesa.num_mesa }}</h3>
+              
+              <!-- Estado Badge -->
+              <div class="mesa-estado">
+                <span class="badge" :class="estadoBadgeClass(mesa.estado)">
+                  <i :class="estadoIcon(mesa.estado)" class="me-1"></i>
+                  {{ estadoTexto(mesa.estado) }}
+                </span>
+              </div>
+
+              <!-- Pedido Activo Info -->
+              <div v-if="mesa.pedido_activo" class="pedido-info">
+                <div class="comensales">
+                  <i class="fas fa-users text-muted me-1"></i>
+                  {{ mesa.pedido_activo.comensales }} {{ mesa.pedido_activo.comensales === 1 ? 'comensal' : 'comensales' }}
+                </div>
+                <div class="tiempo">
+                  <i class="fas fa-clock text-muted me-1"></i>
+                  {{ formatearTiempo(mesa.pedido_activo.fecha_apertura) }}
+                </div>
+                <div class="total" v-if="mesa.pedido_activo.total > 0">
+                  <i class="fas fa-money-bill text-success me-1"></i>
+                  S/ {{ mesa.pedido_activo.total.toFixed(2) }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="mesa-action">
+              <button 
+                class="btn btn-sm"
+                :class="actionButtonClass(mesa)"
+                v-if="mesa.estado === 'D'"
+              >
+                <i class="fas fa-plus me-1"></i>
+                Ocupar
+              </button>
+              <button 
+                class="btn btn-sm btn-outline-warning"
+                v-else-if="mesa.estado === 'O'"
+                @click.stop="verPedido(mesa)"
+              >
+                <i class="fas fa-eye me-1"></i>
+                Ver Pedido
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div v-if="mesas.length === 0 && !isLoading" class="empty-state text-center py-5">
+          <i class="fas fa-table display-1 text-muted mb-3"></i>
+          <h3 class="text-muted">No hay mesas configuradas</h3>
+          <p class="text-muted">Contacta al administrador para configurar las mesas del restaurante.</p>
+        </div>
+      </template>
       </div>
     </template>
+
+    <!-- Modal de Apertura de Caja -->
+    <div 
+      v-if="showAperturaModal" 
+      class="modal fade show d-block" 
+      tabindex="-1" 
+      style="background-color: rgba(0,0,0,0.5);"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title">
+              <i class="fas fa-cash-register me-2"></i>
+              Abrir caja
+            </h5>
+            <button 
+              type="button" 
+              class="btn-close" 
+              @click="cerrarModalApertura"
+              :disabled="isProcessingApertura"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <p class="mb-3">
+              Ingresa el monto inicial disponible en la caja para comenzar las operaciones del día.
+            </p>
+            <div class="mb-3">
+              <label class="form-label">Monto de apertura</label>
+              <div class="input-group input-group-lg">
+                <span class="input-group-text">S/</span>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  min="0" 
+                  step="0.01"
+                  v-model="openForm.monto"
+                  :disabled="isProcessingApertura"
+                  placeholder="0.00"
+                >
+              </div>
+              <div v-if="openFormError" class="text-danger small mt-2">
+                {{ openFormError }}
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button 
+              type="button" 
+              class="btn btn-outline-secondary" 
+              @click="cerrarModalApertura"
+              :disabled="isProcessingApertura"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-success"
+              @click="confirmarApertura"
+              :disabled="isProcessingApertura || openForm.monto === ''"
+            >
+              <span v-if="isProcessingApertura">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Guardando...
+              </span>
+              <span v-else>
+                <i class="fas fa-check me-2"></i>
+                Abrir Caja
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Cierre de Caja -->
+    <div 
+      v-if="showCierreModal" 
+      class="modal fade show d-block" 
+      tabindex="-1" 
+      style="background-color: rgba(0,0,0,0.5);"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">
+              <i class="fas fa-lock me-2"></i>
+              Cerrar caja
+            </h5>
+            <button 
+              type="button" 
+              class="btn-close" 
+              @click="cerrarModalCierre"
+              :disabled="isProcessingCierre"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <p class="mb-3">
+              Registra el monto final en caja al momento del cierre.
+            </p>
+            <div class="mb-3">
+              <label class="form-label">Monto de cierre</label>
+              <div class="input-group input-group-lg">
+                <span class="input-group-text">S/</span>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  min="0" 
+                  step="0.01"
+                  v-model="closeForm.monto"
+                  :disabled="isProcessingCierre"
+                  placeholder="0.00"
+                >
+              </div>
+              <div v-if="closeFormError" class="text-danger small mt-2">
+                {{ closeFormError }}
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button 
+              type="button" 
+              class="btn btn-outline-secondary" 
+              @click="cerrarModalCierre"
+              :disabled="isProcessingCierre"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-danger"
+              @click="confirmarCierre"
+              :disabled="isProcessingCierre || closeForm.monto === ''"
+            >
+              <span v-if="isProcessingCierre">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Cerrando...
+              </span>
+              <span v-else>
+                <i class="fas fa-check me-2"></i>
+                Cerrar Caja
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Modal de Comensales -->
     <div 
@@ -253,10 +511,29 @@ export default {
       isLoading: true,
       isRefreshing: false,
       isOcupandoMesa: false,
-  isLoggingOut: false,
+      isLoggingOut: false,
       
       // Datos
       mesas: [],
+      cajaStatus: {
+        isOpen: false,
+        hasRecordToday: false,
+        record: null
+      },
+
+      // Modal de caja
+      showAperturaModal: false,
+      showCierreModal: false,
+      isProcessingApertura: false,
+      isProcessingCierre: false,
+      openForm: {
+        monto: ''
+      },
+      closeForm: {
+        monto: ''
+      },
+      openFormError: '',
+      closeFormError: '',
       
       // Modal de comensales
       showComensalesModal: false,
@@ -271,6 +548,14 @@ export default {
   },
 
   computed: {
+    cajaEstaAbierta() {
+      return this.cajaStatus.isOpen
+    },
+
+    cajaRegistro() {
+      return this.cajaStatus.record
+    },
+
     mesasDisponibles() {
       return this.mesas.filter(mesa => mesa.estado === 'D').length
     },
@@ -301,24 +586,53 @@ export default {
   },
 
   async mounted() {
-    await this.cargarMesas()
+    await this.initializePage()
   },
 
   methods: {
-    async cargarMesas() {
+    async initializePage() {
       try {
         this.isLoading = true
-        const response = await axios.get('/api/mesas')
-        this.mesas = response.data
-      } catch (error) {
-        console.error('Error al cargar mesas:', error)
-        this.showAlert('Error al cargar las mesas. Intenta nuevamente.', 'error')
+        await this.fetchCajaStatus()
+
+        if (this.cajaEstaAbierta) {
+          await this.cargarMesas()
+        }
       } finally {
         this.isLoading = false
       }
     },
 
+    async fetchCajaStatus() {
+      try {
+        const response = await axios.get('/api/caja/status')
+        this.cajaStatus = response.data
+
+        if (!this.cajaStatus.isOpen && !this.cajaStatus.hasRecordToday) {
+          this.abrirModalApertura()
+        }
+      } catch (error) {
+        console.error('Error al verificar la caja:', error)
+        this.showAlert('Error al verificar el estado de la caja.', 'error')
+      }
+    },
+
+    async cargarMesas() {
+      try {
+        const response = await axios.get('/api/mesas')
+        this.mesas = response.data
+      } catch (error) {
+        console.error('Error al cargar mesas:', error)
+        this.showAlert('Error al cargar las mesas. Intenta nuevamente.', 'error')
+      }
+    },
+
     async refreshMesas() {
+      if (!this.cajaEstaAbierta) {
+        this.showAlert('Debes abrir la caja para administrar las mesas.', 'warning')
+        return
+      }
+
       try {
         this.isRefreshing = true
         await this.cargarMesas()
@@ -330,7 +644,183 @@ export default {
       }
     },
 
+    abrirModalApertura() {
+      if (this.cajaEstaAbierta) {
+        this.showAlert('La caja ya se encuentra abierta.', 'info')
+        return
+      }
+
+      this.openForm = { monto: '' }
+      this.openFormError = ''
+      this.showAperturaModal = true
+    },
+
+    cerrarModalApertura() {
+      this.showAperturaModal = false
+      this.openFormError = ''
+    },
+
+    async confirmarApertura() {
+      if (this.isProcessingApertura) {
+        return
+      }
+
+      const monto = Number(this.openForm.monto)
+      if (Number.isNaN(monto)) {
+        this.openFormError = 'Ingresa un monto válido.'
+        return
+      }
+
+      if (monto < 0) {
+        this.openFormError = 'El monto no puede ser negativo.'
+        return
+      }
+
+      const shouldToggleLoading = !this.isLoading
+
+      try {
+        this.isProcessingApertura = true
+        if (shouldToggleLoading) {
+          this.isLoading = true
+        }
+
+        const response = await axios.post('/api/caja/abrir', {
+          monto_apertura: monto
+        })
+
+        const caja = response.data?.caja || null
+
+        this.cajaStatus = {
+          isOpen: true,
+          hasRecordToday: Boolean(caja),
+          record: caja
+        }
+
+        await this.fetchCajaStatus()
+
+        if (this.cajaEstaAbierta) {
+          await this.cargarMesas()
+        }
+
+        this.showAperturaModal = false
+        this.openForm = { monto: '' }
+        this.showAlert('Caja abierta correctamente.', 'success')
+      } catch (error) {
+        const validationError = error.response?.data?.errors?.monto_apertura?.[0]
+        const message = validationError || error.response?.data?.error || 'Error al abrir la caja.'
+        this.openFormError = validationError || message
+        this.showAlert(message, 'error')
+      } finally {
+        this.isProcessingApertura = false
+        if (shouldToggleLoading) {
+          this.isLoading = false
+        }
+      }
+    },
+
+    abrirModalCierre() {
+      if (!this.cajaEstaAbierta) {
+        this.showAlert('No hay una caja abierta para cerrar.', 'warning')
+        return
+      }
+
+      this.closeForm = { monto: '' }
+      this.closeFormError = ''
+      this.showCierreModal = true
+    },
+
+    cerrarModalCierre() {
+      this.showCierreModal = false
+      this.closeFormError = ''
+    },
+
+    async confirmarCierre() {
+      if (this.isProcessingCierre) {
+        return
+      }
+
+      const monto = Number(this.closeForm.monto)
+      if (Number.isNaN(monto)) {
+        this.closeFormError = 'Ingresa un monto válido.'
+        return
+      }
+
+      if (monto < 0) {
+        this.closeFormError = 'El monto no puede ser negativo.'
+        return
+      }
+
+      const shouldToggleLoading = !this.isLoading
+
+      try {
+        this.isProcessingCierre = true
+        if (shouldToggleLoading) {
+          this.isLoading = true
+        }
+
+        const response = await axios.post('/api/caja/cerrar', {
+          monto_cierre: monto
+        })
+
+        const caja = response.data?.caja || null
+
+        this.cajaStatus = {
+          isOpen: false,
+          hasRecordToday: Boolean(caja),
+          record: caja
+        }
+
+        await this.fetchCajaStatus()
+        this.showAlert('Caja cerrada correctamente.', 'success')
+        this.showCierreModal = false
+        this.closeForm = { monto: '' }
+      } catch (error) {
+        const validationError = error.response?.data?.errors?.monto_cierre?.[0]
+        const message = validationError || error.response?.data?.error || 'Error al cerrar la caja.'
+        this.closeFormError = validationError || message
+        this.showAlert(message, 'error')
+      } finally {
+        this.isProcessingCierre = false
+        if (shouldToggleLoading) {
+          this.isLoading = false
+        }
+      }
+    },
+
+    formatCurrency(value) {
+      const amount = Number(value)
+      if (Number.isNaN(amount)) {
+        return 'S/ 0.00'
+      }
+
+      return new Intl.NumberFormat('es-PE', {
+        style: 'currency',
+        currency: 'PEN'
+      }).format(amount)
+    },
+
+    formatDateTime(value) {
+      if (!value) {
+        return '-'
+      }
+
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) {
+        return '-'
+      }
+
+      return new Intl.DateTimeFormat('es-PE', {
+        dateStyle: 'short',
+        timeStyle: 'short'
+      }).format(date)
+    },
+
     seleccionarMesa(mesa) {
+      if (!this.cajaEstaAbierta) {
+        this.showAlert('Debes abrir la caja para gestionar las mesas.', 'warning')
+        return
+      }
+
       if (mesa.estado === 'D') {
         this.mesaSeleccionada = mesa
         this.comensalesSeleccionados = 2
@@ -384,6 +874,11 @@ export default {
     },
 
     verPedido(mesa) {
+      if (!this.cajaEstaAbierta) {
+        this.showAlert('Debes abrir la caja para revisar los pedidos.', 'warning')
+        return
+      }
+
       // Aquí puedes navegar a la página del pedido
       this.$router.push(`/caja/pedido/${mesa.pedido_activo.id}`)
     },
@@ -535,6 +1030,73 @@ export default {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+/* === CAJA STATUS === */
+.caja-status-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.caja-status-card.caja-open {
+  border-left: 6px solid #28a745;
+}
+
+.caja-status-card.caja-closed {
+  border-left: 6px solid #dc3545;
+}
+
+.status-icon i {
+  font-size: 2.5rem;
+  color: #ffc107;
+}
+
+.status-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #212529;
+}
+
+.status-description {
+  color: #495057;
+  font-size: 1rem;
+}
+
+.status-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.status-meta span {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.95rem;
+  color: #6c757d;
+}
+
+.status-meta i {
+  color: #ffc107;
+}
+
+.status-actions .btn {
+  min-width: 180px;
+}
+
+.caja-closed-placeholder {
+  background: white;
+  border-radius: 16px;
+  border: 1px dashed rgba(220, 53, 69, 0.4);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+}
+
+.caja-closed-placeholder i {
+  opacity: 0.4;
 }
 
 /* === MESAS GRID === */
@@ -752,6 +1314,14 @@ export default {
     width: 100%;
     justify-content: space-between;
     margin-top: 1rem;
+  }
+
+  .status-actions {
+    width: 100%;
+  }
+
+  .status-actions .btn {
+    width: 100%;
   }
   
   .mesas-grid {
