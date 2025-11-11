@@ -12,7 +12,7 @@
         }
         
         @page {
-            margin: 3mm;
+            margin: 4mm 3mm;
         }
 
         html, body {
@@ -34,7 +34,7 @@
             width: 100%;
             max-width: 58mm;
             margin: 0 auto;
-            padding: 0;
+            padding: 1.5mm 1mm;
             background: white;
         }
         
