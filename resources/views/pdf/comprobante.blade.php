@@ -82,20 +82,26 @@
             padding: 0;
         }
         
-        .detalle-row {
+        /* Compact table for items */
+        table.items {
+            width: 100%;
+            border-collapse: collapse;
             font-size: 6px;
-            margin: 0.2mm 0;
-            line-height: 1.1;
-            padding: 0;
+            margin: 0.3mm 0;
         }
-        
-        .detalle-header {
-            font-size: 6px;
+        table.items thead th {
             font-weight: bold;
-            margin: 0.2mm 0;
-            padding: 0;
             border-bottom: 1px solid #000;
+            padding: 0.2mm 0.3mm;
+            text-align: left;
         }
+        table.items td {
+            padding: 0.2mm 0.3mm;
+            vertical-align: top;
+        }
+        .col-desc { width: 34mm; word-wrap: break-word; overflow-wrap: break-word; }
+        .col-cant { width: 8mm; text-align: right; }
+        .col-total { width: 12mm; text-align: right; }
         
         .totales-section {
             border-top: 1px dashed #000;
@@ -163,15 +169,28 @@
 
         <!-- Detalle -->
         <div class="detalle-title">DETALLE</div>
-        <div class="detalle-header">DESCRIPCIÓN                    CANT    TOTAL</div>
-        @forelse($pedido->items ?? [] as $item)
-            <div class="detalle-row">
-                {{ substr($item->producto->nombre ?? 'Producto', 0, 34) }}<br>
-                <span style="text-align: right; float: right;">{{ $item->cantidad ?? 0 }} x S/ {{ number_format(($item->precio_unitario ?? 0), 2) }}</span>
-            </div>
-        @empty
-            <div class="detalle-row">Sin items</div>
-        @endforelse
+        <table class="items">
+            <thead>
+                <tr>
+                    <th class="col-desc">Descripción</th>
+                    <th class="col-cant">Cant</th>
+                    <th class="col-total">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+            @forelse(($pedido->items ?? []) as $item)
+                <tr>
+                    <td class="col-desc">{{ $item->producto->nombre ?? 'Producto' }}</td>
+                    <td class="col-cant">{{ (int)($item->cantidad ?? 0) }}</td>
+                    <td class="col-total">S/ {{ number_format((($item->precio_unitario ?? 0) * ($item->cantidad ?? 0)), 2) }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="3" style="text-align:center">Sin items</td>
+                </tr>
+            @endforelse
+            </tbody>
+        </table>
         <div class="divider"></div>
 
         <!-- Totales -->

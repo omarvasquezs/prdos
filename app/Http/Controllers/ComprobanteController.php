@@ -70,10 +70,16 @@ class ComprobanteController extends Controller
 
             // 5. Generate PDF (after successful transaction)
             try {
+                // Calculate a dynamic paper height to avoid large empty space
+                $itemsCount = $pedido->items->count();
+                $baseHeight = 280; // base points ~ 98mm
+                $perItem = 18;     // per item points
+                $dynamicHeight = max(300, $baseHeight + ($itemsCount * $perItem));
+
                 $pdf = Pdf::loadView('pdf.comprobante', [
                     'comprobante' => $comprobante,
                     'pedido' => $pedido
-                ])->setPaper([0, 0, 164.4, 841.89], 'portrait'); // 58mm width
+                ])->setPaper([0, 0, 164.4, $dynamicHeight], 'portrait'); // 58mm width, dynamic height
 
                 return $pdf->stream('comprobante-' . $comprobante->cod_comprobante . '.pdf');
             } catch (\Exception $e) {
