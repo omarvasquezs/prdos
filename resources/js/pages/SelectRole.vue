@@ -62,22 +62,6 @@
           </button>
         </div>
 
-        <button 
-          v-if="!loading && selectedRole"
-          @click="continueWithRole"
-          class="continue-btn"
-          :disabled="!selectedRole || navigating"
-          :class="{ 'loading': navigating }"
-        >
-          <span v-if="!navigating">Continuar</span>
-          <span v-else class="button-loading">
-            <i class="fas fa-spinner fa-spin"></i>
-            Accediendo...
-          </span>
-        </button>
-
-
-
         <div v-if="error" class="error-message">
           <i class="fas fa-exclamation-triangle"></i>
           {{ error }}
@@ -110,7 +94,7 @@ export default {
         const res = await axios.get('/api/user');
         this.roles = res.data?.roles || [];
         
-        // If user has only one role, auto-select it
+        // If user has only one role, auto-select and navigate
         if (this.roles.length === 1) {
           this.selectedRole = this.roles[0];
           await this.continueWithRole();
@@ -134,8 +118,14 @@ export default {
     },
     
     selectRole(role) {
+      // Evitar navegación múltiple si ya estamos navegando
+      if (this.navigating) return;
+      
       this.selectedRole = role;
       this.error = '';
+      
+      // Navegar directamente al seleccionar el rol
+      this.continueWithRole();
     },
     
     async continueWithRole() {
@@ -326,6 +316,11 @@ export default {
   transform: translateY(-5px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   border-color: #667eea;
+  cursor: pointer;
+}
+
+.role-card:active {
+  transform: translateY(-2px);
 }
 
 .role-card.selected {
@@ -375,49 +370,6 @@ export default {
 .roles-container.scrollable .role-name {
   font-size: 0.85rem;
   letter-spacing: 0.3px;
-}
-
-.continue-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  color: white;
-  padding: 15px 40px;
-  border-radius: 50px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 30px;
-}
-
-.continue-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-}
-
-.continue-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.continue-btn.loading {
-  opacity: 0.8;
-  cursor: wait;
-}
-
-.button-loading {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: center;
-}
-
-.button-loading i {
-  font-size: 1rem;
 }
 
 .scroll-arrow {
