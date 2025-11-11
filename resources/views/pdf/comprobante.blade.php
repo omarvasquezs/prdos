@@ -30,7 +30,7 @@
             width: 100%;
             max-width: 58mm;
             margin: 0;
-            padding: 2mm;
+            padding: 1.5mm;
             background: white;
         }
         
@@ -96,12 +96,12 @@
             text-align: left;
         }
         table.items td {
-            padding: 0.2mm 0.3mm;
+            padding: 0.15mm 0.3mm;
             vertical-align: top;
         }
-    .col-desc { width: 33mm; word-wrap: break-word; overflow-wrap: break-word; }
-    .col-cant { width: 9mm; text-align: right; }
-    .col-total { width: 12mm; text-align: right; }
+        .col-desc { width: 30mm; word-wrap: break-word; overflow-wrap: break-word; }
+        .col-cant { width: 9mm; text-align: right; white-space: nowrap; }
+        .col-total { width: 14mm; text-align: right; white-space: nowrap; }
     .item-desc-line { font-size:7px; line-height:1.1; }
         .item-name { font-weight: bold; }
         
