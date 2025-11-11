@@ -11,12 +11,11 @@
     </div>
 
     <template v-else>
-      <div v-if="isLoggingOut" class="fullscreen-loading">
-        <div class="loading-content">
-          <div class="spinner-border text-danger" role="status" style="width: 3.5rem; height: 3.5rem;">
-            <span class="visually-hidden">Cerrando sesión...</span>
-          </div>
-          <p class="loading-text mt-3">Cerrando sesión...</p>
+      <div v-if="isLoggingOut" class="logout-loading-overlay">
+        <div class="logout-loading-content">
+          <div class="logout-loading-spinner"></div>
+          <h3 class="logout-loading-text">Cerrando sesión...</h3>
+          <p class="logout-loading-subtext">Por favor espera un momento</p>
         </div>
       </div>
 
@@ -1093,14 +1092,21 @@ export default {
       if (this.isLoggingOut) return
       try {
         this.isLoggingOut = true
-        await axios.post('/logout')
+        
+        // Ejecutar logout y esperar al menos 1 segundo para mostrar la animación
+        await Promise.all([
+          axios.post('/logout'),
+          new Promise(resolve => setTimeout(resolve, 1000))
+        ])
+        
+        // La animación permanece visible durante la navegación
         window.location.href = '/login'
       } catch (error) {
         console.error('Error al cerrar sesión:', error)
         this.showAlert('No se pudo cerrar sesión. Intenta nuevamente.', 'error')
-      } finally {
         this.isLoggingOut = false
       }
+      // No resetear isLoggingOut en finally para mantener visible el overlay durante la navegación
     },
 
     // Métodos de utilidad
@@ -1204,6 +1210,52 @@ export default {
   font-size: 1.2rem;
   color: #6c757d;
   font-weight: 500;
+}
+
+/* === LOGOUT LOADING OVERLAY === */
+.logout-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  z-index: 10000;
+  opacity: 0;
+  animation: logoutFadeIn 0.3s ease-out forwards;
+}
+
+.logout-loading-content {
+  text-align: center;
+  color: #ffffff;
+}
+
+.logout-loading-spinner {
+  width: 64px;
+  height: 64px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid #ffffff;
+  border-radius: 50%;
+  animation: logoutSpin 1s linear infinite;
+  margin: 0 auto 28px;
+}
+
+.logout-loading-text {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.logout-loading-subtext {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
 }
 
 /* === HEADER === */
@@ -1658,6 +1710,15 @@ export default {
   0% { transform: scale(1); }
   50% { transform: scale(1.02); }
   100% { transform: scale(1); }
+}
+
+@keyframes logoutFadeIn {
+  to { opacity: 1; }
+}
+
+@keyframes logoutSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .mesa-disponible {
