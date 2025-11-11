@@ -432,11 +432,41 @@
           </div>
 
           <div class="modal-body">
+            <!-- Filtro de fecha -->
+            <div class="mb-4 date-filter-section">
+              <div class="row align-items-end g-3">
+                <div class="col-md-8">
+                  <label for="fechaMovimientos" class="form-label fw-bold">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Fecha de consulta
+                  </label>
+                  <input 
+                    type="date" 
+                    id="fechaMovimientos"
+                    class="form-control form-control-lg"
+                    v-model="fechaMovimientos"
+                    :disabled="isLoadingMovimientos"
+                    :max="hoy"
+                  >
+                </div>
+                <div class="col-md-4">
+                  <button 
+                    class="btn btn-primary btn-lg w-100"
+                    @click="fetchMovimientos"
+                    :disabled="isLoadingMovimientos"
+                  >
+                    <i class="fas" :class="isLoadingMovimientos ? 'fa-spinner fa-spin' : 'fa-search'"></i>
+                    <span class="ms-2">Consultar</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div v-if="isLoadingMovimientos" class="text-center py-5">
               <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Cargando...</span>
               </div>
-              <p class="mt-3 text-muted">Obteniendo movimientos del día...</p>
+              <p class="mt-3 text-muted">Obteniendo movimientos...</p>
             </div>
 
             <div v-else>
@@ -674,6 +704,7 @@ export default {
       // Movimientos
       showMovimientosModal: false,
       isLoadingMovimientos: false,
+      fechaMovimientos: new Date().toISOString().split('T')[0], // Fecha actual por defecto
       movimientos: [],
       movimientosResumen: {
         totalRegistros: 0,
@@ -701,6 +732,10 @@ export default {
 
     cajaRegistro() {
       return this.cajaStatus.record
+    },
+
+    hoy() {
+      return new Date().toISOString().split('T')[0]
     },
 
     mesasDisponibles() {
@@ -981,6 +1016,7 @@ export default {
 
     abrirModalMovimientos() {
       this.movimientosError = ''
+      this.fechaMovimientos = this.hoy // Resetear a la fecha actual
       this.showMovimientosModal = true
       this.fetchMovimientos()
     },
@@ -993,7 +1029,11 @@ export default {
     async fetchMovimientos() {
       try {
         this.isLoadingMovimientos = true
-        const response = await axios.get('/api/caja/movimientos')
+        const response = await axios.get('/api/caja/movimientos', {
+          params: {
+            fecha: this.fechaMovimientos
+          }
+        })
         const records = response.data?.records || []
         const summary = response.data?.summary || {}
 
@@ -1012,7 +1052,7 @@ export default {
           montoTotal: 0,
           porMetodo: []
         }
-        const message = error.response?.data?.error || 'No se pudieron cargar los movimientos del día.'
+        const message = error.response?.data?.error || 'No se pudieron cargar los movimientos.'
         this.movimientosError = message
         this.showAlert(message, 'error')
       } finally {
@@ -1358,6 +1398,35 @@ export default {
 }
 
 /* === MOVIMIENTOS MODAL === */
+.date-filter-section {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.date-filter-section .form-label {
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  color: #495057;
+}
+
+.date-filter-section .form-control {
+  border-radius: 12px;
+  border: 2px solid #dee2e6;
+  transition: all 0.3s ease;
+}
+
+.date-filter-section .form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+.date-filter-section .btn {
+  border-radius: 12px;
+  font-weight: 600;
+}
+
 .summary-card {
   background: white;
   border-radius: 16px;

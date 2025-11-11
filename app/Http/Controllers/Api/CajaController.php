@@ -138,15 +138,26 @@ class CajaController extends Controller
     }
 
     /**
-     * Obtener los movimientos registrados en el día actual.
+     * Obtener los movimientos registrados para una fecha específica.
      */
-    public function movimientos(): JsonResponse
+    public function movimientos(Request $request): JsonResponse
     {
         try {
-            $today = now()->toDateString();
+            // Obtener la fecha del query string, o usar la fecha actual por defecto
+            $fecha = $request->query('fecha', now()->toDateString());
+            
+            // Validar que la fecha tenga formato correcto
+            try {
+                $fechaValidada = \Carbon\Carbon::parse($fecha)->toDateString();
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error' => 'Formato de fecha inválido',
+                    'message' => 'La fecha debe tener el formato YYYY-MM-DD',
+                ], 422);
+            }
 
             $movimientos = ReporteIngreso::with(['metodoPago', 'comprobante.user'])
-                ->whereDate('fecha', $today)
+                ->whereDate('fecha', $fechaValidada)
                 ->orderByDesc('fecha')
                 ->get();
 
@@ -168,12 +179,13 @@ class CajaController extends Controller
             ];
 
             return response()->json([
+                'fecha_consultada' => $fechaValidada,
                 'records' => $records,
                 'summary' => $summary,
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'No se pudieron obtener los movimientos del día',
+                'error' => 'No se pudieron obtener los movimientos',
                 'message' => $e->getMessage(),
             ], 500);
         }
