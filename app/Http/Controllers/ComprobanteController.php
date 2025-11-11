@@ -62,6 +62,10 @@ class ComprobanteController extends Controller
             $pedido->fecha_cierre = now();
             $pedido->save();
 
+            // 5. Mark mesa as disponible (empty)
+            $pedido->mesa->estado = 'D'; // Disponible
+            $pedido->mesa->save();
+
             DB::commit();
 
             // 5. Generate PDF (after successful transaction)
