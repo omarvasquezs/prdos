@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Api\MesaController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\ComprobanteController;
 
 // Rutas de autenticación
 Route::get('/sanctum/csrf-cookie', function () {
@@ -49,4 +50,8 @@ Route::middleware(['web', 'auth'])->withoutMiddleware([\Illuminate\Foundation\Ht
     // API routes for products
     Route::get('/api/productos', [ProductController::class, 'index']);
     Route::get('/api/productos/categorias', [ProductController::class, 'categories']);
+    
+    // API routes for comprobantes
+    Route::post('/api/pedidos/{pedidoId}/comprobante', [ComprobanteController::class, 'create']);
+    Route::get('/api/metodos-pago', [ComprobanteController::class, 'getMetodosPago']);
 });
