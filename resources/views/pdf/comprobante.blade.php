@@ -11,69 +11,79 @@
             box-sizing: border-box;
         }
         
+        html, body {
+            width: 58mm;
+            height: auto;
+            margin: 0;
+            padding: 0;
+        }
+        
         body {
             font-family: 'Courier New', monospace;
             font-size: 9px;
             background: white;
+            padding: 2mm;
         }
         
         .ticket {
-            width: 58mm;
-            max-width: 58mm;
-            margin: 0 auto;
-            padding: 5mm;
+            width: 100%;
+            max-width: 54mm;
+            margin: 0;
+            padding: 0;
             background: white;
         }
         
         .header {
             text-align: center;
             border-bottom: 1px dashed #000;
-            padding-bottom: 3mm;
-            margin-bottom: 3mm;
+            padding-bottom: 2mm;
+            margin-bottom: 2mm;
         }
         
         .header h2 {
-            font-size: 11px;
-            margin: 1mm 0;
+            font-size: 10px;
+            margin: 0.5mm 0;
+            line-height: 1.1;
         }
         
         .header h3 {
-            font-size: 10px;
-            margin: 1mm 0;
+            font-size: 9px;
+            margin: 0.5mm 0;
+            font-weight: bold;
         }
         
         .header p {
-            font-size: 8px;
-            margin: 0.5mm 0;
-            line-height: 1.2;
+            font-size: 7px;
+            margin: 0.3mm 0;
+            line-height: 1.1;
         }
         
         .content {
-            margin: 3mm 0;
+            margin: 1mm 0;
         }
         
         .section {
-            margin: 2mm 0;
-            padding: 2mm 0;
+            margin: 1mm 0;
+            padding: 1mm 0;
             border-bottom: 1px dashed #000;
         }
         
         .section-title {
             font-weight: bold;
-            font-size: 8px;
-            margin-bottom: 1mm;
+            font-size: 7px;
+            margin-bottom: 0.5mm;
         }
         
         .section-content {
-            font-size: 8px;
-            line-height: 1.4;
+            font-size: 7px;
+            line-height: 1.3;
         }
         
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 2mm 0;
-            font-size: 8px;
+            margin: 1mm 0;
+            font-size: 7px;
         }
         
         thead {
@@ -81,13 +91,16 @@
         }
         
         th, td {
-            padding: 1mm;
+            padding: 0.5mm;
             text-align: left;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         
         th {
             font-weight: bold;
             background: #f5f5f5;
+            font-size: 6px;
         }
         
         td.quantity, td.price {
@@ -96,27 +109,32 @@
         
         .total-section {
             border-top: 1px double #000;
-            padding-top: 2mm;
-            margin-top: 2mm;
+            padding-top: 1mm;
+            margin-top: 1mm;
             font-weight: bold;
-            text-align: right;
+        }
+        
+        .total-section td {
+            padding: 0.5mm;
+            font-size: 8px;
         }
         
         .footer {
             text-align: center;
-            margin-top: 3mm;
-            padding-top: 3mm;
+            margin-top: 1mm;
+            padding-top: 1mm;
             border-top: 1px dashed #000;
-            font-size: 8px;
+            font-size: 7px;
         }
         
         .footer p {
-            margin: 1mm 0;
+            margin: 0.3mm 0;
+            line-height: 1.1;
         }
         
         .divider {
             border-bottom: 1px dashed #000;
-            margin: 2mm 0;
+            margin: 1mm 0;
         }
     </style>
 </head>
@@ -137,8 +155,8 @@
             <div class="section-content">
                 <strong>Fecha:</strong> {{ $comprobante->fecha->format('d/m/Y H:i') }}<br>
                 @if($comprobante->tipo_comprobante === 'F')
-                    <strong>RUC Cliente:</strong> {{ $comprobante->num_ruc }}<br>
-                    <strong>Razón Social:</strong> {{ $comprobante->razon_social }}<br>
+                    <strong>RUC:</strong> {{ $comprobante->num_ruc }}<br>
+                    <strong>Razón Social:</strong> {{ substr($comprobante->razon_social ?? '', 0, 30) }}<br>
                 @endif
             </div>
         </div>
@@ -149,21 +167,21 @@
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 50%">Descripción</th>
-                        <th style="width: 15%; text-align: center">Cant</th>
-                        <th style="width: 35%; text-align: right">Total</th>
+                        <th style="width: 50%">Desc.</th>
+                        <th style="width: 20%; text-align: center">Cant</th>
+                        <th style="width: 30%; text-align: right">Total</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($pedido->items as $item)
+                    @forelse($pedido->items ?? [] as $item)
                         <tr>
-                            <td>{{ substr($item->producto->nombre ?? 'Producto', 0, 15) }}</td>
+                            <td>{{ substr($item->producto->nombre ?? 'Prod', 0, 12) }}</td>
                             <td style="text-align: center">{{ $item->cantidad ?? 0 }}</td>
                             <td style="text-align: right">S/ {{ number_format(($item->precio_unitario ?? 0) * ($item->cantidad ?? 0), 2) }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" style="text-align: center">Sin items</td>
+                            <td colspan="3" style="text-align: center; font-size: 6px">Sin items</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -175,16 +193,16 @@
             <div class="total-section">
                 <table style="margin: 0">
                     <tr>
-                        <td style="text-align: left; padding: 1mm">Subtotal:</td>
-                        <td style="text-align: right; padding: 1mm">S/ {{ number_format($pedido->total, 2) }}</td>
+                        <td style="text-align: left; width: 60%">Subtotal:</td>
+                        <td style="text-align: right; width: 40%">S/ {{ number_format($pedido->total ?? 0, 2) }}</td>
                     </tr>
                     <tr>
-                        <td style="text-align: left; padding: 1mm">IGV (0%):</td>
-                        <td style="text-align: right; padding: 1mm">S/ 0.00</td>
+                        <td style="text-align: left">IGV (0%):</td>
+                        <td style="text-align: right">S/ 0.00</td>
                     </tr>
-                    <tr style="font-size: 9px; border-top: 1px solid #000">
-                        <td style="text-align: left; padding: 1mm"><strong>TOTAL:</strong></td>
-                        <td style="text-align: right; padding: 1mm"><strong>S/ {{ number_format($pedido->total, 2) }}</strong></td>
+                    <tr style="border-top: 1px solid #000; font-size: 8px">
+                        <td style="text-align: left"><strong>TOTAL:</strong></td>
+                        <td style="text-align: right"><strong>S/ {{ number_format($pedido->total ?? 0, 2) }}</strong></td>
                     </tr>
                 </table>
             </div>
@@ -193,22 +211,13 @@
         <!-- Método de Pago -->
         <div class="section">
             <div class="section-content">
-                <strong>Método de Pago:</strong> {{ $comprobante->metodoPago->nom_metodo_pago ?? 'No especificado' }}
+                <strong>Pago:</strong> {{ substr($comprobante->metodoPago->nom_metodo_pago ?? 'N/A', 0, 20) }}
             </div>
         </div>
 
-        <!-- Observaciones -->
-        @if($comprobante->observaciones)
-            <div class="section">
-                <div class="section-content">
-                    <strong>Obs:</strong> {{ substr($comprobante->observaciones, 0, 40) }}
-                </div>
-            </div>
-        @endif
-
         <!-- Footer -->
         <div class="footer">
-            <p>¡Gracias por su compra!</p>
+            <p>¡Gracias!</p>
             <p>{{ now()->format('d/m/Y H:i:s') }}</p>
         </div>
     </div>
