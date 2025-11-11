@@ -36,11 +36,11 @@ class ComprobanteController extends Controller
             $comprobante->num_ruc = $request->num_ruc;
             $comprobante->razon_social = $request->razon_social;
             $comprobante->observaciones = $request->observaciones;
-            $comprobante->user_id = Auth::id();
+            $comprobante->user_id = Auth::user()->id;
             $comprobante->pedido_id = $pedido->id;
             $comprobante->fecha = now();
             $comprobante->costo_total = $pedido->total;
-            $comprobante->last_updated_by = Auth::id();
+            $comprobante->last_updated_by = Auth::user()->id;
             
             // 2. Generate code
             $comprobante->generateCode();
