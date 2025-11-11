@@ -157,11 +157,11 @@
               
               <!-- Actions - Always at bottom -->
               <div class="d-grid gap-2 mt-auto">
-                <button class="btn btn-success btn-lg" @click="cobrarPedido">
+                <button class="btn btn-success btn-lg" @click="abrirModalCobro" :disabled="!pedido || !pedido.items || pedido.items.length === 0">
                   <i class="fas fa-money-bill me-2"></i>
                   Cobrar Pedido
                 </button>
-                <button class="btn btn-outline-danger btn-lg" @click="cancelarPedido">
+                <button class="btn btn-outline-danger btn-lg" @click="cancelarPedido" :disabled="!pedido">
                   <i class="fas fa-times me-2"></i>
                   Cancelar Pedido
                 </button>
@@ -181,6 +181,82 @@
           <i class="fas fa-arrow-left me-2"></i>
           Volver a Mesas
         </button>
+      </div>
+    </div>
+
+    <!-- Modal de Cobro -->
+    <div v-if="mostrarModalCobro" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-receipt me-2"></i>
+              Generar Comprobante
+            </h5>
+            <button type="button" class="btn-close" @click="cerrarModalCobro"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="generarComprobante">
+              <!-- Tipo de Comprobante -->
+              <div class="mb-3">
+                <label class="form-label fw-bold">Tipo de Comprobante</label>
+                <div class="btn-group d-flex" role="group">
+                  <input type="radio" class="btn-check" name="tipoComprobante" id="tipoN" value="N" v-model="formCobro.tipo_comprobante">
+                  <label class="btn btn-outline-primary" for="tipoN">Nota de Venta</label>
+                  
+                  <input type="radio" class="btn-check" name="tipoComprobante" id="tipoB" value="B" v-model="formCobro.tipo_comprobante">
+                  <label class="btn btn-outline-primary" for="tipoB">Boleta</label>
+                  
+                  <input type="radio" class="btn-check" name="tipoComprobante" id="tipoF" value="F" v-model="formCobro.tipo_comprobante">
+                  <label class="btn btn-outline-primary" for="tipoF">Factura</label>
+                </div>
+              </div>
+
+              <!-- Campos para Factura -->
+              <div v-if="formCobro.tipo_comprobante === 'F'" class="mb-3">
+                <label for="ruc" class="form-label fw-bold">RUC *</label>
+                <input type="text" id="ruc" v-model="formCobro.num_ruc" class="form-control" placeholder="11 dígitos" maxlength="11" required>
+              </div>
+              <div v-if="formCobro.tipo_comprobante === 'F'" class="mb-3">
+                <label for="razon_social" class="form-label fw-bold">Razón Social *</label>
+                <input type="text" id="razon_social" v-model="formCobro.razon_social" class="form-control" placeholder="Nombre de la empresa" required>
+              </div>
+
+              <!-- Método de Pago -->
+              <div class="mb-3">
+                <label class="form-label fw-bold">Método de Pago *</label>
+                <select v-model="formCobro.metodo_pago_id" class="form-select" required>
+                  <option value="">Seleccionar método de pago...</option>
+                  <option v-for="metodo in metodosPago" :key="metodo.id" :value="metodo.id">
+                    {{ metodo.nom_metodo_pago }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Observaciones -->
+              <div class="mb-3">
+                <label for="observaciones" class="form-label">Observaciones</label>
+                <textarea id="observaciones" v-model="formCobro.observaciones" class="form-control" rows="2" placeholder="Notas adicionales (opcional)"></textarea>
+              </div>
+
+              <!-- Resumen -->
+              <div class="alert alert-info">
+                <strong>Total a cobrar:</strong> S/ {{ parseFloat(pedido?.total || 0).toFixed(2) }}
+              </div>
+
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-success btn-lg" :disabled="isSubmitting">
+                  <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  <i v-else class="fas fa-check me-2"></i>
+                  {{ isSubmitting ? 'Procesando...' : 'Generar y Cobrar' }}
+                </button>
+                <button type="button" class="btn btn-outline-secondary" @click="cerrarModalCobro" :disabled="isSubmitting">
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -275,7 +351,17 @@ export default {
       categorias: [],
       mostrarModalProductos: false,
       cantidadItem: 1,
-      categoriaSeleccionada: ''
+      categoriaSeleccionada: '',
+      mostrarModalCobro: false,
+      metodosPago: [],
+      isSubmitting: false,
+      formCobro: {
+        tipo_comprobante: 'N',
+        metodo_pago_id: '',
+        num_ruc: '',
+        razon_social: '',
+        observaciones: ''
+      }
     }
   },
 
@@ -314,6 +400,74 @@ export default {
 
     volverAMesas() {
       this.$router.push('/caja')
+    },
+
+    async abrirModalCobro() {
+      try {
+        await this.cargarMetodosPago()
+        this.mostrarModalCobro = true
+      } catch (error) {
+        console.error('Error al abrir modal de cobro:', error)
+        alert('Error al abrir el formulario de cobro')
+      }
+    },
+
+    cerrarModalCobro() {
+      this.mostrarModalCobro = false
+      this.formCobro = {
+        tipo_comprobante: 'N',
+        metodo_pago_id: '',
+        num_ruc: '',
+        razon_social: '',
+        observaciones: ''
+      }
+    },
+
+    async cargarMetodosPago() {
+      try {
+        const response = await axios.get('/api/metodos-pago')
+        this.metodosPago = response.data
+        if (this.metodosPago.length > 0) {
+          this.formCobro.metodo_pago_id = this.metodosPago[0].id
+        }
+      } catch (error) {
+        console.error('Error al cargar métodos de pago:', error)
+        throw error
+      }
+    },
+
+    async generarComprobante() {
+      if (!this.formCobro.metodo_pago_id) {
+        alert('Por favor selecciona un método de pago')
+        return
+      }
+
+      this.isSubmitting = true
+      try {
+        const response = await axios.post(`/api/pedidos/${this.pedido.id}/comprobante`, this.formCobro, {
+          responseType: 'blob'
+        })
+
+        // Crear blob y abrir en nueva pestaña
+        const file = new Blob([response.data], { type: 'application/pdf' })
+        const fileURL = URL.createObjectURL(file)
+        window.open(fileURL, '_blank')
+
+        alert('Comprobante generado exitosamente')
+        this.$router.push('/caja')
+      } catch (error) {
+        console.error('Error al generar comprobante:', error)
+        if (error.response?.status === 422) {
+          // Errores de validación
+          const errores = error.response.data.errors
+          const mensajeErrores = Object.values(errores).flat().join('\n')
+          alert('Errores en el formulario:\n' + mensajeErrores)
+        } else {
+          alert('Error al generar el comprobante. Intenta nuevamente.')
+        }
+      } finally {
+        this.isSubmitting = false
+      }
     },
 
     async cobrarPedido() {
