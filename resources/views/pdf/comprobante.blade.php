@@ -155,13 +155,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($pedido->items as $item)
+                    @forelse($pedido->items as $item)
                         <tr>
-                            <td>{{ substr($item->producto->nombre, 0, 15) }}</td>
-                            <td style="text-align: center">{{ $item->cantidad }}</td>
-                            <td style="text-align: right">S/ {{ number_format($item->precio_unitario * $item->cantidad, 2) }}</td>
+                            <td>{{ substr($item->producto->nombre ?? 'Producto', 0, 15) }}</td>
+                            <td style="text-align: center">{{ $item->cantidad ?? 0 }}</td>
+                            <td style="text-align: right">S/ {{ number_format(($item->precio_unitario ?? 0) * ($item->cantidad ?? 0), 2) }}</td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="3" style="text-align: center">Sin items</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
@@ -189,7 +193,7 @@
         <!-- Método de Pago -->
         <div class="section">
             <div class="section-content">
-                <strong>Método de Pago:</strong> {{ $comprobante->metodoPago->nom_metodo_pago }}
+                <strong>Método de Pago:</strong> {{ $comprobante->metodoPago->nom_metodo_pago ?? 'No especificado' }}
             </div>
         </div>
 
