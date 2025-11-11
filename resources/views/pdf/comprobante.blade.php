@@ -20,14 +20,14 @@
         
         body {
             font-family: 'Courier New', monospace;
-            font-size: 9px;
+            font-size: 8px;
             background: white;
-            padding: 2mm;
+            padding: 1mm;
         }
         
         .ticket {
             width: 100%;
-            max-width: 54mm;
+            max-width: 56mm;
             margin: 0;
             padding: 0;
             background: white;
@@ -36,54 +36,54 @@
         .header {
             text-align: center;
             border-bottom: 1px dashed #000;
-            padding-bottom: 2mm;
-            margin-bottom: 2mm;
+            padding-bottom: 1mm;
+            margin-bottom: 1mm;
         }
         
         .header h2 {
-            font-size: 10px;
-            margin: 0.5mm 0;
-            line-height: 1.1;
+            font-size: 9px;
+            margin: 0.2mm 0;
+            line-height: 1;
         }
         
         .header h3 {
-            font-size: 9px;
-            margin: 0.5mm 0;
+            font-size: 8px;
+            margin: 0.2mm 0;
             font-weight: bold;
         }
         
         .header p {
-            font-size: 7px;
-            margin: 0.3mm 0;
-            line-height: 1.1;
+            font-size: 6px;
+            margin: 0.1mm 0;
+            line-height: 1;
         }
         
         .content {
-            margin: 1mm 0;
+            margin: 0.5mm 0;
         }
         
         .section {
-            margin: 1mm 0;
-            padding: 1mm 0;
+            margin: 0.5mm 0;
+            padding: 0.5mm 0;
             border-bottom: 1px dashed #000;
         }
         
         .section-title {
             font-weight: bold;
-            font-size: 7px;
-            margin-bottom: 0.5mm;
+            font-size: 6px;
+            margin-bottom: 0.3mm;
         }
         
         .section-content {
-            font-size: 7px;
-            line-height: 1.3;
+            font-size: 6px;
+            line-height: 1.2;
         }
         
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 1mm 0;
-            font-size: 7px;
+            margin: 0.3mm 0;
+            font-size: 6px;
         }
         
         thead {
@@ -91,7 +91,7 @@
         }
         
         th, td {
-            padding: 0.5mm;
+            padding: 0.2mm;
             text-align: left;
             word-wrap: break-word;
             overflow-wrap: break-word;
@@ -100,7 +100,7 @@
         th {
             font-weight: bold;
             background: #f5f5f5;
-            font-size: 6px;
+            font-size: 5px;
         }
         
         td.quantity, td.price {
@@ -109,32 +109,32 @@
         
         .total-section {
             border-top: 1px double #000;
-            padding-top: 1mm;
-            margin-top: 1mm;
+            padding-top: 0.3mm;
+            margin-top: 0.3mm;
             font-weight: bold;
         }
         
         .total-section td {
-            padding: 0.5mm;
-            font-size: 8px;
+            padding: 0.2mm;
+            font-size: 7px;
         }
         
         .footer {
             text-align: center;
-            margin-top: 1mm;
-            padding-top: 1mm;
+            margin-top: 0.5mm;
+            padding-top: 0.5mm;
             border-top: 1px dashed #000;
-            font-size: 7px;
+            font-size: 6px;
         }
         
         .footer p {
-            margin: 0.3mm 0;
-            line-height: 1.1;
+            margin: 0.1mm 0;
+            line-height: 1;
         }
         
         .divider {
             border-bottom: 1px dashed #000;
-            margin: 1mm 0;
+            margin: 0.5mm 0;
         }
     </style>
 </head>
