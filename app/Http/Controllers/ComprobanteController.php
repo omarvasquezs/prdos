@@ -78,7 +78,7 @@ class ComprobanteController extends Controller
                     $desc = $it->producto->description ?? '';
                     if ($desc) {
                         // approx 34 chars per line -> add lines-1
-                        $lines = (int) ceil(strlen($desc) / 34);
+                        $lines = (int) ceil(strlen($desc) / 32);
                         $descExtra += max(0, $lines) * 8; // 8pt per line
                     }
                 }

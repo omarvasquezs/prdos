@@ -19,8 +19,8 @@
         }
         
         body {
-            font-family: 'Courier New', monospace;
-            font-size: 7px;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8px;
             background: white;
             padding: 0;
             line-height: 1;
@@ -42,7 +42,7 @@
         }
         
         .header h2 {
-            font-size: 8px;
+            font-size: 9px;
             margin: 0;
             padding: 0;
             line-height: 1.1;
@@ -50,7 +50,7 @@
         }
         
         .header h3 {
-            font-size: 7px;
+            font-size: 8px;
             margin: 0.3mm 0 0 0;
             padding: 0;
             font-weight: bold;
@@ -58,7 +58,7 @@
         }
         
         .header p {
-            font-size: 6px;
+            font-size: 7px;
             margin: 0;
             padding: 0;
             line-height: 1;
@@ -70,14 +70,14 @@
         }
         
         .info-line {
-            font-size: 6px;
+            font-size: 7px;
             margin: 0.3mm 0;
             line-height: 1;
         }
         
         .detalle-title {
             font-weight: bold;
-            font-size: 7px;
+            font-size: 8px;
             margin: 0.5mm 0 0.3mm 0;
             padding: 0;
         }
@@ -86,7 +86,7 @@
         table.items {
             width: 100%;
             border-collapse: collapse;
-            font-size: 6px;
+            font-size: 7px;
             margin: 0.3mm 0;
         }
         table.items thead th {
@@ -99,10 +99,10 @@
             padding: 0.2mm 0.3mm;
             vertical-align: top;
         }
-        .col-desc { width: 34mm; word-wrap: break-word; overflow-wrap: break-word; }
-        .col-cant { width: 8mm; text-align: right; }
-        .col-total { width: 12mm; text-align: right; }
-        .item-desc-line { font-size:6px; line-height:1.05; }
+    .col-desc { width: 33mm; word-wrap: break-word; overflow-wrap: break-word; }
+    .col-cant { width: 9mm; text-align: right; }
+    .col-total { width: 12mm; text-align: right; }
+    .item-desc-line { font-size:7px; line-height:1.1; }
         .item-name { font-weight: bold; }
         
         .totales-section {
@@ -184,8 +184,8 @@
                 @php
                     $name = $item->producto->name ?? 'Producto';
                     $desc = $item->producto->description ?? '';
-                    // Wrap description to ~34 chars per line
-                    $wrappedDesc = wordwrap($desc, 34, "\n", true);
+                    // Wrap description to ~32 chars per line for proportional font
+                    $wrappedDesc = wordwrap($desc, 32, "\n", true);
                     $descLines = array_filter(explode("\n", $wrappedDesc));
                 @endphp
                 <tr>
