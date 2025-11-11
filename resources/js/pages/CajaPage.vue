@@ -349,6 +349,12 @@ export default {
         this.showAlert(`Mesa ${this.mesaSeleccionada.num_mesa} ocupada exitosamente`, 'success')
         this.cerrarModalComensales()
 
+        // Redirigir directamente a la página de pedido
+        this.$router.push({
+          name: 'pedido',
+          params: { id: response.data.pedido.id }
+        })
+
       } catch (error) {
         console.error('Error al ocupar mesa:', error)
         this.showAlert('Error al ocupar la mesa. Intenta nuevamente.', 'error')
@@ -667,8 +673,18 @@ export default {
 
 .comensal-btn:hover {
   border-color: #0d6efd;
+  background-color: rgba(13, 110, 253, 0.05);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15);
+  color: #0d6efd;
+}
+
+.comensal-btn:hover i {
+  color: #0d6efd;
+}
+
+.comensal-btn:hover .text-muted {
+  color: #6c757d !important;
 }
 
 .comensal-btn.active {
@@ -677,6 +693,14 @@ export default {
   color: white;
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(13, 110, 253, 0.3);
+}
+
+.comensal-btn.active i {
+  color: white;
+}
+
+.comensal-btn.active .text-muted {
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 
 /* === EMPTY STATE === */
@@ -753,9 +777,15 @@ export default {
   }
   
   .comensal-btn:hover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+    color: #0d6efd;
     transform: none;
-    border-color: #e9ecef;
-    box-shadow: none;
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.1);
+  }
+  
+  .comensal-btn:hover i {
+    color: #0d6efd;
   }
   
   .mesa-disponible {
