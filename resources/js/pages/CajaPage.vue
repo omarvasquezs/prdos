@@ -10,8 +10,18 @@
       </div>
     </div>
 
-    <!-- Main Content -->
-    <div v-else class="container-fluid px-4 py-3">
+    <template v-else>
+      <div v-if="isLoggingOut" class="fullscreen-loading">
+        <div class="loading-content">
+          <div class="spinner-border text-danger" role="status" style="width: 3.5rem; height: 3.5rem;">
+            <span class="visually-hidden">Cerrando sesión...</span>
+          </div>
+          <p class="loading-text mt-3">Cerrando sesión...</p>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="container-fluid px-4 py-3">
       <!-- Header Section -->
       <div class="header-section mb-4">
         <div class="d-flex align-items-center justify-content-between flex-wrap">
@@ -23,6 +33,14 @@
             <p class="page-subtitle mb-0 text-muted">Toca una mesa disponible para iniciar un nuevo pedido</p>
           </div>
           <div class="header-actions d-flex align-items-center">
+            <button
+              @click="logout"
+              class="btn btn-outline-danger btn-lg me-3"
+              :disabled="isLoggingOut"
+            >
+              <i class="fas" :class="isLoggingOut ? 'fa-spinner fa-spin' : 'fa-sign-out-alt'"></i>
+              <span class="ms-2 d-none d-md-inline">Cerrar sesión</span>
+            </button>
             <button 
               @click="refreshMesas" 
               class="btn btn-outline-secondary btn-lg me-3"
@@ -123,7 +141,8 @@
         <h3 class="text-muted">No hay mesas configuradas</h3>
         <p class="text-muted">Contacta al administrador para configurar las mesas del restaurante.</p>
       </div>
-    </div>
+      </div>
+    </template>
 
     <!-- Modal de Comensales -->
     <div 
@@ -234,6 +253,7 @@ export default {
       isLoading: true,
       isRefreshing: false,
       isOcupandoMesa: false,
+  isLoggingOut: false,
       
       // Datos
       mesas: [],
@@ -366,6 +386,20 @@ export default {
     verPedido(mesa) {
       // Aquí puedes navegar a la página del pedido
       this.$router.push(`/caja/pedido/${mesa.pedido_activo.id}`)
+    },
+
+    async logout() {
+      if (this.isLoggingOut) return
+      try {
+        this.isLoggingOut = true
+        await axios.post('/logout')
+        window.location.href = '/login'
+      } catch (error) {
+        console.error('Error al cerrar sesión:', error)
+        this.showAlert('No se pudo cerrar sesión. Intenta nuevamente.', 'error')
+      } finally {
+        this.isLoggingOut = false
+      }
     },
 
     // Métodos de utilidad
