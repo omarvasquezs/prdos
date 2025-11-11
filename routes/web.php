@@ -60,4 +60,5 @@ Route::middleware(['web', 'auth'])->withoutMiddleware([\Illuminate\Foundation\Ht
     Route::get('/api/caja/status', [CajaController::class, 'status']);
     Route::post('/api/caja/abrir', [CajaController::class, 'abrir']);
     Route::post('/api/caja/cerrar', [CajaController::class, 'cerrar']);
+    Route::get('/api/caja/movimientos', [CajaController::class, 'movimientos']);
 });

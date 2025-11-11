@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\CajaAperturaCierre;
+use App\Models\ReporteIngreso;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -136,6 +137,48 @@ class CajaController extends Controller
         }
     }
 
+    /**
+     * Obtener los movimientos registrados en el día actual.
+     */
+    public function movimientos(): JsonResponse
+    {
+        try {
+            $today = now()->toDateString();
+
+            $movimientos = ReporteIngreso::with(['metodoPago', 'comprobante.user'])
+                ->whereDate('fecha', $today)
+                ->orderByDesc('fecha')
+                ->get();
+
+            $records = $movimientos->map(fn ($movimiento) => $this->transformMovimiento($movimiento));
+
+            $summary = [
+                'total_registros' => $movimientos->count(),
+                'monto_total' => round($movimientos->sum('costo_total'), 2),
+                'por_metodo' => $movimientos->groupBy('metodo_pago_id')->map(function ($items) {
+                    $metodo = $items->first()->metodoPago;
+
+                    return [
+                        'metodo_pago_id' => $items->first()->metodo_pago_id,
+                        'metodo_pago' => $metodo?->nom_metodo_pago ?? 'No especificado',
+                        'cantidad' => $items->count(),
+                        'monto_total' => round($items->sum('costo_total'), 2),
+                    ];
+                })->values()
+            ];
+
+            return response()->json([
+                'records' => $records,
+                'summary' => $summary,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'No se pudieron obtener los movimientos del día',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     private function transformCaja(CajaAperturaCierre $caja): array
     {
         return [
@@ -148,6 +191,25 @@ class CajaController extends Controller
             'monto_cierre' => $caja->monto_cierre !== null ? (float) $caja->monto_cierre : null,
             'id_usuario_cierre' => $caja->id_usuario_cierre,
             'usuario_cierre' => optional($caja->usuarioCierre)->name,
+        ];
+    }
+
+    private function transformMovimiento(ReporteIngreso $movimiento): array
+    {
+        $comprobante = $movimiento->comprobante;
+        $metodo = $movimiento->metodoPago;
+        $usuario = $comprobante?->user;
+
+        return [
+            'id' => $movimiento->id,
+            'fecha' => $movimiento->fecha,
+            'cod_comprobante' => $movimiento->cod_comprobante,
+            'monto' => (float) $movimiento->costo_total,
+            'metodo_pago_id' => $movimiento->metodo_pago_id,
+            'metodo_pago' => $metodo?->nom_metodo_pago ?? 'No especificado',
+            'tipo_comprobante' => $comprobante?->tipo_comprobante,
+            'tipo_comprobante_nombre' => $comprobante?->tipo_comprobante_name,
+            'usuario' => $usuario->name ?? null,
         ];
     }
 }

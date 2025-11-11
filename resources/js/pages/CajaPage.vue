@@ -49,6 +49,14 @@
               <i class="fas fa-sync-alt" :class="{ 'fa-spin': isRefreshing }"></i>
               <span class="ms-2 d-none d-md-inline">Actualizar</span>
             </button>
+            <button
+              @click="abrirModalMovimientos"
+              class="btn btn-warning btn-lg me-3"
+              :disabled="isLoadingMovimientos"
+            >
+              <i class="fas" :class="isLoadingMovimientos ? 'fa-spinner fa-spin' : 'fa-list-alt'"></i>
+              <span class="ms-2 d-none d-md-inline">Movimientos</span>
+            </button>
             <div class="stats-badge">
               <span class="badge bg-success fs-6 px-3 py-2 me-2">
                 <i class="fas fa-check-circle me-1"></i>
@@ -402,6 +410,135 @@
       </div>
     </div>
 
+    <!-- Modal de Movimientos -->
+    <div 
+      v-if="showMovimientosModal" 
+      class="modal fade show d-block" 
+      tabindex="-1" 
+      style="background-color: rgba(0,0,0,0.5);"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+              <i class="fas fa-list-alt me-2"></i>
+              Movimientos del día
+            </h5>
+            <button 
+              type="button" 
+              class="btn-close" 
+              @click="cerrarModalMovimientos"
+              :disabled="isLoadingMovimientos"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <div v-if="isLoadingMovimientos" class="text-center py-5">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+              <p class="mt-3 text-muted">Obteniendo movimientos del día...</p>
+            </div>
+
+            <div v-else>
+              <div v-if="movimientosError" class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                {{ movimientosError }}
+              </div>
+
+              <template v-else>
+                <div class="row g-3 movimientos-summary mb-4">
+                  <div class="col-md-4">
+                    <div class="summary-card h-100">
+                      <div class="summary-icon bg-success-subtle text-success">
+                        <i class="fas fa-wallet"></i>
+                      </div>
+                      <div class="summary-label">Total cobrado</div>
+                      <div class="summary-value">{{ formatCurrency(movimientosResumen.montoTotal) }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="summary-card h-100">
+                      <div class="summary-icon bg-info-subtle text-info">
+                        <i class="fas fa-receipt"></i>
+                      </div>
+                      <div class="summary-label">Operaciones</div>
+                      <div class="summary-value">{{ movimientosResumen.totalRegistros }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="summary-card h-100">
+                      <div class="summary-icon bg-warning-subtle text-warning">
+                        <i class="fas fa-layer-group"></i>
+                      </div>
+                      <div class="summary-label">Métodos de pago</div>
+                      <div class="summary-value">{{ movimientosResumen.porMetodo.length }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="metodo-breakdown mb-4" v-if="movimientosResumen.porMetodo.length">
+                  <h6 class="text-uppercase text-muted fw-bold mb-3">Detalle por método de pago</h6>
+                  <div class="row g-3">
+                    <div class="col-md-6 col-lg-4" v-for="item in movimientosResumen.porMetodo" :key="`metodo-${item.metodo_pago_id}`">
+                      <div class="metodo-card">
+                        <div class="metodo-header d-flex justify-content-between align-items-center">
+                          <span class="metodo-nombre">{{ item.metodo_pago }}</span>
+                          <span class="badge bg-light text-dark">{{ item.cantidad }} ops</span>
+                        </div>
+                        <div class="metodo-monto">{{ formatCurrency(item.monto_total) }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="movimientos.length" class="table-responsive movimientos-table">
+                  <table class="table table-striped align-middle">
+                    <thead>
+                      <tr>
+                        <th scope="col">Hora</th>
+                        <th scope="col">Comprobante</th>
+                        <th scope="col">Tipo</th>
+                        <th scope="col">Método de pago</th>
+                        <th scope="col" class="text-end">Monto</th>
+                        <th scope="col">Registrado por</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="mov in movimientos" :key="mov.id">
+                        <td>{{ formatHour(mov.fecha) }}</td>
+                        <td>{{ mov.cod_comprobante || '—' }}</td>
+                        <td>{{ mov.tipo_comprobante_nombre || '—' }}</td>
+                        <td>{{ mov.metodo_pago }}</td>
+                        <td class="text-end">{{ formatCurrency(mov.monto) }}</td>
+                        <td>{{ mov.usuario || '—' }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div v-else class="text-center text-muted py-4">
+                  <i class="fas fa-inbox fa-2x mb-3"></i>
+                  <p class="mb-0">Aún no se registran movimientos en el día actual.</p>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button 
+              type="button" 
+              class="btn btn-outline-secondary" 
+              @click="cerrarModalMovimientos"
+              :disabled="isLoadingMovimientos"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal de Comensales -->
     <div 
       v-if="showComensalesModal" 
@@ -534,6 +671,17 @@ export default {
       },
       openFormError: '',
       closeFormError: '',
+
+      // Movimientos
+      showMovimientosModal: false,
+      isLoadingMovimientos: false,
+      movimientos: [],
+      movimientosResumen: {
+        totalRegistros: 0,
+        montoTotal: 0,
+        porMetodo: []
+      },
+      movimientosError: '',
       
       // Modal de comensales
       showComensalesModal: false,
@@ -813,6 +961,64 @@ export default {
         dateStyle: 'short',
         timeStyle: 'short'
       }).format(date)
+    },
+
+    formatHour(value) {
+      if (!value) {
+        return '-'
+      }
+
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) {
+        return '-'
+      }
+
+      return new Intl.DateTimeFormat('es-PE', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }).format(date)
+    },
+
+    abrirModalMovimientos() {
+      this.movimientosError = ''
+      this.showMovimientosModal = true
+      this.fetchMovimientos()
+    },
+
+    cerrarModalMovimientos() {
+      this.showMovimientosModal = false
+      this.movimientosError = ''
+    },
+
+    async fetchMovimientos() {
+      try {
+        this.isLoadingMovimientos = true
+        const response = await axios.get('/api/caja/movimientos')
+        const records = response.data?.records || []
+        const summary = response.data?.summary || {}
+
+        this.movimientos = records
+        this.movimientosResumen = {
+          totalRegistros: summary.total_registros || 0,
+          montoTotal: summary.monto_total || 0,
+          porMetodo: summary.por_metodo || []
+        }
+        this.movimientosError = ''
+      } catch (error) {
+        console.error('Error al cargar movimientos:', error)
+        this.movimientos = []
+        this.movimientosResumen = {
+          totalRegistros: 0,
+          montoTotal: 0,
+          porMetodo: []
+        }
+        const message = error.response?.data?.error || 'No se pudieron cargar los movimientos del día.'
+        this.movimientosError = message
+        this.showAlert(message, 'error')
+      } finally {
+        this.isLoadingMovimientos = false
+      }
     },
 
     seleccionarMesa(mesa) {
@@ -1097,6 +1303,91 @@ export default {
 
 .caja-closed-placeholder i {
   opacity: 0.4;
+}
+
+/* === MOVIMIENTOS MODAL === */
+.summary-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.summary-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.summary-label {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-bottom: 0.35rem;
+}
+
+.summary-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #212529;
+}
+
+.metodo-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  height: 100%;
+}
+
+.metodo-header {
+  margin-bottom: 0.75rem;
+}
+
+.metodo-nombre {
+  font-weight: 600;
+  color: #212529;
+}
+
+.metodo-monto {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0d6efd;
+}
+
+.movimientos-table .table {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.movimientos-table thead {
+  background: #0d6efd;
+  color: white;
+}
+
+.movimientos-table th {
+  border-bottom: none;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.movimientos-table td {
+  vertical-align: middle;
+}
+
+.movimientos-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 /* === MESAS GRID === */
