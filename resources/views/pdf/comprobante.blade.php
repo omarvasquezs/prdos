@@ -12,7 +12,7 @@
         }
         
         @page {
-            margin: 3mm;
+            margin: 8mm 3mm 3mm 3mm;
         }
 
         html, body {
@@ -32,8 +32,8 @@
 
         .ticket {
             width: 100%;
-            max-width: 52mm;
-            margin: 0 auto;
+            max-width: 50mm;
+            margin: 8mm auto 0 auto;
             padding: 0;
             background: white;
         }
@@ -155,8 +155,8 @@
     <div class="ticket">
         <!-- Header -->
         <div class="header">
-            <h2>Pollería P'rdos</h2>
-            <p>RUC: 10458845125</p>
+            <h1>Pollería P'rdos</h1>
+            <h2>RUC: 10458845125</h2>
             <p>Av. Universitaria 123</p>
             <div class="divider"></div>
             <h3>{{ $comprobante->tipo_comprobante === 'B' ? 'BOLETA' : ($comprobante->tipo_comprobante === 'F' ? 'FACTURA' : 'NOTA DE VENTA') }}</h3>
