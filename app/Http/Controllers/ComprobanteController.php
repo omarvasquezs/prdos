@@ -72,9 +72,19 @@ class ComprobanteController extends Controller
             try {
                 // Calculate a dynamic paper height to avoid large empty space
                 $itemsCount = $pedido->items->count();
-                $baseHeight = 280; // base points ~ 98mm
-                $perItem = 18;     // per item points
-                $dynamicHeight = max(300, $baseHeight + ($itemsCount * $perItem));
+                // Estimate extra height if descriptions exist
+                $descExtra = 0;
+                foreach ($pedido->items as $it) {
+                    $desc = $it->producto->description ?? '';
+                    if ($desc) {
+                        // approx 34 chars per line -> add lines-1
+                        $lines = (int) ceil(strlen($desc) / 34);
+                        $descExtra += max(0, $lines) * 8; // 8pt per line
+                    }
+                }
+                $baseHeight = 260; // base points
+                $perItem = 22;     // per item points
+                $dynamicHeight = max(300, $baseHeight + ($itemsCount * $perItem) + $descExtra);
 
                 $pdf = Pdf::loadView('pdf.comprobante', [
                     'comprobante' => $comprobante,

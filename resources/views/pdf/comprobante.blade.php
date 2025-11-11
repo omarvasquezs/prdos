@@ -102,6 +102,8 @@
         .col-desc { width: 34mm; word-wrap: break-word; overflow-wrap: break-word; }
         .col-cant { width: 8mm; text-align: right; }
         .col-total { width: 12mm; text-align: right; }
+        .item-desc-line { font-size:6px; line-height:1.05; }
+        .item-name { font-weight: bold; }
         
         .totales-section {
             border-top: 1px dashed #000;
@@ -179,8 +181,22 @@
             </thead>
             <tbody>
             @forelse(($pedido->items ?? []) as $item)
+                @php
+                    $name = $item->producto->name ?? 'Producto';
+                    $desc = $item->producto->description ?? '';
+                    // Wrap description to ~34 chars per line
+                    $wrappedDesc = wordwrap($desc, 34, "\n", true);
+                    $descLines = array_filter(explode("\n", $wrappedDesc));
+                @endphp
                 <tr>
-                    <td class="col-desc">{{ $item->producto->nombre ?? 'Producto' }}</td>
+                    <td class="col-desc">
+                        <span class="item-name">{{ $name }}</span>
+                        @if(!empty($descLines))
+                            @foreach($descLines as $dLine)
+                                <div class="item-desc-line">{{ $dLine }}</div>
+                            @endforeach
+                        @endif
+                    </td>
                     <td class="col-cant">{{ (int)($item->cantidad ?? 0) }}</td>
                     <td class="col-total">S/ {{ number_format((($item->precio_unitario ?? 0) * ($item->cantidad ?? 0)), 2) }}</td>
                 </tr>
