@@ -57,10 +57,6 @@ class ComprobanteController extends Controller
                 'costo_total' => $comprobante->costo_total
             ]);
 
-            // 4. Mark pedido as pagado
-            $pedido->estado = 'P'; // Pagado
-            $pedido->save();
-
             // 4. Mark pedido as cerrado (paid)
             $pedido->estado = 'C'; // Cerrado
             $pedido->fecha_cierre = now();
