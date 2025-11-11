@@ -61,6 +61,11 @@ class ComprobanteController extends Controller
             $pedido->estado = 'P'; // Pagado
             $pedido->save();
 
+            // 4. Mark pedido as cerrado (paid)
+            $pedido->estado = 'C'; // Cerrado
+            $pedido->fecha_cierre = now();
+            $pedido->save();
+
             DB::commit();
 
             // 5. Generate PDF (after successful transaction)
