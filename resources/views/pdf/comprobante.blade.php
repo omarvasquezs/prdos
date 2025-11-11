@@ -12,7 +12,7 @@
         }
         
         @page {
-            margin: 4mm 3mm;
+            margin: 3mm;
         }
 
         html, body {
@@ -32,9 +32,9 @@
 
         .ticket {
             width: 100%;
-            max-width: 58mm;
+            max-width: 52mm;
             margin: 0 auto;
-            padding: 1.5mm 1mm;
+            padding: 0;
             background: white;
         }
         
@@ -91,6 +91,7 @@
         table.items {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed;
             font-size: 7.5px;
             margin: 0.5mm 0 1mm 0;
         }
@@ -107,9 +108,9 @@
             vertical-align: top;
             border-bottom: 1px dotted #ccc;
         }
-        .col-desc { width: 32mm; word-wrap: break-word; overflow-wrap: break-word; }
-        .col-cant { width: 8mm; text-align: center; white-space: nowrap; }
-        .col-total { width: 13mm; text-align: right; white-space: nowrap; }
+        .col-desc { width: 60%; word-wrap: break-word; overflow-wrap: break-word; }
+        .col-cant { width: 15%; text-align: center; white-space: nowrap; }
+        .col-total { width: 25%; text-align: right; white-space: nowrap; }
         .item-desc-line { font-size:7px; line-height:1.2; }
         .item-name { font-weight: bold; display:block; margin-bottom:0.3mm; }
         
