@@ -60,8 +60,15 @@ class Comprobante extends Model
     
     public function generateCode()
     {
+        $prefixMap = [
+            'B' => 'B001-',
+            'F' => 'F001-',
+            'N' => 'NV001-'
+        ];
+        $prefix = $prefixMap[$this->tipo_comprobante] ?? '';
+
         $nextNumber = ComprobanteCounter::getNextNumber($this->tipo_comprobante);
-        $this->cod_comprobante = $this->tipo_comprobante . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+        $this->cod_comprobante = $prefix . $nextNumber;
         return $this->cod_comprobante;
     }
     
