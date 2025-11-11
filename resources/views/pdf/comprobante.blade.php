@@ -20,16 +20,17 @@
         
         body {
             font-family: 'Courier New', monospace;
-            font-size: 8px;
+            font-size: 7px;
             background: white;
-            padding: 1mm;
+            padding: 0;
+            line-height: 1;
         }
         
         .ticket {
             width: 100%;
-            max-width: 56mm;
+            max-width: 58mm;
             margin: 0;
-            padding: 0;
+            padding: 2mm;
             background: white;
         }
         
@@ -41,82 +42,82 @@
         }
         
         .header h2 {
-            font-size: 9px;
-            margin: 0.2mm 0;
-            line-height: 1;
+            font-size: 8px;
+            margin: 0;
+            padding: 0;
+            line-height: 1.1;
+            font-weight: bold;
         }
         
         .header h3 {
-            font-size: 8px;
-            margin: 0.2mm 0;
+            font-size: 7px;
+            margin: 0.3mm 0 0 0;
+            padding: 0;
             font-weight: bold;
+            line-height: 1.1;
         }
         
         .header p {
             font-size: 6px;
-            margin: 0.1mm 0;
+            margin: 0;
+            padding: 0;
             line-height: 1;
         }
         
-        .content {
-            margin: 0.5mm 0;
-        }
-        
-        .section {
-            margin: 0.5mm 0;
-            padding: 0.5mm 0;
+        .divider {
             border-bottom: 1px dashed #000;
+            margin: 0.5mm 0;
         }
         
-        .section-title {
-            font-weight: bold;
+        .info-line {
             font-size: 6px;
-            margin-bottom: 0.3mm;
-        }
-        
-        .section-content {
-            font-size: 6px;
-            line-height: 1.2;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
             margin: 0.3mm 0;
-            font-size: 6px;
+            line-height: 1;
         }
         
-        thead {
+        .detalle-title {
+            font-weight: bold;
+            font-size: 7px;
+            margin: 0.5mm 0 0.3mm 0;
+            padding: 0;
+        }
+        
+        .detalle-row {
+            font-size: 6px;
+            margin: 0.2mm 0;
+            line-height: 1.1;
+            padding: 0;
+        }
+        
+        .detalle-header {
+            font-size: 6px;
+            font-weight: bold;
+            margin: 0.2mm 0;
+            padding: 0;
             border-bottom: 1px solid #000;
         }
         
-        th, td {
-            padding: 0.2mm;
-            text-align: left;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-        }
-        
-        th {
-            font-weight: bold;
-            background: #f5f5f5;
-            font-size: 5px;
-        }
-        
-        td.quantity, td.price {
-            text-align: right;
-        }
-        
-        .total-section {
-            border-top: 1px double #000;
-            padding-top: 0.3mm;
-            margin-top: 0.3mm;
-            font-weight: bold;
-        }
-        
-        .total-section td {
-            padding: 0.2mm;
+        .totales-section {
+            border-top: 1px dashed #000;
+            margin: 0.5mm 0;
+            padding: 0.3mm 0;
             font-size: 7px;
+        }
+        
+        .totales-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 0.2mm 0;
+            padding: 0;
+        }
+        
+        .total-final {
+            font-weight: bold;
+            font-size: 8px;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            margin: 0.3mm 0;
+            padding: 0.2mm 0;
         }
         
         .footer {
@@ -128,13 +129,9 @@
         }
         
         .footer p {
-            margin: 0.1mm 0;
+            margin: 0.2mm 0;
+            padding: 0;
             line-height: 1;
-        }
-        
-        .divider {
-            border-bottom: 1px dashed #000;
-            margin: 0.5mm 0;
         }
     </style>
 </head>
@@ -151,73 +148,59 @@
         </div>
 
         <!-- Información General -->
-        <div class="section">
-            <div class="section-content">
-                <strong>Fecha:</strong> {{ $comprobante->fecha->format('d/m/Y H:i') }}<br>
-                @if($comprobante->tipo_comprobante === 'F')
-                    <strong>RUC:</strong> {{ $comprobante->num_ruc }}<br>
-                    <strong>Razón Social:</strong> {{ substr($comprobante->razon_social ?? '', 0, 30) }}<br>
-                @endif
+        <div class="info-line">
+            <strong>Fecha y Hora:</strong> {{ $comprobante->fecha->format('d/m/Y - H:i') }}
+        </div>
+        @if($comprobante->tipo_comprobante === 'F')
+            <div class="info-line">
+                <strong>RUC Cliente:</strong> {{ $comprobante->num_ruc }}
             </div>
-        </div>
+            <div class="info-line">
+                <strong>Razón Social:</strong> {{ substr($comprobante->razon_social ?? '', 0, 35) }}
+            </div>
+        @endif
+        <div class="divider"></div>
 
-        <!-- Items -->
-        <div class="section">
-            <div class="section-title">DETALLE</div>
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 50%">Desc.</th>
-                        <th style="width: 20%; text-align: center">Cant</th>
-                        <th style="width: 30%; text-align: right">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($pedido->items ?? [] as $item)
-                        <tr>
-                            <td>{{ substr($item->producto->nombre ?? 'Prod', 0, 12) }}</td>
-                            <td style="text-align: center">{{ $item->cantidad ?? 0 }}</td>
-                            <td style="text-align: right">S/ {{ number_format(($item->precio_unitario ?? 0) * ($item->cantidad ?? 0), 2) }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="3" style="text-align: center; font-size: 6px">Sin items</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+        <!-- Detalle -->
+        <div class="detalle-title">DETALLE</div>
+        <div class="detalle-header">DESCRIPCIÓN                    CANT    TOTAL</div>
+        @forelse($pedido->items ?? [] as $item)
+            <div class="detalle-row">
+                {{ substr($item->producto->nombre ?? 'Producto', 0, 34) }}<br>
+                <span style="text-align: right; float: right;">{{ $item->cantidad ?? 0 }} x S/ {{ number_format(($item->precio_unitario ?? 0), 2) }}</span>
+            </div>
+        @empty
+            <div class="detalle-row">Sin items</div>
+        @endforelse
+        <div class="divider"></div>
 
         <!-- Totales -->
-        <div class="section">
-            <div class="total-section">
-                <table style="margin: 0">
-                    <tr>
-                        <td style="text-align: left; width: 60%">Subtotal:</td>
-                        <td style="text-align: right; width: 40%">S/ {{ number_format($pedido->total ?? 0, 2) }}</td>
-                    </tr>
-                    <tr>
-                        <td style="text-align: left">IGV (0%):</td>
-                        <td style="text-align: right">S/ 0.00</td>
-                    </tr>
-                    <tr style="border-top: 1px solid #000; font-size: 8px">
-                        <td style="text-align: left"><strong>TOTAL:</strong></td>
-                        <td style="text-align: right"><strong>S/ {{ number_format($pedido->total ?? 0, 2) }}</strong></td>
-                    </tr>
-                </table>
+        <div class="totales-section">
+            <div class="totales-row">
+                <span>SUBTOTAL</span>
+                <span style="text-align: right;">S/ {{ number_format($pedido->total ?? 0, 2) }}</span>
+            </div>
+            <div class="totales-row">
+                <span>IGV (0%)</span>
+                <span style="text-align: right;">S/ 0.00</span>
+            </div>
+            <div class="total-final">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>TOTAL</span>
+                    <span>S/ {{ number_format($pedido->total ?? 0, 2) }}</span>
+                </div>
             </div>
         </div>
 
         <!-- Método de Pago -->
-        <div class="section">
-            <div class="section-content">
-                <strong>Pago:</strong> {{ substr($comprobante->metodoPago->nom_metodo_pago ?? 'N/A', 0, 20) }}
-            </div>
+        <div class="info-line">
+            <strong>Método Pago:</strong> {{ substr($comprobante->metodoPago->nom_metodo_pago ?? 'N/A', 0, 25) }}
         </div>
+        <div class="divider"></div>
 
         <!-- Footer -->
         <div class="footer">
-            <p>¡Gracias!</p>
+            <p>¡Gracias por su compra!</p>
             <p>{{ now()->format('d/m/Y H:i:s') }}</p>
         </div>
     </div>
