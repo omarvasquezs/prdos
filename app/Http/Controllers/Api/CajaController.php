@@ -191,6 +191,12 @@ class CajaController extends Controller
         }
     }
 
+    /**
+     * Transform CajaAperturaCierre model to array.
+     *
+     * @param CajaAperturaCierre $caja
+     * @return array<string, mixed>
+     */
     private function transformCaja(CajaAperturaCierre $caja): array
     {
         return [
@@ -206,6 +212,12 @@ class CajaController extends Controller
         ];
     }
 
+    /**
+     * Transform ReporteIngreso model to array.
+     *
+     * @param ReporteIngreso $movimiento
+     * @return array<string, mixed>
+     */
     private function transformMovimiento(ReporteIngreso $movimiento): array
     {
         $comprobante = $movimiento->comprobante;
