@@ -107,4 +107,43 @@ class ComprobanteController extends Controller
     {
         return MetodoPago::where('habilitado', true)->get();
     }
+
+    /**
+     * Visualizar un comprobante existente por su código.
+     */
+    public function show($codComprobante)
+    {
+        try {
+            $comprobante = Comprobante::where('cod_comprobante', $codComprobante)
+                ->with('metodoPago')
+                ->firstOrFail();
+
+            $pedido = Pedido::with('items.producto', 'mesa')
+                ->findOrFail($comprobante->pedido_id);
+
+            // Calculate dynamic paper height
+            $itemsCount = $pedido->items->count();
+            $descExtra = 0;
+            foreach ($pedido->items as $it) {
+                $desc = $it->producto->description ?? '';
+                if ($desc) {
+                    $lines = (int) ceil(strlen($desc) / 32);
+                    $descExtra += max(0, $lines) * 8;
+                }
+            }
+            $baseHeight = 260;
+            $perItem = 22;
+            $dynamicHeight = max(300, $baseHeight + ($itemsCount * $perItem) + $descExtra);
+
+            $pdf = Pdf::loadView('pdf.comprobante', [
+                'comprobante' => $comprobante,
+                'pedido' => $pedido
+            ])->setPaper([0, 0, 164.4, $dynamicHeight], 'portrait');
+
+            return $pdf->stream('comprobante-' . $comprobante->cod_comprobante . '.pdf');
+        } catch (\Exception $e) {
+            Log::error('PDF Show Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Comprobante no encontrado'], 404);
+        }
+    }
 }

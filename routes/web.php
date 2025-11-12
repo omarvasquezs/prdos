@@ -55,6 +55,7 @@ Route::middleware(['web', 'auth'])->withoutMiddleware([\Illuminate\Foundation\Ht
     // API routes for comprobantes
     Route::post('/api/pedidos/{pedidoId}/comprobante', [ComprobanteController::class, 'create']);
     Route::get('/api/metodos-pago', [ComprobanteController::class, 'getMetodosPago']);
+    Route::get('/comprobante/{codComprobante}', [ComprobanteController::class, 'show']);
 
     // API routes for caja apertura/cierre
     Route::get('/api/caja/status', [CajaController::class, 'status']);

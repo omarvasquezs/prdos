@@ -531,6 +531,7 @@
                         <th scope="col">Método de pago</th>
                         <th scope="col" class="text-end">Monto</th>
                         <th scope="col">Registrado por</th>
+                        <th scope="col" class="text-center">Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -541,6 +542,16 @@
                         <td>{{ mov.metodo_pago }}</td>
                         <td class="text-end">{{ formatCurrency(mov.monto) }}</td>
                         <td>{{ mov.usuario || '—' }}</td>
+                        <td class="text-center">
+                          <button 
+                            class="btn btn-sm btn-primary" 
+                            @click="verComprobante(mov.cod_comprobante)"
+                            :disabled="!mov.cod_comprobante"
+                          >
+                            <i class="fas fa-file-alt me-1"></i>
+                            Ver
+                          </button>
+                        </td>
                       </tr>
                     </tbody>
                   </table>
@@ -562,6 +573,50 @@
               :disabled="isLoadingMovimientos"
             >
               Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Comprobante -->
+    <div 
+      v-if="showComprobanteModal" 
+      class="modal fade show d-block" 
+      tabindex="-1" 
+      style="background-color: rgba(0,0,0,0.5);"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-fullscreen">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+              <i class="fas fa-file-invoice me-2"></i>
+              Comprobante: {{ comprobanteSeleccionado }}
+            </h5>
+            <button 
+              type="button" 
+              class="btn-close btn-close-white" 
+              @click="cerrarComprobante"
+            ></button>
+          </div>
+
+          <div class="modal-body p-0">
+            <iframe 
+              v-if="comprobanteUrl"
+              :src="comprobanteUrl" 
+              style="width: 100%; height: calc(100vh - 120px); border: none;"
+              frameborder="0"
+            ></iframe>
+          </div>
+
+          <div class="modal-footer">
+            <button 
+              type="button" 
+              class="btn btn-secondary" 
+              @click="cerrarComprobante"
+            >
+              <i class="fas fa-arrow-left me-2"></i>
+              Regresar
             </button>
           </div>
         </div>
@@ -712,6 +767,11 @@ export default {
         porMetodo: []
       },
       movimientosError: '',
+
+      // Comprobante
+      showComprobanteModal: false,
+      comprobanteSeleccionado: null,
+      comprobanteUrl: null,
       
       // Modal de comensales
       showComensalesModal: false,
@@ -1024,6 +1084,24 @@ export default {
     cerrarModalMovimientos() {
       this.showMovimientosModal = false
       this.movimientosError = ''
+    },
+
+    verComprobante(codComprobante) {
+      if (!codComprobante) {
+        return
+      }
+      
+      this.comprobanteSeleccionado = codComprobante
+      this.comprobanteUrl = `/comprobante/${codComprobante}`
+      this.showMovimientosModal = false
+      this.showComprobanteModal = true
+    },
+
+    cerrarComprobante() {
+      this.showComprobanteModal = false
+      this.comprobanteSeleccionado = null
+      this.comprobanteUrl = null
+      this.showMovimientosModal = true
     },
 
     async fetchMovimientos() {
