@@ -12,8 +12,13 @@ class Pedido extends Model
      * Los atributos que son asignables en masa.
      */
     protected $fillable = [
+        'tipo_atencion',
         'mesa_id',
         'comensales',
+        'cliente_nombre',
+        'cliente_telefono',
+        'direccion_entrega',
+        'notas',
         'estado',
         'fecha_apertura',
         'fecha_cierre',
@@ -85,8 +90,10 @@ class Pedido extends Model
             'total' => $this->calcularTotal()
         ]);
         
-        // Liberar la mesa
-        $this->mesa->liberar();
+        // Liberar la mesa solo si es pedido presencial
+        if ($this->tipo_atencion === 'P' && $this->mesa) {
+            $this->mesa->liberar();
+        }
     }
 
     /**
@@ -99,8 +106,10 @@ class Pedido extends Model
             'fecha_cierre' => now()
         ]);
         
-        // Liberar la mesa
-        $this->mesa->liberar();
+        // Liberar la mesa solo si es pedido presencial
+        if ($this->tipo_atencion === 'P' && $this->mesa) {
+            $this->mesa->liberar();
+        }
     }
 
     /**
@@ -135,6 +144,43 @@ class Pedido extends Model
     public function scopeCancelados($query)
     {
         return $query->where('estado', 'X');
+    }
+
+    /**
+     * Verificar si es pedido presencial
+     */
+    public function isPresencial(): bool
+    {
+        return $this->tipo_atencion === 'P';
+    }
+
+    /**
+     * Verificar si es pedido delivery
+     */
+    public function isDelivery(): bool
+    {
+        return $this->tipo_atencion === 'D';
+    }
+
+    /**
+     * Verificar si es pedido recojo
+     */
+    public function isRecojo(): bool
+    {
+        return $this->tipo_atencion === 'R';
+    }
+
+    /**
+     * Accessor: Tipo de atención formateado
+     */
+    public function getTipoAtencionTextoAttribute(): string
+    {
+        return match($this->tipo_atencion) {
+            'P' => 'Presencial',
+            'D' => 'Delivery',
+            'R' => 'Recojo',
+            default => 'Desconocido'
+        };
     }
 
     /**

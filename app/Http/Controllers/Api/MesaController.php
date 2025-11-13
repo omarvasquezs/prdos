@@ -103,6 +103,7 @@ class MesaController extends Controller
 
             // Crear el pedido
             $pedido = Pedido::create([
+                'tipo_atencion' => 'P', // Presencial
                 'mesa_id' => $mesa->id,
                 'comensales' => $validated['comensales'],
                 'estado' => 'A',
@@ -171,13 +172,9 @@ class MesaController extends Controller
         try {
             $pedido->load(['mesa', 'items.producto']);
 
-            return response()->json([
+            $response = [
                 'id' => $pedido->id,
-                'mesa' => [
-                    'id' => $pedido->mesa->id,
-                    'num_mesa' => $pedido->mesa->num_mesa,
-                    'nombre' => "Mesa {$pedido->mesa->num_mesa}"
-                ],
+                'tipo_atencion' => $pedido->tipo_atencion,
                 'comensales' => $pedido->comensales,
                 'estado' => $pedido->estado,
                 'estado_texto' => $pedido->estado_texto,
@@ -193,7 +190,29 @@ class MesaController extends Controller
                         'subtotal' => $item->subtotal
                     ];
                 })
-            ]);
+            ];
+
+            // Add mesa info only for presencial orders
+            if ($pedido->tipo_atencion === 'P' && $pedido->mesa) {
+                $response['mesa'] = [
+                    'id' => $pedido->mesa->id,
+                    'num_mesa' => $pedido->mesa->num_mesa,
+                    'nombre' => "Mesa {$pedido->mesa->num_mesa}"
+                ];
+            }
+
+            // Add delivery/recojo specific fields
+            if ($pedido->tipo_atencion === 'D' || $pedido->tipo_atencion === 'R') {
+                $response['cliente_nombre'] = $pedido->cliente_nombre;
+                $response['cliente_telefono'] = $pedido->cliente_telefono;
+                $response['notas'] = $pedido->notas;
+                
+                if ($pedido->tipo_atencion === 'D') {
+                    $response['direccion_entrega'] = $pedido->direccion_entrega;
+                }
+            }
+
+            return response()->json($response);
 
         } catch (\Exception $e) {
             return response()->json([

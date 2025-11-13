@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Api\MesaController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CajaController;
+use App\Http\Controllers\Api\PedidoController;
 use App\Http\Controllers\ComprobanteController;
 
 // Rutas de autenticación
@@ -62,4 +63,12 @@ Route::middleware(['web', 'auth'])->withoutMiddleware([\Illuminate\Foundation\Ht
     Route::post('/api/caja/abrir', [CajaController::class, 'abrir']);
     Route::post('/api/caja/cerrar', [CajaController::class, 'cerrar']);
     Route::get('/api/caja/movimientos', [CajaController::class, 'movimientos']);
+
+    // API routes for delivery/recojo pedidos
+    Route::get('/api/pedidos-cola', [PedidoController::class, 'index']);
+    Route::post('/api/pedidos-cola', [PedidoController::class, 'store']);
+    Route::get('/api/pedidos-cola/{pedido}', [PedidoController::class, 'show']);
+    Route::post('/api/pedidos-cola/{pedido}/items', [PedidoController::class, 'addItem']);
+    Route::delete('/api/pedidos-cola/{pedido}/items/{item}', [PedidoController::class, 'removeItem']);
+    Route::post('/api/pedidos-cola/{pedido}/cancelar', [PedidoController::class, 'cancel']);
 });

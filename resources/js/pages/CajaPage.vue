@@ -174,8 +174,68 @@
       </div>
 
       <template v-else>
-        <!-- Mesas Grid -->
-        <div class="mesas-grid">
+        <!-- Selector de Tipo de Atención -->
+        <div class="tipo-atencion-selector mb-4">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div 
+                class="atencion-card" 
+                :class="{ 'active': tipoAtencionActivo === 'P' }"
+                @click="cambiarTipoAtencion('P')"
+              >
+                <div class="atencion-icon">
+                  <i class="fas fa-utensils"></i>
+                </div>
+                <h4>Presencial</h4>
+                <p>Atención en mesas</p>
+                <span class="badge bg-success" v-if="tipoAtencionActivo === 'P'">
+                  <i class="fas fa-check me-1"></i>Activo
+                </span>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div 
+                class="atencion-card" 
+                :class="{ 'active': tipoAtencionActivo === 'D' }"
+                @click="cambiarTipoAtencion('D')"
+              >
+                <div class="atencion-icon">
+                  <i class="fas fa-motorcycle"></i>
+                </div>
+                <h4>Delivery</h4>
+                <p>Pedidos a domicilio</p>
+                <span class="badge bg-success" v-if="tipoAtencionActivo === 'D'">
+                  <i class="fas fa-check me-1"></i>Activo
+                </span>
+                <span class="badge bg-info text-white" v-if="pedidosDelivery.length > 0">
+                  {{ pedidosDelivery.length }} en cola
+                </span>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div 
+                class="atencion-card" 
+                :class="{ 'active': tipoAtencionActivo === 'R' }"
+                @click="cambiarTipoAtencion('R')"
+              >
+                <div class="atencion-icon">
+                  <i class="fas fa-shopping-bag"></i>
+                </div>
+                <h4>Recojo</h4>
+                <p>Para llevar</p>
+                <span class="badge bg-success" v-if="tipoAtencionActivo === 'R'">
+                  <i class="fas fa-check me-1"></i>Activo
+                </span>
+                <span class="badge bg-info text-white" v-if="pedidosRecojo.length > 0">
+                  {{ pedidosRecojo.length }} en cola
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mesas Grid (solo si tipo presencial) -->
+        <div v-if="tipoAtencionActivo === 'P'" class="mesas-grid">
           <div 
             v-for="mesa in mesas" 
             :key="mesa.id"
@@ -240,10 +300,96 @@
         </div>
 
         <!-- Empty State -->
-        <div v-if="mesas.length === 0 && !isLoading" class="empty-state text-center py-5">
+        <div v-if="mesas.length === 0 && !isLoading && tipoAtencionActivo === 'P'" class="empty-state text-center py-5">
           <i class="fas fa-table display-1 text-muted mb-3"></i>
           <h3 class="text-muted">No hay mesas configuradas</h3>
           <p class="text-muted">Contacta al administrador para configurar las mesas del restaurante.</p>
+        </div>
+
+        <!-- Vista Delivery -->
+        <div v-if="tipoAtencionActivo === 'D'" class="delivery-view">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3><i class="fas fa-motorcycle me-2"></i>Cola de Delivery</h3>
+            <button class="btn btn-primary" @click="abrirModalNuevoPedido('D')">
+              <i class="fas fa-plus me-2"></i>Nuevo Pedido Delivery
+            </button>
+          </div>
+          
+          <div v-if="isLoadingPedidos" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-3">Cargando pedidos...</p>
+          </div>
+
+          <div v-else-if="pedidosDelivery.length === 0" class="text-center py-5">
+            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No hay pedidos de delivery pendientes</h4>
+          </div>
+
+          <div v-else class="pedidos-grid">
+            <div 
+              v-for="pedido in pedidosDelivery" 
+              :key="pedido.id"
+              class="pedido-card"
+              @click="verPedidoCola(pedido)"
+            >
+              <div class="pedido-header">
+                <h5>#{{ pedido.id }} - {{ pedido.cliente_nombre }}</h5>
+                <span class="badge bg-warning">{{ pedido.estado_texto }}</span>
+              </div>
+              <div class="pedido-body">
+                <p><i class="fas fa-phone me-2"></i>{{ pedido.cliente_telefono }}</p>
+                <p><i class="fas fa-map-marker-alt me-2"></i>{{ pedido.direccion_entrega }}</p>
+                <p class="text-muted small"><i class="fas fa-clock me-2"></i>{{ formatearTiempo(pedido.fecha_apertura) }}</p>
+              </div>
+              <div class="pedido-footer">
+                <strong>Total: {{ formatCurrency(pedido.total) }}</strong>
+                <span class="badge bg-info">{{ pedido.items.length }} items</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vista Recojo -->
+        <div v-if="tipoAtencionActivo === 'R'" class="recojo-view">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3><i class="fas fa-shopping-bag me-2"></i>Cola de Recojo</h3>
+            <button class="btn btn-primary" @click="abrirModalNuevoPedido('R')">
+              <i class="fas fa-plus me-2"></i>Nuevo Pedido Recojo
+            </button>
+          </div>
+          
+          <div v-if="isLoadingPedidos" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-3">Cargando pedidos...</p>
+          </div>
+
+          <div v-else-if="pedidosRecojo.length === 0" class="text-center py-5">
+            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No hay pedidos de recojo pendientes</h4>
+          </div>
+
+          <div v-else class="pedidos-grid">
+            <div 
+              v-for="pedido in pedidosRecojo" 
+              :key="pedido.id"
+              class="pedido-card"
+              @click="verPedidoCola(pedido)"
+            >
+              <div class="pedido-header">
+                <h5>#{{ pedido.id }} - {{ pedido.cliente_nombre }}</h5>
+                <span class="badge bg-warning">{{ pedido.estado_texto }}</span>
+              </div>
+              <div class="pedido-body">
+                <p><i class="fas fa-phone me-2"></i>{{ pedido.cliente_telefono }}</p>
+                <p v-if="pedido.notas" class="text-muted small"><i class="fas fa-sticky-note me-2"></i>{{ pedido.notas }}</p>
+                <p class="text-muted small"><i class="fas fa-clock me-2"></i>{{ formatearTiempo(pedido.fecha_apertura) }}</p>
+              </div>
+              <div class="pedido-footer">
+                <strong>Total: {{ formatCurrency(pedido.total) }}</strong>
+                <span class="badge bg-info">{{ pedido.items.length }} items</span>
+              </div>
+            </div>
+          </div>
         </div>
       </template>
       </div>
@@ -708,6 +854,107 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Nuevo Pedido Delivery/Recojo -->
+    <div 
+      v-if="showModalNuevoPedido" 
+      class="modal fade show d-block" 
+      tabindex="-1" 
+      style="background-color: rgba(0,0,0,0.5);"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+              <i :class="nuevoPedidoForm.tipo === 'D' ? 'fas fa-motorcycle' : 'fas fa-shopping-bag'" class="me-2"></i>
+              Nuevo Pedido {{ nuevoPedidoForm.tipo === 'D' ? 'Delivery' : 'Recojo' }}
+            </h5>
+            <button 
+              type="button" 
+              class="btn-close btn-close-white" 
+              @click="cerrarModalNuevoPedido"
+            ></button>
+          </div>
+          
+          <div class="modal-body p-4">
+            <form @submit.prevent="crearNuevoPedido">
+              <div class="mb-3">
+                <label class="form-label fw-bold">Nombre del Cliente *</label>
+                <input 
+                  type="text" 
+                  class="form-control form-control-lg"
+                  v-model="nuevoPedidoForm.cliente_nombre"
+                  placeholder="Ej: Juan Pérez"
+                  required
+                >
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Teléfono *</label>
+                <input 
+                  type="tel" 
+                  class="form-control form-control-lg"
+                  v-model="nuevoPedidoForm.cliente_telefono"
+                  placeholder="Ej: 987654321"
+                  required
+                >
+              </div>
+
+              <div class="mb-3" v-if="nuevoPedidoForm.tipo === 'D'">
+                <label class="form-label fw-bold">Dirección de Entrega *</label>
+                <textarea 
+                  class="form-control"
+                  v-model="nuevoPedidoForm.direccion_entrega"
+                  placeholder="Ej: Av. Principal 123, Ref: Frente al parque"
+                  rows="3"
+                  required
+                ></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Notas (Opcional)</label>
+                <textarea 
+                  class="form-control"
+                  v-model="nuevoPedidoForm.notas"
+                  placeholder="Instrucciones especiales, método de pago, etc."
+                  rows="2"
+                ></textarea>
+              </div>
+
+              <div v-if="nuevoPedidoError" class="alert alert-danger">
+                {{ nuevoPedidoError }}
+              </div>
+            </form>
+          </div>
+
+          <div class="modal-footer">
+            <button 
+              type="button" 
+              class="btn btn-secondary" 
+              @click="cerrarModalNuevoPedido"
+              :disabled="isCreatingPedido"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-primary" 
+              @click="crearNuevoPedido"
+              :disabled="isCreatingPedido || !nuevoPedidoForm.cliente_nombre || !nuevoPedidoForm.cliente_telefono"
+            >
+              <span v-if="isCreatingPedido">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Creando...
+              </span>
+              <span v-else>
+                <i class="fas fa-plus me-2"></i>
+                Crear Pedido
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -762,6 +1009,26 @@ export default {
       showComprobanteModal: false,
       comprobanteSeleccionado: null,
       comprobanteUrl: null,
+
+      // Tipo de atención
+      tipoAtencionActivo: 'P', // P=Presencial, D=Delivery, R=Recojo
+      
+      // Pedidos delivery/recojo
+      pedidosDelivery: [],
+      pedidosRecojo: [],
+      isLoadingPedidos: false,
+
+      // Modal nuevo pedido
+      showModalNuevoPedido: false,
+      isCreatingPedido: false,
+      nuevoPedidoForm: {
+        tipo: 'D',
+        cliente_nombre: '',
+        cliente_telefono: '',
+        direccion_entrega: '',
+        notas: ''
+      },
+      nuevoPedidoError: '',
       
       // Modal de comensales
       showComensalesModal: false,
@@ -829,10 +1096,99 @@ export default {
 
         if (this.cajaEstaAbierta) {
           await this.cargarMesas()
+          await this.cargarPedidosCola()
         }
       } finally {
         this.isLoading = false
       }
+    },
+
+    cambiarTipoAtencion(tipo) {
+      this.tipoAtencionActivo = tipo
+      
+      if (tipo !== 'P') {
+        this.cargarPedidosCola()
+      }
+    },
+
+    async cargarPedidosCola() {
+      try {
+        this.isLoadingPedidos = true
+        
+        // Cargar pedidos delivery
+        const responseDelivery = await axios.get('/api/pedidos-cola', {
+          params: { tipo_atencion: 'D', estado: 'A' }
+        })
+        this.pedidosDelivery = responseDelivery.data.pedidos || []
+
+        // Cargar pedidos recojo
+        const responseRecojo = await axios.get('/api/pedidos-cola', {
+          params: { tipo_atencion: 'R', estado: 'A' }
+        })
+        this.pedidosRecojo = responseRecojo.data.pedidos || []
+      } catch (error) {
+        console.error('Error al cargar pedidos:', error)
+        this.showAlert('Error al cargar la cola de pedidos.', 'error')
+      } finally {
+        this.isLoadingPedidos = false
+      }
+    },
+
+    abrirModalNuevoPedido(tipo) {
+      this.nuevoPedidoForm = {
+        tipo: tipo,
+        cliente_nombre: '',
+        cliente_telefono: '',
+        direccion_entrega: '',
+        notas: ''
+      }
+      this.nuevoPedidoError = ''
+      this.showModalNuevoPedido = true
+    },
+
+    cerrarModalNuevoPedido() {
+      this.showModalNuevoPedido = false
+      this.nuevoPedidoForm = {
+        tipo: 'D',
+        cliente_nombre: '',
+        cliente_telefono: '',
+        direccion_entrega: '',
+        notas: ''
+      }
+      this.nuevoPedidoError = ''
+    },
+
+    async crearNuevoPedido() {
+      try {
+        this.isCreatingPedido = true
+        this.nuevoPedidoError = ''
+
+        const response = await axios.post('/api/pedidos-cola', {
+          tipo_atencion: this.nuevoPedidoForm.tipo,
+          cliente_nombre: this.nuevoPedidoForm.cliente_nombre,
+          cliente_telefono: this.nuevoPedidoForm.cliente_telefono,
+          direccion_entrega: this.nuevoPedidoForm.direccion_entrega || null,
+          notas: this.nuevoPedidoForm.notas || null
+        })
+
+        const pedido = response.data.pedido
+
+        this.showAlert('Pedido creado correctamente', 'success')
+        this.cerrarModalNuevoPedido()
+        
+        // Redirigir a la vista del pedido
+        this.$router.push(`/caja/pedido/${pedido.id}`)
+      } catch (error) {
+        console.error('Error al crear pedido:', error)
+        this.nuevoPedidoError = error.response?.data?.error || 'Error al crear el pedido'
+        this.showAlert(this.nuevoPedidoError, 'error')
+      } finally {
+        this.isCreatingPedido = false
+      }
+    },
+
+    verPedidoCola(pedido) {
+      this.$router.push(`/caja/pedido/${pedido.id}`)
     },
 
     async fetchCajaStatus() {
@@ -1907,5 +2263,145 @@ export default {
 .comensal-btn:focus {
   outline: 3px solid rgba(13, 110, 253, 0.5);
   outline-offset: 2px;
+}
+
+/* === TIPO ATENCION SELECTOR === */
+.tipo-atencion-selector {
+  margin-bottom: 2rem;
+}
+
+.atencion-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 3px solid #e9ecef;
+  position: relative;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.atencion-card:hover {
+  border-color: #0d6efd;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(13, 110, 253, 0.2);
+}
+
+.atencion-card.active {
+  border-color: #0d6efd;
+  background: linear-gradient(135deg, #fff 0%, #f0f7ff 100%);
+  box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3);
+}
+
+.atencion-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  color: #ffc107;
+}
+
+.atencion-card h4 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #212529;
+}
+
+.atencion-card p {
+  color: #6c757d;
+  margin-bottom: 1rem;
+}
+
+.atencion-card .badge {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+/* === PEDIDOS GRID === */
+.pedidos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem 0;
+}
+
+.pedido-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.pedido-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  border-color: #0d6efd;
+}
+
+.pedido-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.pedido-header h5 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  color: #212529;
+}
+
+.pedido-body {
+  margin-bottom: 1rem;
+}
+
+.pedido-body p {
+  margin-bottom: 0.5rem;
+  color: #495057;
+  font-size: 0.95rem;
+}
+
+.pedido-body p:last-child {
+  margin-bottom: 0;
+}
+
+.pedido-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 2px solid #f0f0f0;
+}
+
+.pedido-footer strong {
+  color: #28a745;
+  font-size: 1.1rem;
+}
+
+/* === RESPONSIVE PEDIDOS === */
+@media (max-width: 768px) {
+  .pedidos-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  
+  .atencion-card {
+    min-height: 180px;
+    padding: 1.5rem 1rem;
+  }
+  
+  .atencion-icon {
+    font-size: 2.5rem;
+  }
 }
 </style>
