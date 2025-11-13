@@ -32,14 +32,6 @@
             <p class="page-subtitle mb-0 text-muted">Toca una mesa disponible para iniciar un nuevo pedido</p>
           </div>
           <div class="header-actions d-flex align-items-center">
-            <button
-              @click="logout"
-              class="btn btn-outline-danger btn-lg me-3"
-              :disabled="isLoggingOut"
-            >
-              <i class="fas" :class="isLoggingOut ? 'fa-spinner fa-spin' : 'fa-sign-out-alt'"></i>
-              <span class="ms-2 d-none d-md-inline">Cerrar sesión</span>
-            </button>
             <button 
               @click="refreshMesas" 
               class="btn btn-outline-secondary btn-lg me-3"
@@ -56,7 +48,14 @@
               <i class="fas" :class="isLoadingMovimientos ? 'fa-spinner fa-spin' : 'fa-list-alt'"></i>
               <span class="ms-2 d-none d-md-inline">Movimientos</span>
             </button>
-            
+            <button
+              @click="logout"
+              class="btn btn-outline-danger btn-lg"
+              :disabled="isLoggingOut"
+            >
+              <i class="fas" :class="isLoggingOut ? 'fa-spinner fa-spin' : 'fa-sign-out-alt'"></i>
+              <span class="ms-2 d-none d-md-inline">Cerrar sesión</span>
+            </button>
           </div>
         </div>
       </div>
