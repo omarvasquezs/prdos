@@ -45,6 +45,13 @@
             margin-bottom: 1.5mm;
         }
         
+        .header .logo {
+            width: 35mm;
+            height: auto;
+            margin: 0 auto 1mm auto;
+            display: block;
+        }
+        
         .header h2 {
             font-size: 10px;
             margin: 0;
@@ -155,6 +162,7 @@
     <div class="ticket">
         <!-- Header -->
         <div class="header">
+            <img src="{{ public_path('prdos_chicken_logo_optimizado.jpg') }}" alt="Logo" class="logo">
             <h1>Pollería P'rdos</h1>
             <h2>RUC: 10441973361</h2>
             <p>Mz. E Lote 11</p>
@@ -221,19 +229,25 @@
         <div class="divider"></div>
 
         <!-- Totales -->
+        @php
+            $total = $pedido->total ?? 0;
+            $igvRate = 0.10; // 10%
+            $igv = $total * $igvRate;
+            $subtotal = $total - $igv;
+        @endphp
         <div class="totales-section">
             <div class="totales-row">
                 <span>Subtotal</span>
-                <span>S/ {{ number_format($pedido->total ?? 0, 2) }}</span>
+                <span>S/ {{ number_format($subtotal, 2) }}</span>
             </div>
             <div class="totales-row">
-                <span>IGV (0%)</span>
-                <span>S/ 0.00</span>
+                <span>IGV (10%)</span>
+                <span>S/ {{ number_format($igv, 2) }}</span>
             </div>
             <div class="total-final">
                 <div style="display: flex; justify-content: space-between;">
                     <span>Total</span>
-                    <span>S/ {{ number_format($pedido->total ?? 0, 2) }}</span>
+                    <span>S/ {{ number_format($total, 2) }}</span>
                 </div>
             </div>
         </div>
