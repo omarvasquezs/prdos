@@ -56,16 +56,7 @@
               <i class="fas" :class="isLoadingMovimientos ? 'fa-spinner fa-spin' : 'fa-list-alt'"></i>
               <span class="ms-2 d-none d-md-inline">Movimientos</span>
             </button>
-            <div class="stats-badge">
-              <span class="badge bg-success fs-6 px-3 py-2 me-2">
-                <i class="fas fa-check-circle me-1"></i>
-                {{ mesasDisponibles }} Disponibles
-              </span>
-              <span class="badge bg-danger fs-6 px-3 py-2">
-                <i class="fas fa-users me-1"></i>
-                {{ mesasOcupadas }} Ocupadas
-              </span>
-            </div>
+            
           </div>
         </div>
       </div>
