@@ -156,8 +156,11 @@
         <!-- Header -->
         <div class="header">
             <h1>Pollería P'rdos</h1>
-            <h2>RUC: 10458845125</h2>
-            <p>Av. Universitaria 123</p>
+            <h2>RUC: 10441973361</h2>
+            <p>Mz. E Lote 11</p>
+            <p>A.H. Señor de los Milagros</p>
+            <p>Prov. Const. del Callao</p>
+            <p>Carmen de la Legua - Reynoso</p>
             <div class="divider"></div>
             <h3>{{ $comprobante->tipo_comprobante === 'B' ? 'BOLETA' : ($comprobante->tipo_comprobante === 'F' ? 'FACTURA' : 'NOTA DE VENTA') }}</h3>
             <p>{{ $comprobante->cod_comprobante }}</p>
