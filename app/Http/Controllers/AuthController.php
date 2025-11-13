@@ -28,6 +28,9 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+            
+            // Establecer el timestamp de última actividad al iniciar sesión
+            session(['last_activity_time' => time()]);
 
             /** @var \App\Models\User|null $user */
             $user = Auth::user();
