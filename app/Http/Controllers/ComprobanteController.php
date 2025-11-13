@@ -77,16 +77,16 @@ class ComprobanteController extends Controller
                 // Estimate extra height if descriptions exist
                 $descExtra = 0;
                 foreach ($pedido->items as $it) {
-                    $desc = $it->producto->description ?? '';
+                    $desc = $it->produto->description ?? '';
                     if ($desc) {
                         // approx 34 chars per line -> add lines-1
                         $lines = (int) ceil(strlen($desc) / 32);
                         $descExtra += max(0, $lines) * 8; // 8pt per line
                     }
                 }
-                $baseHeight = 260; // base points
+                $baseHeight = 320; // base points (increased for logo)
                 $perItem = 22;     // per item points
-                $dynamicHeight = max(300, $baseHeight + ($itemsCount * $perItem) + $descExtra);
+                $dynamicHeight = max(360, $baseHeight + ($itemsCount * $perItem) + $descExtra);
 
                 $pdf = Pdf::loadView('pdf.comprobante', [
                     'comprobante' => $comprobante,
@@ -127,15 +127,15 @@ class ComprobanteController extends Controller
             $itemsCount = $pedido->items->count();
             $descExtra = 0;
             foreach ($pedido->items as $it) {
-                $desc = $it->producto->description ?? '';
+                $desc = $it->produto->description ?? '';
                 if ($desc) {
                     $lines = (int) ceil(strlen($desc) / 32);
                     $descExtra += max(0, $lines) * 8;
                 }
             }
-            $baseHeight = 260;
+            $baseHeight = 320; // increased for logo
             $perItem = 22;
-            $dynamicHeight = max(300, $baseHeight + ($itemsCount * $perItem) + $descExtra);
+            $dynamicHeight = max(360, $baseHeight + ($itemsCount * $perItem) + $descExtra);
 
             $pdf = Pdf::loadView('pdf.comprobante', [
                 'comprobante' => $comprobante,
