@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class => \App\Http\Middleware\VerifyCsrfToken::class,
         ]);
         
+        $middleware->web(append: [
+            \App\Http\Middleware\ValidateSession::class,
+        ]);
+        
         $middleware->alias([
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         ]);
