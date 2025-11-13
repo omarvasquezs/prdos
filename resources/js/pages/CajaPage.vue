@@ -1583,9 +1583,13 @@ export default {
 /* === MESAS GRID === */
 .mesas-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  /* Fixed maximum of 4 columns, each at least 240px. Center the grid with a max-width. */
+  grid-template-columns: repeat(4, minmax(240px, 1fr));
   gap: 1.5rem;
   padding: 1rem 0;
+  justify-content: center;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 /* === MESA CARD === */
@@ -1806,7 +1810,8 @@ export default {
   }
   
   .mesas-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    /* On medium/smaller screens limit to 2 columns */
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
     gap: 1rem;
   }
   
@@ -1830,7 +1835,8 @@ export default {
 
 @media (max-width: 576px) {
   .mesas-grid {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    /* On very small screens show one column */
+    grid-template-columns: repeat(1, minmax(220px, 1fr));
   }
   
   .comensal-btn {
