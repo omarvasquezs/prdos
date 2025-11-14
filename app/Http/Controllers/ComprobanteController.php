@@ -86,7 +86,8 @@ class ComprobanteController extends Controller
                 }
                 $baseHeight = 320; // base points (increased for logo)
                 $perItem = 22;     // per item points
-                $dynamicHeight = max(360, $baseHeight + ($itemsCount * $perItem) + $descExtra);
+                $qrHeight = 95;    // extra space for QR code + bottom margin
+                $dynamicHeight = max(360, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight);
 
                 $pdf = Pdf::loadView('pdf.comprobante', [
                     'comprobante' => $comprobante,
@@ -135,7 +136,8 @@ class ComprobanteController extends Controller
             }
             $baseHeight = 320; // increased for logo
             $perItem = 22;
-            $dynamicHeight = max(360, $baseHeight + ($itemsCount * $perItem) + $descExtra);
+            $qrHeight = 95;    // extra space for QR code + bottom margin
+            $dynamicHeight = max(360, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight);
 
             $pdf = Pdf::loadView('pdf.comprobante', [
                 'comprobante' => $comprobante,
