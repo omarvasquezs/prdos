@@ -207,11 +207,23 @@
 
         <!-- Vista Delivery -->
         <div v-if="tipoAtencionActivo === 'D'" class="delivery-view">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3><i class="fas fa-motorcycle me-2"></i>Cola de Delivery</h3>
-            <button class="btn btn-primary" @click="abrirModalNuevoPedido('D')">
-              <i class="fas fa-plus me-2"></i>Nuevo Pedido Delivery
-            </button>
+          <div class="header-section mb-4">
+            <div class="d-flex align-items-center justify-content-between flex-wrap">
+              <div>
+                <h1 class="page-title mb-1">
+                  <i class="fas fa-motorcycle text-warning me-2"></i>
+                  Cola de Delivery
+                </h1>
+                <p class="page-subtitle mb-0 text-muted">Gestiona los pedidos a domicilio</p>
+              </div>
+              <div class="header-actions d-flex align-items-center">
+                <button class="btn btn-primary btn-lg" @click="abrirModalNuevoPedido('D')">
+                  <i class="fas fa-plus me-2"></i>
+                  <span class="d-none d-md-inline">Nuevo Pedido</span>
+                  <span class="d-md-none">Nuevo</span>
+                </button>
+              </div>
+            </div>
           </div>
           
           <div v-if="isLoadingPedidos" class="text-center py-5">
@@ -250,11 +262,23 @@
 
         <!-- Vista Recojo -->
         <div v-if="tipoAtencionActivo === 'R'" class="recojo-view">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3><i class="fas fa-shopping-bag me-2"></i>Cola de Recojo</h3>
-            <button class="btn btn-primary" @click="abrirModalNuevoPedido('R')">
-              <i class="fas fa-plus me-2"></i>Nuevo Pedido Recojo
-            </button>
+          <div class="header-section mb-4">
+            <div class="d-flex align-items-center justify-content-between flex-wrap">
+              <div>
+                <h1 class="page-title mb-1">
+                  <i class="fas fa-shopping-bag text-warning me-2"></i>
+                  Cola de Recojo
+                </h1>
+                <p class="page-subtitle mb-0 text-muted">Gestiona los pedidos para llevar</p>
+              </div>
+              <div class="header-actions d-flex align-items-center">
+                <button class="btn btn-primary btn-lg" @click="abrirModalNuevoPedido('R')">
+                  <i class="fas fa-plus me-2"></i>
+                  <span class="d-none d-md-inline">Nuevo Pedido</span>
+                  <span class="d-md-none">Nuevo</span>
+                </button>
+              </div>
+            </div>
           </div>
           
           <div v-if="isLoadingPedidos" class="text-center py-5">
