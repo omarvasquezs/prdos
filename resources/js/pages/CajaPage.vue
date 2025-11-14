@@ -865,13 +865,17 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label fw-bold">Teléfono *</label>
+                <label class="form-label fw-bold">
+                  Teléfono
+                  <span v-if="nuevoPedidoForm.tipo === 'D'"> *</span>
+                  <span v-else class="text-muted">(Opcional)</span>
+                </label>
                 <input 
                   type="tel" 
                   class="form-control form-control-lg"
                   v-model="nuevoPedidoForm.cliente_telefono"
                   placeholder="Ej: 987654321"
-                  required
+                  :required="nuevoPedidoForm.tipo === 'D'"
                 >
               </div>
 
@@ -915,7 +919,7 @@
               type="button" 
               class="btn btn-primary" 
               @click="crearNuevoPedido"
-              :disabled="isCreatingPedido || !nuevoPedidoForm.cliente_nombre || !nuevoPedidoForm.cliente_telefono"
+              :disabled="isCreatingPedido || !nuevoPedidoForm.cliente_nombre || (nuevoPedidoForm.tipo === 'D' && !nuevoPedidoForm.cliente_telefono)"
             >
               <span v-if="isCreatingPedido">
                 <span class="spinner-border spinner-border-sm me-2"></span>

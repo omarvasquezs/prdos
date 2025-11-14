@@ -196,6 +196,21 @@
                 <strong>Razón Social:</strong> {{ substr($comprobante->razon_social ?? '', 0, 35) }}
             </div>
         @endif
+        
+        <!-- Información de cliente para Delivery y Recojo -->
+        @if($pedido->tipo_atencion === 'D')
+            <div class="info-line">
+                <strong>Cliente:</strong> {{ $pedido->cliente_nombre }}
+            </div>
+            <div class="info-line">
+                <strong>Dirección:</strong> {{ substr($pedido->direccion_entrega ?? '', 0, 50) }}
+            </div>
+        @elseif($pedido->tipo_atencion === 'R')
+            <div class="info-line">
+                <strong>Cliente:</strong> {{ $pedido->cliente_nombre }}
+            </div>
+        @endif
+        
         <div class="divider"></div>
 
         <!-- Detalle -->
