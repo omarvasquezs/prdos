@@ -114,7 +114,6 @@
                 </div>
               </div>
               <div v-else class="p-4 text-center text-muted d-flex flex-column justify-content-center flex-fill">
-                <i class="fas fa-inbox display-1 mb-3" style="opacity: 0.3;"></i>
                 <h5>No hay items en este pedido</h5>
                 <p>El pedido está vacío. Agrega productos para comenzar.</p>
               </div>
