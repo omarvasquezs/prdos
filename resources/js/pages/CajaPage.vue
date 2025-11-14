@@ -51,89 +51,6 @@
         <button type="button" class="btn-close" @click="clearAlert"></button>
       </div>
 
-      <!-- Caja Status -->
-      <div class="caja-status-card mb-4" :class="{ 'caja-open': cajaEstaAbierta, 'caja-closed': !cajaEstaAbierta }">
-        <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center">
-          <div class="status-icon me-0 me-lg-4 mb-3 mb-lg-0">
-            <i :class="cajaEstaAbierta ? 'fas fa-cash-register' : 'fas fa-lock'"></i>
-          </div>
-          <div class="flex-grow-1">
-            <h2 class="status-title mb-2">
-              {{ cajaEstaAbierta ? 'Caja abierta' : cajaStatus.hasRecordToday ? 'Caja cerrada' : 'Caja pendiente de apertura' }}
-            </h2>
-            <p class="status-description mb-2">
-              <template v-if="cajaEstaAbierta && cajaRegistro">
-                La caja se abrió el {{ formatDateTime(cajaRegistro.datetime_apertura) }} por
-                {{ cajaRegistro.usuario_apertura || 'usuario desconocido' }} con un monto inicial de
-                {{ formatCurrency(cajaRegistro.monto_apertura) }}.
-              </template>
-              <template v-else-if="cajaStatus.hasRecordToday && cajaRegistro">
-                La caja está cerrada. La última apertura fue el {{ formatDateTime(cajaRegistro.datetime_apertura) }}.
-                <span v-if="cajaRegistro.datetime_cierre">
-                  Se cerró el {{ formatDateTime(cajaRegistro.datetime_cierre) }}<span v-if="cajaRegistro.usuario_cierre"> por {{ cajaRegistro.usuario_cierre }}</span><span v-else-if="cajaRegistro.usuario_apertura"> por {{ cajaRegistro.usuario_apertura }}</span>.
-                </span>
-                <span v-else>
-                  Aún no registra un cierre.
-                </span>
-              </template>
-              <template v-else>
-                Debes abrir la caja para registrar las operaciones del día actual.
-              </template>
-            </p>
-            <div class="status-meta" v-if="cajaRegistro">
-              <span class="me-3">
-                <i class="fas fa-hourglass-start me-1"></i>
-                Apertura: {{ formatDateTime(cajaRegistro.datetime_apertura) }}
-              </span>
-              <span class="me-3">
-                <i class="fas fa-coins me-1"></i>
-                Monto apertura: {{ formatCurrency(cajaRegistro.monto_apertura) }}
-              </span>
-              <span v-if="cajaRegistro.datetime_cierre" class="me-3">
-                <i class="fas fa-hourglass-end me-1"></i>
-                Cierre: {{ formatDateTime(cajaRegistro.datetime_cierre) }}
-              </span>
-              <span v-if="cajaRegistro.monto_cierre !== null">
-                <i class="fas fa-wallet me-1"></i>
-                Monto cierre: {{ formatCurrency(cajaRegistro.monto_cierre) }}
-              </span>
-            </div>
-          </div>
-          <div class="status-actions ms-lg-4 mt-3 mt-lg-0">
-            <button
-              v-if="cajaEstaAbierta"
-              class="btn btn-danger btn-lg"
-              @click="abrirModalCierre"
-              :disabled="isProcessingCierre"
-            >
-              <span v-if="isProcessingCierre">
-                <span class="spinner-border spinner-border-sm me-2"></span>
-                Cerrando...
-              </span>
-              <span v-else>
-                <i class="fas fa-lock me-2"></i>
-                Cerrar Caja
-              </span>
-            </button>
-            <button
-              v-else
-              class="btn btn-success btn-lg"
-              @click="abrirModalApertura"
-              :disabled="isProcessingApertura"
-            >
-              <span v-if="isProcessingApertura">
-                <span class="spinner-border spinner-border-sm me-2"></span>
-                Abriendo...
-              </span>
-              <span v-else>
-                <i class="fas fa-cash-register me-2"></i>
-                Abrir Caja
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
-
       <!-- Placeholder when caja is closed -->
       <div v-if="!cajaEstaAbierta" class="caja-closed-placeholder text-center py-5">
         <i class="fas fa-cash-register display-4 text-muted mb-3"></i>
@@ -187,6 +104,14 @@
             <span class="atencion-badge" v-if="pedidosRecojo.length > 0">{{ pedidosRecojo.length }}</span>
           </button>
           <div class="sidebar-divider"></div>
+          <button 
+            class="atencion-sidebar-item sidebar-action sidebar-cerrar-caja"
+            @click="abrirModalCierre"
+            :disabled="isProcessingCierre"
+          >
+            <i class="fas" :class="isProcessingCierre ? 'fa-spinner fa-spin' : 'fa-lock'"></i>
+            <span class="atencion-label">Cerrar Caja</span>
+          </button>
           <button 
             class="atencion-sidebar-item sidebar-action"
             @click="abrirModalMovimientos"
@@ -542,6 +467,57 @@
           </div>
 
           <div class="modal-body">
+            <!-- Caja Status Info -->
+            <div class="alert mb-4" :class="cajaEstaAbierta ? 'alert-success' : 'alert-warning'">
+              <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 me-3">
+                  <i :class="cajaEstaAbierta ? 'fas fa-cash-register' : 'fas fa-lock'" class="fs-2"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <h6 class="alert-heading mb-1">
+                    {{ cajaEstaAbierta ? 'Caja abierta' : cajaStatus.hasRecordToday ? 'Caja cerrada' : 'Caja pendiente de apertura' }}
+                  </h6>
+                  <p class="mb-2 small">
+                    <template v-if="cajaEstaAbierta && cajaRegistro">
+                      La caja se abrió el {{ formatDateTime(cajaRegistro.datetime_apertura) }} por
+                      {{ cajaRegistro.usuario_apertura || 'usuario desconocido' }} con un monto inicial de
+                      {{ formatCurrency(cajaRegistro.monto_apertura) }}.
+                    </template>
+                    <template v-else-if="cajaStatus.hasRecordToday && cajaRegistro">
+                      La caja está cerrada. La última apertura fue el {{ formatDateTime(cajaRegistro.datetime_apertura) }}.
+                      <span v-if="cajaRegistro.datetime_cierre">
+                        Se cerró el {{ formatDateTime(cajaRegistro.datetime_cierre) }}<span v-if="cajaRegistro.usuario_cierre"> por {{ cajaRegistro.usuario_cierre }}</span><span v-else-if="cajaRegistro.usuario_apertura"> por {{ cajaRegistro.usuario_apertura }}</span>.
+                      </span>
+                      <span v-else>
+                        Aún no registra un cierre.
+                      </span>
+                    </template>
+                    <template v-else>
+                      Debes abrir la caja para registrar las operaciones del día actual.
+                    </template>
+                  </p>
+                  <div class="d-flex flex-wrap gap-3 small" v-if="cajaRegistro">
+                    <span>
+                      <i class="fas fa-hourglass-start me-1"></i>
+                      Apertura: {{ formatDateTime(cajaRegistro.datetime_apertura) }}
+                    </span>
+                    <span>
+                      <i class="fas fa-coins me-1"></i>
+                      Monto apertura: {{ formatCurrency(cajaRegistro.monto_apertura) }}
+                    </span>
+                    <span v-if="cajaRegistro.datetime_cierre">
+                      <i class="fas fa-hourglass-end me-1"></i>
+                      Cierre: {{ formatDateTime(cajaRegistro.datetime_cierre) }}
+                    </span>
+                    <span v-if="cajaRegistro.monto_cierre !== null">
+                      <i class="fas fa-wallet me-1"></i>
+                      Monto cierre: {{ formatCurrency(cajaRegistro.monto_cierre) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Filtro de fecha -->
             <div class="mb-4 date-filter-section">
               <div class="row align-items-end g-3">
@@ -2344,6 +2320,15 @@ export default {
 
 .sidebar-logout:hover i,
 .sidebar-logout:hover .atencion-label {
+  color: #dc3545 !important;
+}
+
+.sidebar-cerrar-caja:hover {
+  background: #fff5f5 !important;
+}
+
+.sidebar-cerrar-caja:hover i,
+.sidebar-cerrar-caja:hover .atencion-label {
   color: #dc3545 !important;
 }
 
