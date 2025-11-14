@@ -79,7 +79,7 @@
                 Agregar Item
               </button>
             </div>
-            <div class="card-body p-0 d-flex flex-column">
+            <div class="card-body p-0 d-flex flex-column items-scroll-container">
               <div v-if="pedido.items && pedido.items.length > 0" class="list-group list-group-flush flex-fill">
                 <div 
                   v-for="item in pedido.items" 
@@ -690,16 +690,36 @@ export default {
 .flex-fill-content {
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .flex-fill {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .flex-fill .card-body {
   flex: 1;
+  min-height: 0;
+}
+
+/* Items scroll container */
+.items-scroll-container {
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.items-scroll-container .list-group {
+  flex: unset !important;
+}
+
+/* Resumen stays fixed */
+.col-lg-4 .card {
+  position: sticky;
+  top: 1rem;
 }
 
 /* === LOADING SCREEN === */
