@@ -21,29 +21,6 @@
 
       <!-- Main Content -->
       <div class="container-fluid px-4 py-3">
-      <!-- Header Section -->
-      <div class="header-section mb-4">
-        <div class="d-flex align-items-center justify-content-between flex-wrap">
-          <div>
-            <h1 class="page-title mb-1">
-              <i class="fas fa-utensils text-warning me-2"></i>
-              Selección de Mesa
-            </h1>
-            <p class="page-subtitle mb-0 text-muted">Toca una mesa disponible para iniciar un nuevo pedido</p>
-          </div>
-          <div class="header-actions d-flex align-items-center">
-            <button 
-              @click="refreshMesas" 
-              class="btn btn-outline-secondary btn-lg"
-              :disabled="isRefreshing || !cajaEstaAbierta"
-            >
-              <i class="fas fa-sync-alt" :class="{ 'fa-spin': isRefreshing }"></i>
-              <span class="ms-2 d-none d-md-inline">Actualizar</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
       <!-- Alert Messages -->
       <div v-if="alertMessage" class="alert alert-dismissible fade show" :class="alertClass" role="alert">
         <i :class="alertIcon" class="me-2"></i>
@@ -132,6 +109,30 @@
 
         <!-- Contenido Principal con Sidebar -->
         <div class="contenido-con-sidebar">
+        
+        <!-- Header Section (solo para Presencial) -->
+        <div v-if="tipoAtencionActivo === 'P'" class="header-section mb-4">
+          <div class="d-flex align-items-center justify-content-between flex-wrap">
+            <div>
+              <h1 class="page-title mb-1">
+                <i class="fas fa-utensils text-warning me-2"></i>
+                Selección de Mesa
+              </h1>
+              <p class="page-subtitle mb-0 text-muted">Toca una mesa disponible para iniciar un nuevo pedido</p>
+            </div>
+            <div class="header-actions d-flex align-items-center">
+              <button 
+                @click="refreshMesas" 
+                class="btn btn-outline-secondary btn-lg"
+                :disabled="isRefreshing || !cajaEstaAbierta"
+              >
+                <i class="fas fa-sync-alt" :class="{ 'fa-spin': isRefreshing }"></i>
+                <span class="ms-2 d-none d-md-inline">Actualizar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        
         <!-- Mesas Grid (solo si tipo presencial) -->
         <div v-if="tipoAtencionActivo === 'P'" class="mesas-grid">
           <div 
