@@ -104,7 +104,6 @@
         }
         table.items thead th {
             font-weight: bold;
-            border-bottom: 1px solid #000;
             padding: 0.4mm 0.2mm;
             text-align: center;
             background-color: #f5f5f5;
@@ -113,7 +112,6 @@
         table.items td {
             padding: 0.35mm 0.2mm;
             vertical-align: top;
-            border-bottom: 1px dotted #ccc;
         }
         .col-desc { width: 60%; word-wrap: break-word; overflow-wrap: break-word; }
         .col-cant { width: 15%; text-align: center; white-space: nowrap; }
@@ -147,7 +145,6 @@
             text-align: center;
             margin-top: 1mm;
             padding-top: 0.5mm;
-            border-top: 1px dashed #000;
             font-size: 7px;
         }
 
@@ -155,6 +152,19 @@
             margin: 0.3mm 0;
             padding: 0;
             line-height: 1.2;
+        }
+        
+        .footer .qr-code {
+            width: 25mm;
+            height: 25mm;
+            margin: 1mm auto;
+            display: block;
+        }
+        
+        .footer .thank-you {
+            font-size: 7.5px;
+            font-weight: bold;
+            margin: 1mm 0 0.5mm 0;
         }
     </style>
 </head>
@@ -226,12 +236,11 @@
             @endforelse
             </tbody>
         </table>
-        <div class="divider"></div>
 
         <!-- Totales -->
         @php
             $total = $pedido->total ?? 0;
-            $igvRate = 0.10; // 10%
+            $igvRate = 0.18; // 18%
             $igv = $total * $igvRate;
             $subtotal = $total - $igv;
         @endphp
@@ -241,7 +250,7 @@
                 <span>S/ {{ number_format($subtotal, 2) }}</span>
             </div>
             <div class="totales-row">
-                <span>IGV (10%)</span>
+                <span>IGV (18%)</span>
                 <span>S/ {{ number_format($igv, 2) }}</span>
             </div>
             <div class="total-final">
@@ -256,12 +265,25 @@
         <div class="info-line">
             <strong>Método Pago:</strong> {{ substr($comprobante->metodoPago->nom_metodo_pago ?? 'N/A', 0, 25) }}
         </div>
-        <div class="divider"></div>
+        <div style="margin: 3mm 0;"></div>
 
         <!-- Footer -->
         <div class="footer">
-            <p>¡Gracias por su compra!</p>
+            <p class="thank-you">¡Gracias por su preferencia, vuelva pronto!</p>
+            @php
+                $qrData = sprintf(
+                    "RUC: %s\nTipo: %s\nCódigo: %s\nTotal: S/ %s\nFecha: %s",
+                    '10441973361',
+                    $comprobante->tipo_comprobante === 'B' ? 'BOLETA' : ($comprobante->tipo_comprobante === 'F' ? 'FACTURA' : 'NOTA DE VENTA'),
+                    $comprobante->cod_comprobante,
+                    number_format($total, 2),
+                    $comprobante->fecha->format('d/m/Y H:i')
+                );
+                $qrCode = base64_encode(QrCode::format('png')->size(200)->generate($qrData));
+            @endphp
+            <img src="data:image/png;base64,{{ $qrCode }}" alt="QR Code" class="qr-code">
             <p>{{ now()->format('d/m/Y H:i:s') }}</p>
+            <div style="margin-bottom: 4mm;"></div>
         </div>
     </div>
 </body>
