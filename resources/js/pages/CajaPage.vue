@@ -34,27 +34,11 @@
           <div class="header-actions d-flex align-items-center">
             <button 
               @click="refreshMesas" 
-              class="btn btn-outline-secondary btn-lg me-3"
+              class="btn btn-outline-secondary btn-lg"
               :disabled="isRefreshing || !cajaEstaAbierta"
             >
               <i class="fas fa-sync-alt" :class="{ 'fa-spin': isRefreshing }"></i>
               <span class="ms-2 d-none d-md-inline">Actualizar</span>
-            </button>
-            <button
-              @click="abrirModalMovimientos"
-              class="btn btn-warning btn-lg me-3"
-              :disabled="isLoadingMovimientos"
-            >
-              <i class="fas" :class="isLoadingMovimientos ? 'fa-spinner fa-spin' : 'fa-list-alt'"></i>
-              <span class="ms-2 d-none d-md-inline">Movimientos</span>
-            </button>
-            <button
-              @click="logout"
-              class="btn btn-outline-danger btn-lg"
-              :disabled="isLoggingOut"
-            >
-              <i class="fas" :class="isLoggingOut ? 'fa-spinner fa-spin' : 'fa-sign-out-alt'"></i>
-              <span class="ms-2 d-none d-md-inline">Cerrar sesión</span>
             </button>
           </div>
         </div>
@@ -174,66 +158,55 @@
       </div>
 
       <template v-else>
-        <!-- Selector de Tipo de Atención -->
-        <div class="tipo-atencion-selector mb-4">
-          <div class="row g-3">
-            <div class="col-md-4">
-              <div 
-                class="atencion-card" 
-                :class="{ 'active': tipoAtencionActivo === 'P' }"
-                @click="cambiarTipoAtencion('P')"
-              >
-                <div class="atencion-icon">
-                  <i class="fas fa-utensils"></i>
-                </div>
-                <h4>Presencial</h4>
-                <p>Atención en mesas</p>
-                <span class="badge bg-success" v-if="tipoAtencionActivo === 'P'">
-                  <i class="fas fa-check me-1"></i>Activo
-                </span>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div 
-                class="atencion-card" 
-                :class="{ 'active': tipoAtencionActivo === 'D' }"
-                @click="cambiarTipoAtencion('D')"
-              >
-                <div class="atencion-icon">
-                  <i class="fas fa-motorcycle"></i>
-                </div>
-                <h4>Delivery</h4>
-                <p>Pedidos a domicilio</p>
-                <span class="badge bg-success" v-if="tipoAtencionActivo === 'D'">
-                  <i class="fas fa-check me-1"></i>Activo
-                </span>
-                <span class="badge bg-info text-white" v-if="pedidosDelivery.length > 0">
-                  {{ pedidosDelivery.length }} en cola
-                </span>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div 
-                class="atencion-card" 
-                :class="{ 'active': tipoAtencionActivo === 'R' }"
-                @click="cambiarTipoAtencion('R')"
-              >
-                <div class="atencion-icon">
-                  <i class="fas fa-shopping-bag"></i>
-                </div>
-                <h4>Recojo</h4>
-                <p>Para llevar</p>
-                <span class="badge bg-success" v-if="tipoAtencionActivo === 'R'">
-                  <i class="fas fa-check me-1"></i>Activo
-                </span>
-                <span class="badge bg-info text-white" v-if="pedidosRecojo.length > 0">
-                  {{ pedidosRecojo.length }} en cola
-                </span>
-              </div>
-            </div>
-          </div>
+        <!-- Sidebar de Tipo de Atención -->
+        <div class="atencion-sidebar">
+          <button 
+            class="atencion-sidebar-item" 
+            :class="{ 'active': tipoAtencionActivo === 'P' }"
+            @click="cambiarTipoAtencion('P')"
+          >
+            <i class="fas fa-utensils"></i>
+            <span class="atencion-label">Presencial</span>
+          </button>
+          <button 
+            class="atencion-sidebar-item" 
+            :class="{ 'active': tipoAtencionActivo === 'D' }"
+            @click="cambiarTipoAtencion('D')"
+          >
+            <i class="fas fa-motorcycle"></i>
+            <span class="atencion-label">Delivery</span>
+            <span class="atencion-badge" v-if="pedidosDelivery.length > 0">{{ pedidosDelivery.length }}</span>
+          </button>
+          <button 
+            class="atencion-sidebar-item" 
+            :class="{ 'active': tipoAtencionActivo === 'R' }"
+            @click="cambiarTipoAtencion('R')"
+          >
+            <i class="fas fa-shopping-bag"></i>
+            <span class="atencion-label">Recojo</span>
+            <span class="atencion-badge" v-if="pedidosRecojo.length > 0">{{ pedidosRecojo.length }}</span>
+          </button>
+          <div class="sidebar-divider"></div>
+          <button 
+            class="atencion-sidebar-item sidebar-action"
+            @click="abrirModalMovimientos"
+            :disabled="isLoadingMovimientos"
+          >
+            <i class="fas" :class="isLoadingMovimientos ? 'fa-spinner fa-spin' : 'fa-list-alt'"></i>
+            <span class="atencion-label">Movimientos</span>
+          </button>
+          <button 
+            class="atencion-sidebar-item sidebar-action sidebar-logout"
+            @click="logout"
+            :disabled="isLoggingOut"
+          >
+            <i class="fas" :class="isLoggingOut ? 'fa-spinner fa-spin' : 'fa-sign-out-alt'"></i>
+            <span class="atencion-label">Salir</span>
+          </button>
         </div>
 
+        <!-- Contenido Principal con Sidebar -->
+        <div class="contenido-con-sidebar">
         <!-- Mesas Grid (solo si tipo presencial) -->
         <div v-if="tipoAtencionActivo === 'P'" class="mesas-grid">
           <div 
@@ -390,6 +363,7 @@
               </div>
             </div>
           </div>
+        </div>
         </div>
       </template>
       </div>
@@ -2265,60 +2239,112 @@ export default {
   outline-offset: 2px;
 }
 
-/* === TIPO ATENCION SELECTOR === */
-.tipo-atencion-selector {
-  margin-bottom: 2rem;
-}
-
-.atencion-card {
-  background: white;
-  border-radius: 16px;
-  padding: 2rem 1.5rem;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 3px solid #e9ecef;
-  position: relative;
-  min-height: 220px;
+/* === TIPO ATENCION SIDEBAR === */
+.atencion-sidebar {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  gap: 0;
+  background: white;
+  border-radius: 0 16px 16px 0;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-.atencion-card:hover {
-  border-color: #0d6efd;
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(13, 110, 253, 0.2);
+.atencion-sidebar-item {
+  position: relative;
+  background: white;
+  border: none;
+  padding: 1.2rem 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 85px;
+  border-left: 4px solid transparent;
 }
 
-.atencion-card.active {
-  border-color: #0d6efd;
-  background: linear-gradient(135deg, #fff 0%, #f0f7ff 100%);
-  box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3);
+.atencion-sidebar-item i {
+  font-size: 1.8rem;
+  color: #6c757d;
+  transition: all 0.3s ease;
 }
 
-.atencion-icon {
-  font-size: 3.5rem;
-  margin-bottom: 1rem;
+.atencion-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6c757d;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.atencion-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #dc3545;
+  color: white;
+  border-radius: 10px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 20px;
+  text-align: center;
+}
+
+.atencion-sidebar-item:hover {
+  background: #f8f9fa;
+}
+
+.atencion-sidebar-item:hover i,
+.atencion-sidebar-item:hover .atencion-label {
   color: #ffc107;
 }
 
-.atencion-card h4 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
+.atencion-sidebar-item.active {
+  background: linear-gradient(135deg, #fff3cd 0%, #fff 100%);
+  border-left-color: #ffc107;
+}
+
+.atencion-sidebar-item.active i {
+  color: #ffc107;
+  transform: scale(1.1);
+}
+
+.atencion-sidebar-item.active .atencion-label {
   color: #212529;
+  font-weight: 700;
 }
 
-.atencion-card p {
-  color: #6c757d;
-  margin-bottom: 1rem;
+.contenido-con-sidebar {
+  margin-left: 95px;
 }
 
-.atencion-card .badge {
-  margin-top: 0.5rem;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
+.sidebar-divider {
+  width: 100%;
+  height: 1px;
+  background: #dee2e6;
+  margin: 0.5rem 0;
+}
+
+.sidebar-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sidebar-logout:hover {
+  background: #fff5f5 !important;
+}
+
+.sidebar-logout:hover i,
+.sidebar-logout:hover .atencion-label {
+  color: #dc3545 !important;
 }
 
 /* === PEDIDOS GRID === */
