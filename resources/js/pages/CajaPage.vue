@@ -82,20 +82,20 @@
           </button>
           <div class="sidebar-divider"></div>
           <button 
-            class="atencion-sidebar-item sidebar-action sidebar-cerrar-caja"
-            @click="abrirModalCierre"
-            :disabled="isProcessingCierre"
-          >
-            <i class="fas" :class="isProcessingCierre ? 'fa-spinner fa-spin' : 'fa-lock'"></i>
-            <span class="atencion-label">Cerrar Caja</span>
-          </button>
-          <button 
             class="atencion-sidebar-item sidebar-action"
             @click="abrirModalMovimientos"
             :disabled="isLoadingMovimientos"
           >
             <i class="fas" :class="isLoadingMovimientos ? 'fa-spinner fa-spin' : 'fa-list-alt'"></i>
             <span class="atencion-label">Movimientos</span>
+          </button>
+          <button 
+            class="atencion-sidebar-item sidebar-action sidebar-cerrar-caja"
+            @click="abrirModalCierre"
+            :disabled="isProcessingCierre"
+          >
+            <i class="fas" :class="isProcessingCierre ? 'fa-spinner fa-spin' : 'fa-cash-register'"></i>
+            <span class="atencion-label">Cerrar Caja</span>
           </button>
           <button 
             class="atencion-sidebar-item sidebar-action sidebar-logout"
