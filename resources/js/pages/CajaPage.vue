@@ -30,7 +30,6 @@
 
       <!-- Placeholder when caja is closed -->
       <div v-if="!cajaEstaAbierta" class="caja-closed-placeholder text-center py-5">
-        <i class="fas fa-cash-register display-4 text-muted mb-3"></i>
         <h3 class="mb-3">La caja no está abierta</h3>
         <p class="text-muted mb-4">
           Abre la caja para gestionar pedidos y movimientos del día.
