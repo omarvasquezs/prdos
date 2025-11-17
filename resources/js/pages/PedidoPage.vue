@@ -11,9 +11,9 @@
     </div>
 
     <!-- Main Content -->
-    <div v-else class="container-fluid px-4 py-3 flex-fill d-flex flex-column">
+    <div v-else class="container-fluid px-3 py-2 flex-fill d-flex flex-column">
       <!-- Header Section -->
-      <div class="header-section mb-4">
+      <div class="header-section mb-3">
         <div class="d-flex align-items-center justify-content-between flex-wrap">
           <div class="d-flex align-items-center">
             <button 
@@ -707,7 +707,7 @@ export default {
 
 /* Items scroll container */
 .items-scroll-container {
-  max-height: calc(100vh - 300px);
+  max-height: calc(100vh - 250px);
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -750,21 +750,21 @@ export default {
 /* === HEADER === */
 .header-section {
   background: white;
-  border-radius: 16px;
-  padding: 1.5rem;
+  border-radius: 12px;
+  padding: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .page-title {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #212529;
   margin: 0;
 }
 
 .page-subtitle {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   color: #6c757d;
   font-weight: 400;
 }
@@ -772,17 +772,17 @@ export default {
 /* === CARDS === */
 .card {
   border: none;
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
 }
 
 .card-header {
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.25rem;
 }
 
 .card-body {
-  padding: 1.5rem;
+  padding: 1.25rem;
 }
 
 /* === LIST ITEMS === */
@@ -808,6 +808,25 @@ export default {
 }
 
 /* === RESPONSIVE === */
+/* Optimized for 1024x768 (EPOS terminal) */
+@media (min-width: 1000px) and (max-width: 1100px) {
+  .page-title {
+    font-size: 1.4rem;
+  }
+  
+  .page-subtitle {
+    font-size: 0.85rem;
+  }
+  
+  .items-scroll-container {
+    max-height: calc(100vh - 220px);
+  }
+  
+  .btn-lg {
+    padding: 0.75rem 1.5rem;
+  }
+}
+
 @media (max-width: 768px) {
   .page-title {
     font-size: 1.75rem;

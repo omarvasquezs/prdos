@@ -20,7 +20,7 @@
       </div>
 
       <!-- Main Content -->
-      <div class="container-fluid px-4 py-3">
+      <div class="container-fluid px-3 py-2">
       <!-- Alert Messages -->
       <div v-if="alertMessage" class="alert alert-dismissible fade show" :class="alertClass" role="alert">
         <i :class="alertIcon" class="me-2"></i>
@@ -110,7 +110,7 @@
         <div class="contenido-con-sidebar">
         
         <!-- Header Section (solo para Presencial) -->
-        <div v-if="tipoAtencionActivo === 'P'" class="header-section mb-4">
+        <div v-if="tipoAtencionActivo === 'P'" class="header-section mb-3">
           <div class="d-flex align-items-center justify-content-between flex-wrap">
             <div>
               <h1 class="page-title mb-1">
@@ -206,7 +206,7 @@
 
         <!-- Vista Delivery -->
         <div v-if="tipoAtencionActivo === 'D'" class="delivery-view">
-          <div class="header-section mb-4">
+          <div class="header-section mb-3">
             <div class="d-flex align-items-center justify-content-between flex-wrap">
               <div>
                 <h1 class="page-title mb-1">
@@ -261,7 +261,7 @@
 
         <!-- Vista Recojo -->
         <div v-if="tipoAtencionActivo === 'R'" class="recojo-view">
-          <div class="header-section mb-4">
+          <div class="header-section mb-3">
             <div class="d-flex align-items-center justify-content-between flex-wrap">
               <div>
                 <h1 class="page-title mb-1">
@@ -1703,21 +1703,21 @@ export default {
 /* === HEADER === */
 .header-section {
   background: white;
-  border-radius: 16px;
-  padding: 1.5rem;
+  border-radius: 12px;
+  padding: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .page-title {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #212529;
   margin: 0;
 }
 
 .page-subtitle {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   color: #6c757d;
   font-weight: 400;
 }
@@ -1916,27 +1916,27 @@ export default {
 /* === MESAS GRID === */
 .mesas-grid {
   display: grid;
-  /* Fixed maximum of 4 columns, each at least 240px. Center the grid with a max-width. */
-  grid-template-columns: repeat(4, minmax(240px, 1fr));
-  gap: 1.5rem;
-  padding: 1rem 0;
+  /* Optimized for 1024x768: 3 columns */
+  grid-template-columns: repeat(3, minmax(200px, 1fr));
+  gap: 1rem;
+  padding: 0.5rem 0;
   justify-content: center;
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
 /* === MESA CARD === */
 .mesa-card {
   background: white;
-  border-radius: 20px;
-  padding: 1.5rem;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
   border: 2px solid transparent;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  min-height: 200px;
+  min-height: 160px;
   display: flex;
   flex-direction: column;
   user-select: none;
@@ -1977,11 +1977,11 @@ export default {
 /* Mesa Icon */
 .mesa-icon {
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.4rem;
 }
 
 .mesa-icon i {
-  font-size: 3rem;
+  font-size: 1.75rem;
   color: #ffc107;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
@@ -1993,30 +1993,30 @@ export default {
 }
 
 .mesa-numero {
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #212529;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.4rem;
 }
 
 .mesa-estado {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .mesa-estado .badge {
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  padding: 0.5rem 1rem;
+  padding: 0.35rem 0.75rem;
   border-radius: 50px;
 }
 
 /* Pedido Info */
 .pedido-info {
   background: rgba(0, 0, 0, 0.03);
-  border-radius: 12px;
-  padding: 1rem;
-  margin: 1rem 0;
-  font-size: 0.9rem;
+  border-radius: 10px;
+  padding: 0.6rem;
+  margin: 0.6rem 0;
+  font-size: 0.8rem;
 }
 
 .pedido-info > div {
@@ -2043,46 +2043,46 @@ export default {
 
 .mesa-action .btn {
   font-weight: 600;
-  border-radius: 12px;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.95rem;
-  min-width: 120px;
+  border-radius: 10px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.85rem;
+  min-width: 100px;
 }
 
 /* === MODAL STYLES === */
 .modal-content {
   border: none;
-  border-radius: 20px;
+  border-radius: 16px;
   overflow: hidden;
 }
 
 .modal-header {
   border-bottom: none;
-  padding: 1.5rem;
+  padding: 1.25rem;
 }
 
 .modal-body {
-  padding: 2rem;
+  padding: 1.5rem;
 }
 
 .modal-footer {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
+  padding: 1.25rem;
 }
 
 /* Comensales Selector */
 .comensales-selector {
-  margin: 1.5rem 0;
+  margin: 1rem 0;
 }
 
 .comensal-btn {
-  border-radius: 16px;
-  padding: 1.5rem 1rem;
+  border-radius: 12px;
+  padding: 1rem 0.75rem;
   border: 2px solid #e9ecef;
   background: white;
   transition: all 0.3s ease;
   height: auto;
-  min-height: 100px;
+  min-height: 80px;
 }
 
 .comensal-btn:hover {
@@ -2123,6 +2123,26 @@ export default {
 }
 
 /* === RESPONSIVE === */
+/* Optimized for 1024x768 (EPOS terminal) */
+@media (min-width: 1000px) and (max-width: 1100px) {
+  .mesas-grid {
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
+    gap: 0.75rem;
+  }
+  
+  .mesa-card {
+    min-height: 135px;
+  }
+  
+  .page-title {
+    font-size: 1.4rem;
+  }
+  
+  .page-subtitle {
+    font-size: 0.85rem;
+  }
+}
+
 @media (max-width: 768px) {
   .page-title {
     font-size: 1.75rem;
@@ -2263,25 +2283,25 @@ export default {
   position: relative;
   background: white;
   border: none;
-  padding: 1.2rem 1rem;
+  padding: 0.6rem 0.4rem;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  min-width: 85px;
-  border-left: 4px solid transparent;
+  gap: 0.25rem;
+  min-width: 60px;
+  border-left: 3px solid transparent;
 }
 
 .atencion-sidebar-item i {
-  font-size: 1.8rem;
+  font-size: 1.25rem;
   color: #6c757d;
   transition: all 0.3s ease;
 }
 
 .atencion-label {
-  font-size: 0.75rem;
+  font-size: 0.6rem;
   font-weight: 600;
   color: #6c757d;
   transition: all 0.3s ease;
@@ -2327,7 +2347,7 @@ export default {
 }
 
 .contenido-con-sidebar {
-  margin-left: 95px;
+  margin-left: 65px;
 }
 
 .sidebar-divider {
@@ -2363,15 +2383,15 @@ export default {
 /* === PEDIDOS GRID === */
 .pedidos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
-  padding: 1rem 0;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: 0.75rem 0;
 }
 
 .pedido-card {
   background: white;
-  border-radius: 16px;
-  padding: 1.5rem;
+  border-radius: 12px;
+  padding: 1rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border: 2px solid transparent;
   transition: all 0.3s ease;
