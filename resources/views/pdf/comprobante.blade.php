@@ -12,7 +12,7 @@
         }
         
         @page {
-            margin: 8mm 3mm 3mm 3mm;
+            margin: 6mm 3mm 3mm 3mm;
         }
 
         html, body {
@@ -33,7 +33,7 @@
         .ticket {
             width: 100%;
             max-width: 50mm;
-            margin: 8mm auto 0 auto;
+            margin: 6mm auto 0 auto;
             padding: 0;
             background: white;
         }
@@ -155,8 +155,8 @@
         }
         
         .footer .qr-code {
-            width: 25mm;
-            height: 25mm;
+            width: 23mm;
+            height: 23mm;
             margin: 1mm auto;
             display: block;
         }
@@ -298,7 +298,7 @@
             @endphp
             <img src="data:image/png;base64,{{ $qrCode }}" alt="QR Code" class="qr-code">
             <p>{{ now()->format('d/m/Y H:i:s') }}</p>
-            <div style="margin-bottom: 4mm;"></div>
+            <div style="margin-bottom: 2mm;"></div>
         </div>
     </div>
 </body>

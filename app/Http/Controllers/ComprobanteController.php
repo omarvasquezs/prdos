@@ -84,12 +84,23 @@ class ComprobanteController extends Controller
                         $descExtra += max(0, $lines) * 8; // 8pt per line
                     }
                 }
-                $baseHeight = 320; // base points (increased for logo)
-                $perItem = 22;     // per item points
-                $qrHeight = 95;    // extra space for QR code + bottom margin
-                $dynamicHeight = max(360, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight);
-
-                $pdf = Pdf::loadView('pdf.comprobante', [
+                $baseHeight = 400; // base points (increased for logo + header)
+                $perItem = 28;     // per item points (increased for better spacing)
+                $qrHeight = 120;   // extra space for QR code + bottom margin
+                $clientInfoExtra = 0;
+                // Add extra space for delivery/pickup client info
+                if ($pedido->tipo_atencion === 'D') {
+                    $clientInfoExtra = 45; // name + phone + address
+                } elseif ($pedido->tipo_atencion === 'R') {
+                    $clientInfoExtra = 25; // name + phone
+                }
+                $dynamicHeight = max(450, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight + $clientInfoExtra);
+            if ($pedido->tipo_atencion === 'D') {
+                $clientInfoExtra = 45;
+            } elseif ($pedido->tipo_atencion === 'R') {
+                $clientInfoExtra = 25;
+            }
+            $dynamicHeight = max(450, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight + $clientInfoExtra);                $pdf = Pdf::loadView('pdf.comprobante', [
                     'comprobante' => $comprobante,
                     'pedido' => $pedido
                 ])->setPaper([0, 0, 164.4, $dynamicHeight], 'portrait'); // 58mm width, dynamic height
