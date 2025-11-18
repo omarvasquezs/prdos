@@ -11,7 +11,7 @@
     
     <form @submit.prevent="handleSubmit" class="login-form">
       <div class="text-center mb-4">
-        <h1 class="app-title">POLLERIA P'RDOS</h1>
+        <h1 class="app-title">POLLERIA PARD'S</h1>
         <p class="app-version">v1.0.0</p>
       </div>
 
