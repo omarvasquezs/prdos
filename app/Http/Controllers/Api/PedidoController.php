@@ -70,6 +70,8 @@ class PedidoController extends Controller
                 'notas' => $validated['notas'] ?? null,
                 'comensales' => 1, // Default for delivery/recojo
                 'estado' => 'A',
+                'estado_entrega' => 'P', // Inicia en preparación
+                'pagado' => false,
                 'fecha_apertura' => now(),
                 'total' => 0,
             ]);
@@ -243,6 +245,105 @@ class PedidoController extends Controller
     }
 
     /**
+     * Cambiar estado de entrega del pedido
+     */
+    public function cambiarEstadoEntrega(Request $request, $pedidoId): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'estado_entrega' => 'required|in:P,L,E',
+            ]);
+
+            $pedido = Pedido::findOrFail($pedidoId);
+
+            if ($pedido->tipo_atencion === 'P') {
+                return response()->json([
+                    'error' => 'Los pedidos presenciales no usan estados de entrega',
+                ], 422);
+            }
+
+            DB::beginTransaction();
+
+            $pedido->update([
+                'estado_entrega' => $validated['estado_entrega']
+            ]);
+
+            DB::commit();
+
+            $pedido->load('items.producto', 'metodoPago');
+
+            return response()->json([
+                'message' => 'Estado actualizado correctamente',
+                'pedido' => $this->transformPedido($pedido),
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'error' => 'Datos inválidos',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'No se pudo actualizar el estado',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Marcar como pagado (sin cerrar el pedido)
+     */
+    public function marcarPagado(Request $request, $pedidoId): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'metodo_pago_id' => 'required|integer|exists:metodo_pago,id',
+            ]);
+
+            $pedido = Pedido::findOrFail($pedidoId);
+
+            if ($pedido->isPagado()) {
+                return response()->json([
+                    'error' => 'Este pedido ya está marcado como pagado',
+                ], 422);
+            }
+
+            if ($pedido->total <= 0) {
+                return response()->json([
+                    'error' => 'El pedido debe tener items antes de marcar como pagado',
+                ], 422);
+            }
+
+            DB::beginTransaction();
+
+            $pedido->update([
+                'pagado' => true,
+                'metodo_pago_id' => $validated['metodo_pago_id'],
+            ]);
+
+            DB::commit();
+
+            $pedido->load('items.producto', 'metodoPago');
+
+            return response()->json([
+                'message' => 'Pedido marcado como pagado',
+                'pedido' => $this->transformPedido($pedido),
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'error' => 'Datos inválidos',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'No se pudo marcar como pagado',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Transform Pedido model to array
      */
     private function transformPedido(Pedido $pedido): array
@@ -258,6 +359,11 @@ class PedidoController extends Controller
             'comensales' => $pedido->comensales,
             'estado' => $pedido->estado,
             'estado_texto' => $pedido->estado_texto,
+            'estado_entrega' => $pedido->estado_entrega,
+            'estado_entrega_texto' => $this->getEstadoEntregaTexto($pedido->estado_entrega),
+            'pagado' => $pedido->pagado,
+            'metodo_pago_id' => $pedido->metodo_pago_id,
+            'metodo_pago' => $pedido->metodoPago ? $pedido->metodoPago->nom_metodo_pago : null,
             'fecha_apertura' => $pedido->fecha_apertura,
             'fecha_cierre' => $pedido->fecha_cierre,
             'total' => (float) $pedido->total,
@@ -272,5 +378,18 @@ class PedidoController extends Controller
                 ];
             }),
         ];
+    }
+
+    /**
+     * Obtener texto del estado de entrega
+     */
+    private function getEstadoEntregaTexto(?string $estado): ?string
+    {
+        return match($estado) {
+            'P' => 'En Preparación',
+            'L' => 'Listo',
+            'E' => 'Entregado',
+            default => null,
+        };
     }
 }
