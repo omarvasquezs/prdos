@@ -71,4 +71,6 @@ Route::middleware(['web', 'auth'])->withoutMiddleware([\Illuminate\Foundation\Ht
     Route::post('/api/pedidos-cola/{pedido}/items', [PedidoController::class, 'addItem']);
     Route::delete('/api/pedidos-cola/{pedido}/items/{item}', [PedidoController::class, 'removeItem']);
     Route::post('/api/pedidos-cola/{pedido}/cancelar', [PedidoController::class, 'cancel']);
+    Route::post('/api/pedidos-cola/{pedido}/estado-entrega', [PedidoController::class, 'cambiarEstadoEntrega']);
+    Route::post('/api/pedidos-cola/{pedido}/marcar-pagado', [PedidoController::class, 'marcarPagado']);
 });
