@@ -55,7 +55,7 @@ class PedidoController extends Controller
             $validated = $request->validate([
                 'tipo_atencion' => 'required|in:D,R',
                 'cliente_nombre' => 'required|string|max:255',
-                'cliente_telefono' => 'required|string|max:20',
+                'cliente_telefono' => 'required_if:tipo_atencion,D|nullable|string|max:20',
                 'direccion_entrega' => 'required_if:tipo_atencion,D|nullable|string',
                 'notas' => 'nullable|string',
             ]);
