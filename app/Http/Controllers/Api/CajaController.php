@@ -156,7 +156,7 @@ class CajaController extends Controller
                 ], 422);
             }
 
-            $movimientos = ReporteIngreso::with(['metodoPago', 'comprobante.user'])
+            $movimientos = ReporteIngreso::with(['metodoPago', 'comprobante.user', 'comprobante.pedido'])
                 ->whereDate('fecha', $fechaValidada)
                 ->orderByDesc('fecha')
                 ->get();
@@ -223,6 +223,7 @@ class CajaController extends Controller
         $comprobante = $movimiento->comprobante;
         $metodo = $movimiento->metodoPago;
         $usuario = $comprobante?->user;
+        $pedido = $comprobante?->pedido;
 
         return [
             'id' => $movimiento->id,
@@ -234,6 +235,7 @@ class CajaController extends Controller
             'tipo_comprobante' => $comprobante?->tipo_comprobante,
             'tipo_comprobante_nombre' => $comprobante?->tipo_comprobante_name,
             'usuario' => $usuario->name ?? null,
+            'tipo_atencion' => $pedido?->tipo_atencion ?? 'P', // P por defecto (Mesa)
         ];
     }
 }

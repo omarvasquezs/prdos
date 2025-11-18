@@ -664,6 +664,7 @@
                         <th scope="col">Hora</th>
                         <th scope="col">Comprobante</th>
                         <th scope="col">Tipo</th>
+                        <th scope="col">Atención</th>
                         <th scope="col">Método de pago</th>
                         <th scope="col" class="text-end">Monto</th>
                         <th scope="col">Registrado por</th>
@@ -675,6 +676,12 @@
                         <td>{{ formatHour(mov.fecha) }}</td>
                         <td>{{ mov.cod_comprobante || '—' }}</td>
                         <td>{{ mov.tipo_comprobante_nombre || '—' }}</td>
+                        <td>
+                          <span class="badge" :class="getTipoAtencionBadgeClass(mov.tipo_atencion)">
+                            <i :class="getTipoAtencionIcon(mov.tipo_atencion)" class="me-1"></i>
+                            {{ getTipoAtencionTexto(mov.tipo_atencion) }}
+                          </span>
+                        </td>
                         <td>{{ mov.metodo_pago }}</td>
                         <td class="text-end">{{ formatCurrency(mov.monto) }}</td>
                         <td>{{ mov.usuario || '—' }}</td>
@@ -1630,6 +1637,33 @@ export default {
         'E': 'fas fa-check-double'
       }
       return iconos[estadoEntrega] || 'fas fa-question'
+    },
+
+    getTipoAtencionBadgeClass(tipoAtencion) {
+      const clases = {
+        'P': 'bg-danger',
+        'D': 'bg-info',
+        'R': 'bg-warning text-dark'
+      }
+      return clases[tipoAtencion] || 'bg-secondary'
+    },
+
+    getTipoAtencionIcon(tipoAtencion) {
+      const iconos = {
+        'P': 'fas fa-utensils',
+        'D': 'fas fa-motorcycle',
+        'R': 'fas fa-shopping-bag'
+      }
+      return iconos[tipoAtencion] || 'fas fa-question'
+    },
+
+    getTipoAtencionTexto(tipoAtencion) {
+      const textos = {
+        'P': 'Mesa',
+        'D': 'Delivery',
+        'R': 'Recojo'
+      }
+      return textos[tipoAtencion] || '—'
     },
 
     formatearTiempo(fechaApertura) {
