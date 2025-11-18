@@ -20,6 +20,9 @@ class Pedido extends Model
         'direccion_entrega',
         'notas',
         'estado',
+        'estado_entrega',
+        'pagado',
+        'metodo_pago_id',
         'fecha_apertura',
         'fecha_cierre',
         'total'
@@ -31,6 +34,8 @@ class Pedido extends Model
     protected $casts = [
         'mesa_id' => 'integer',
         'comensales' => 'integer',
+        'metodo_pago_id' => 'integer',
+        'pagado' => 'boolean',
         'fecha_apertura' => 'datetime',
         'fecha_cierre' => 'datetime',
         'total' => 'decimal:2'
@@ -56,6 +61,14 @@ class Pedido extends Model
     }
 
     /**
+     * Relación: Un pedido pertenece a un método de pago
+     */
+    public function metodoPago(): BelongsTo
+    {
+        return $this->belongsTo(MetodoPago::class, 'metodo_pago_id');
+    }
+
+    /**
      * Verificar si el pedido está abierto
      */
     public function isAbierto(): bool
@@ -77,6 +90,38 @@ class Pedido extends Model
     public function isCancelado(): bool
     {
         return $this->estado === 'X';
+    }
+
+    /**
+     * Verificar si el pedido está en preparación
+     */
+    public function isEnPreparacion(): bool
+    {
+        return $this->estado_entrega === 'P';
+    }
+
+    /**
+     * Verificar si el pedido está listo
+     */
+    public function isListo(): bool
+    {
+        return $this->estado_entrega === 'L';
+    }
+
+    /**
+     * Verificar si el pedido fue entregado
+     */
+    public function isEntregado(): bool
+    {
+        return $this->estado_entrega === 'E';
+    }
+
+    /**
+     * Verificar si ya está pagado
+     */
+    public function isPagado(): bool
+    {
+        return $this->pagado === true;
     }
 
     /**
