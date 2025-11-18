@@ -244,7 +244,20 @@
             >
               <div class="pedido-header">
                 <h5>#{{ pedido.id }} - {{ pedido.cliente_nombre }}</h5>
-                <span class="badge bg-warning">{{ pedido.estado_texto }}</span>
+                <div class="d-flex gap-1 flex-wrap">
+                  <span class="badge" :class="getEstadoEntregaBadgeClass(pedido.estado_entrega)">
+                    <i :class="getEstadoEntregaIcon(pedido.estado_entrega)" class="me-1"></i>
+                    {{ pedido.estado_entrega_texto || 'Abierto' }}
+                  </span>
+                  <span v-if="pedido.pagado" class="badge bg-success">
+                    <i class="fas fa-check-circle me-1"></i>
+                    Pagado
+                  </span>
+                  <span v-else class="badge bg-danger">
+                    <i class="fas fa-times-circle me-1"></i>
+                    No Pagado
+                  </span>
+                </div>
               </div>
               <div class="pedido-body">
                 <p><i class="fas fa-phone me-2"></i>{{ pedido.cliente_telefono }}</p>
@@ -299,7 +312,20 @@
             >
               <div class="pedido-header">
                 <h5>#{{ pedido.id }} - {{ pedido.cliente_nombre }}</h5>
-                <span class="badge bg-warning">{{ pedido.estado_texto }}</span>
+                <div class="d-flex gap-1 flex-wrap">
+                  <span class="badge" :class="getEstadoEntregaBadgeClass(pedido.estado_entrega)">
+                    <i :class="getEstadoEntregaIcon(pedido.estado_entrega)" class="me-1"></i>
+                    {{ pedido.estado_entrega_texto || 'Abierto' }}
+                  </span>
+                  <span v-if="pedido.pagado" class="badge bg-success">
+                    <i class="fas fa-check-circle me-1"></i>
+                    Pagado
+                  </span>
+                  <span v-else class="badge bg-danger">
+                    <i class="fas fa-times-circle me-1"></i>
+                    No Pagado
+                  </span>
+                </div>
               </div>
               <div class="pedido-body">
                 <p><i class="fas fa-phone me-2"></i>{{ pedido.cliente_telefono }}</p>
@@ -1588,6 +1614,24 @@ export default {
       return mesa.estado === 'D' ? 'btn-success' : 'btn-outline-secondary'
     },
 
+    getEstadoEntregaBadgeClass(estadoEntrega) {
+      const clases = {
+        'P': 'bg-warning text-dark',
+        'L': 'bg-info text-white',
+        'E': 'bg-success text-white'
+      }
+      return clases[estadoEntrega] || 'bg-secondary'
+    },
+
+    getEstadoEntregaIcon(estadoEntrega) {
+      const iconos = {
+        'P': 'fas fa-clock',
+        'L': 'fas fa-check',
+        'E': 'fas fa-check-double'
+      }
+      return iconos[estadoEntrega] || 'fas fa-question'
+    },
+
     formatearTiempo(fechaApertura) {
       const ahora = new Date()
       const apertura = new Date(fechaApertura)
@@ -2407,17 +2451,25 @@ export default {
 .pedido-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid #f0f0f0;
+  gap: 0.5rem;
 }
 
 .pedido-header h5 {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   margin: 0;
   color: #212529;
+  flex: 1;
+}
+
+.pedido-header .badge {
+  font-size: 0.7rem;
+  padding: 0.3rem 0.5rem;
+  white-space: nowrap;
 }
 
 .pedido-body {
