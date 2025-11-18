@@ -84,17 +84,17 @@ class ComprobanteController extends Controller
                         $descExtra += max(0, $lines) * 8; // 8pt per line
                     }
                 }
-                $baseHeight = 400; // base points (increased for logo + header)
-                $perItem = 28;     // per item points (increased for better spacing)
-                $qrHeight = 120;   // extra space for QR code + bottom margin
+                $baseHeight = 360; // base points
+                $perItem = 25;     // per item points
+                $qrHeight = 100;   // QR code + margins
                 $clientInfoExtra = 0;
                 // Add extra space for delivery/pickup client info
                 if ($pedido->tipo_atencion === 'D') {
-                    $clientInfoExtra = 45; // name + phone + address
+                    $clientInfoExtra = 35; // name + phone + address
                 } elseif ($pedido->tipo_atencion === 'R') {
-                    $clientInfoExtra = 25; // name + phone
+                    $clientInfoExtra = 20; // name + phone
                 }
-                $dynamicHeight = max(450, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight + $clientInfoExtra);
+                $dynamicHeight = max(420, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight + $clientInfoExtra);
             if ($pedido->tipo_atencion === 'D') {
                 $clientInfoExtra = 45;
             } elseif ($pedido->tipo_atencion === 'R') {

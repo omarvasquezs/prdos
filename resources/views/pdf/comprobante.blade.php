@@ -157,14 +157,14 @@
         .footer .qr-code {
             width: 23mm;
             height: 23mm;
-            margin: 1mm auto;
+            margin: 0.5mm auto;
             display: block;
         }
         
         .footer .thank-you {
             font-size: 7.5px;
             font-weight: bold;
-            margin: 1mm 0 0.5mm 0;
+            margin: 0.5mm 0 0.5mm 0;
         }
     </style>
 </head>
@@ -280,7 +280,7 @@
         <div class="info-line">
             <strong>Método Pago:</strong> {{ substr($comprobante->metodoPago->nom_metodo_pago ?? 'N/A', 0, 25) }}
         </div>
-        <div style="margin: 3mm 0;"></div>
+        <div style="margin: 2mm 0;"></div>
 
         <!-- Footer -->
         <div class="footer">
@@ -298,7 +298,6 @@
             @endphp
             <img src="data:image/png;base64,{{ $qrCode }}" alt="QR Code" class="qr-code">
             <p>{{ now()->format('d/m/Y H:i:s') }}</p>
-            <div style="margin-bottom: 2mm;"></div>
         </div>
     </div>
 </body>
