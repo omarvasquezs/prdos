@@ -50,6 +50,16 @@
               <i class="fas fa-clock me-1"></i>
               Abierto
             </span>
+            <!-- Badge de estado de entrega para Delivery/Recojo -->
+            <span v-if="pedido?.tipo_atencion !== 'P' && pedido?.estado_entrega" class="badge fs-5 px-3 py-2 me-2" :class="estadoEntregaBadgeClass">
+              <i :class="estadoEntregaIcon" class="me-1"></i>
+              {{ pedido?.estado_entrega_texto }}
+            </span>
+            <!-- Badge de pagado -->
+            <span v-if="pedido?.pagado" class="badge bg-info fs-5 px-3 py-2 me-2">
+              <i class="fas fa-check-circle me-1"></i>
+              Pagado - {{ pedido?.metodo_pago }}
+            </span>
             <span class="badge bg-primary fs-5 px-3 py-2">
               <i class="fas fa-money-bill me-1"></i>
               S/ {{ parseFloat(pedido?.total || 0).toFixed(2) }}
@@ -173,11 +183,55 @@
                 </div>
               </div>
               
+              <!-- Controls for Delivery/Recojo -->
+              <div v-if="pedido.tipo_atencion !== 'P'" class="mb-3">
+                <h6 class="mb-2"><i class="fas fa-tasks me-2"></i>Estado del Pedido</h6>
+                <div class="d-grid gap-2">
+                  <button 
+                    class="btn btn-sm" 
+                    :class="pedido.estado_entrega === 'P' ? 'btn-warning' : 'btn-outline-warning'"
+                    @click="cambiarEstado('P')"
+                    :disabled="pedido.estado_entrega === 'P'"
+                  >
+                    <i class="fas fa-clock me-2"></i>
+                    En Preparación
+                  </button>
+                  <button 
+                    class="btn btn-sm" 
+                    :class="pedido.estado_entrega === 'L' ? 'btn-info' : 'btn-outline-info'"
+                    @click="cambiarEstado('L')"
+                    :disabled="pedido.estado_entrega === 'L'"
+                  >
+                    <i class="fas fa-check me-2"></i>
+                    Listo
+                  </button>
+                  <button 
+                    class="btn btn-sm" 
+                    :class="pedido.estado_entrega === 'E' ? 'btn-success' : 'btn-outline-success'"
+                    @click="cambiarEstado('E')"
+                    :disabled="pedido.estado_entrega === 'E'"
+                  >
+                    <i class="fas fa-check-double me-2"></i>
+                    Entregado/Recogido
+                  </button>
+                </div>
+                
+                <!-- Button to mark as paid (if not paid yet) -->
+                <button 
+                  v-if="!pedido.pagado && pedido.total > 0" 
+                  class="btn btn-outline-primary btn-sm w-100 mt-2"
+                  @click="abrirModalMarcarPagado"
+                >
+                  <i class="fas fa-money-bill-wave me-2"></i>
+                  Marcar como Pagado
+                </button>
+              </div>
+              
               <!-- Actions - Always at bottom -->
               <div class="d-grid gap-2 mt-auto">
                 <button class="btn btn-success btn-lg" @click="abrirModalCobro" :disabled="!pedido || !pedido.items || pedido.items.length === 0">
                   <i class="fas fa-money-bill me-2"></i>
-                  Cobrar Pedido
+                  {{ pedido?.tipo_atencion === 'P' ? 'Cobrar Pedido' : 'Generar Comprobante y Cerrar' }}
                 </button>
                 <button class="btn btn-outline-danger btn-lg" @click="cancelarPedido" :disabled="!pedido">
                   <i class="fas fa-times me-2"></i>
@@ -352,6 +406,55 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Marcar como Pagado -->
+    <div v-if="mostrarModalMarcarPagado" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+              <i class="fas fa-money-bill-wave me-2"></i>
+              Marcar como Pagado
+            </h5>
+            <button type="button" class="btn-close btn-close-white" @click="cerrarModalMarcarPagado"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted mb-3">El pedido permanecerá abierto pero se registrará que ya fue pagado.</p>
+            
+            <!-- Método de Pago -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Método de Pago *</label>
+              <select v-model="formMarcarPagado.metodo_pago_id" class="form-select form-select-lg" required>
+                <option value="">Seleccionar método...</option>
+                <option v-for="metodo in metodosPago" :key="metodo.id" :value="metodo.id">
+                  {{ metodo.nom_metodo_pago }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Resumen -->
+            <div class="alert alert-info mb-0">
+              <strong>Total pagado:</strong> S/ {{ parseFloat(pedido?.total || 0).toFixed(2) }}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="cerrarModalMarcarPagado" :disabled="isSubmitting">
+              Cancelar
+            </button>
+            <button type="button" class="btn btn-primary" @click="marcarComoPagado" :disabled="isSubmitting || !formMarcarPagado.metodo_pago_id">
+              <span v-if="isSubmitting">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Procesando...
+              </span>
+              <span v-else>
+                <i class="fas fa-check me-2"></i>
+                Confirmar Pago
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -371,6 +474,7 @@ export default {
       cantidadItem: 1,
       categoriaSeleccionada: '',
       mostrarModalCobro: false,
+      mostrarModalMarcarPagado: false,
       metodosPago: [],
       isSubmitting: false,
       formCobro: {
@@ -379,6 +483,9 @@ export default {
         num_ruc: '',
         razon_social: '',
         observaciones: ''
+      },
+      formMarcarPagado: {
+        metodo_pago_id: ''
       }
     }
   },
@@ -432,11 +539,30 @@ export default {
       if (this.pedido.tipo_atencion === 'P') return 'Ocupada'
       if (this.pedido.tipo_atencion === 'D') return 'Delivery'
       return 'Recojo'
+    },
+
+    estadoEntregaBadgeClass() {
+      if (!this.pedido?.estado_entrega) return 'bg-secondary'
+      
+      if (this.pedido.estado_entrega === 'P') return 'bg-warning'
+      if (this.pedido.estado_entrega === 'L') return 'bg-info'
+      if (this.pedido.estado_entrega === 'E') return 'bg-success'
+      return 'bg-secondary'
+    },
+
+    estadoEntregaIcon() {
+      if (!this.pedido?.estado_entrega) return 'fas fa-question'
+      
+      if (this.pedido.estado_entrega === 'P') return 'fas fa-clock'
+      if (this.pedido.estado_entrega === 'L') return 'fas fa-check'
+      if (this.pedido.estado_entrega === 'E') return 'fas fa-check-double'
+      return 'fas fa-question'
     }
   },
 
   async mounted() {
     await this.cargarPedido()
+    await this.cargarMetodosPago()
   },
 
   methods: {
@@ -569,6 +695,65 @@ export default {
         alert('Error al cancelar el pedido. Intenta nuevamente.')
             } finally {
         this.isLoading = false
+      }
+    },
+
+    async cambiarEstado(nuevoEstado) {
+      if (!confirm(`¿Cambiar el estado a "${this.getEstadoTexto(nuevoEstado)}"?`)) {
+        return
+      }
+
+      try {
+        const response = await axios.post(`/api/pedidos-cola/${this.pedido.id}/estado-entrega`, {
+          estado_entrega: nuevoEstado
+        })
+
+        this.pedido = response.data.pedido
+        alert('Estado actualizado correctamente')
+      } catch (error) {
+        console.error('Error al cambiar estado:', error)
+        alert('Error al cambiar el estado. Intenta nuevamente.')
+      }
+    },
+
+    getEstadoTexto(estado) {
+      const estados = {
+        'P': 'En Preparación',
+        'L': 'Listo',
+        'E': 'Entregado/Recogido'
+      }
+      return estados[estado] || estado
+    },
+
+    abrirModalMarcarPagado() {
+      this.formMarcarPagado.metodo_pago_id = ''
+      this.mostrarModalMarcarPagado = true
+    },
+
+    cerrarModalMarcarPagado() {
+      this.mostrarModalMarcarPagado = false
+    },
+
+    async marcarComoPagado() {
+      if (!this.formMarcarPagado.metodo_pago_id) {
+        alert('Por favor selecciona un método de pago')
+        return
+      }
+
+      try {
+        this.isSubmitting = true
+        const response = await axios.post(`/api/pedidos-cola/${this.pedido.id}/marcar-pagado`, {
+          metodo_pago_id: this.formMarcarPagado.metodo_pago_id
+        })
+
+        this.pedido = response.data.pedido
+        this.cerrarModalMarcarPagado()
+        alert('Pedido marcado como pagado correctamente')
+      } catch (error) {
+        console.error('Error al marcar como pagado:', error)
+        alert('Error al marcar como pagado. Intenta nuevamente.')
+      } finally {
+        this.isSubmitting = false
       }
     },
 
