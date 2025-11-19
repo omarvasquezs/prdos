@@ -22,4 +22,18 @@ class DashboardController extends BaseController
     {
         return view('dashboard');
     }
+
+    /**
+     * Redirigir a la página apropiada según el rol activo
+     */
+    public function redirectToRole()
+    {
+        $activeRole = session('active_role');
+
+        if ($activeRole === 'Administrador') {
+            return redirect('/dashboard');
+        } else {
+            return redirect('/caja');
+        }
+    }
 }

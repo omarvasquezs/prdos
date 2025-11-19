@@ -20,8 +20,12 @@ Route::post('/logout', [AuthController::class, 'logout'])->withoutMiddleware([\I
 
 // Rutas protegidas (requieren autenticación)
 Route::middleware('auth')->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard', [DashboardController::class, 'index']);
+    // Ruta raíz redirige según el rol
+    Route::get('/', [DashboardController::class, 'redirectToRole'])->name('home');
+    
+    // Dashboard solo para Administrador
+    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('role:Administrador')->name('dashboard');
+    
     // Route to show the role selection SPA route (served by the admin SPA)
     Route::get('/select-role', [DashboardController::class, 'index']);
     Route::get('/test', [DashboardController::class, 'index']);
