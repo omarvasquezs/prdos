@@ -30,7 +30,7 @@ class DashboardController extends BaseController
     {
         $activeRole = session('active_role');
 
-        if ($activeRole === 'Administrador') {
+        if ($activeRole === 'administrador') {
             return redirect('/dashboard');
         } else {
             return redirect('/caja');

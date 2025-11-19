@@ -24,8 +24,8 @@ Route::middleware('auth')->group(function () {
     // Ruta raíz redirige según el rol
     Route::get('/', [DashboardController::class, 'redirectToRole'])->name('home');
     
-    // Dashboard solo para Administrador
-    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('role:Administrador')->name('dashboard');
+    // Dashboard solo para administrador
+    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('role:administrador')->name('dashboard');
     
     // Route to show the role selection SPA route (served by the admin SPA)
     Route::get('/select-role', [DashboardController::class, 'index']);

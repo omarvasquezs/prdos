@@ -20,7 +20,7 @@ class CheckRole
         // Si no hay rol activo o el rol activo no coincide con el requerido
         if (!$activeRole || $activeRole !== $role) {
             // Redirigir según el rol que tiene
-            if ($activeRole === 'Administrador') {
+            if ($activeRole === 'administrador') {
                 return redirect('/dashboard');
             } else {
                 return redirect('/caja');

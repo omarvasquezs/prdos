@@ -42,7 +42,7 @@ class AuthController extends Controller
                 $request->session()->put('active_role', $roles[0]);
                 
                 // Redirect based on the role
-                if ($roles[0] === 'Administrador') {
+                if ($roles[0] === 'administrador') {
                     $redirect = '/dashboard';
                 } else {
                     $redirect = '/caja';
@@ -124,8 +124,8 @@ class AuthController extends Controller
 
         // Determinar redirección basada en el rol
         $redirect = match($role) {
-            'Caja' => '/caja',
-            'Administrador' => '/dashboard',
+            'caja' => '/caja',
+            'administrador' => '/dashboard',
             default => '/dashboard'
         };
 
