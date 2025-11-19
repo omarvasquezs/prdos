@@ -455,6 +455,48 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal de Vista Previa PDF -->
+    <div v-if="mostrarModalPDF" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.7);">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+              <i class="fas fa-file-pdf me-2"></i>
+              Comprobante Generado
+            </h5>
+            <button type="button" class="btn-close btn-close-white" @click="cerrarModalPDF"></button>
+          </div>
+          <div class="modal-body p-0" style="height: 80vh;">
+            <iframe 
+              v-if="pdfURL"
+              :src="pdfURL" 
+              style="width: 100%; height: 100%; border: none;"
+              title="Vista previa del comprobante"
+            ></iframe>
+          </div>
+          <div class="modal-footer">
+            <a 
+              v-if="pdfURL"
+              :href="pdfURL" 
+              download="comprobante.pdf" 
+              class="btn btn-success"
+            >
+              <i class="fas fa-download me-2"></i>
+              Descargar PDF
+            </a>
+            <button type="button" class="btn btn-primary" @click="imprimirPDF">
+              <i class="fas fa-print me-2"></i>
+              Imprimir
+            </button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModalPDF">
+              <i class="fas fa-times me-2"></i>
+              Cerrar y Volver
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -475,6 +517,8 @@ export default {
       categoriaSeleccionada: '',
       mostrarModalCobro: false,
       mostrarModalMarcarPagado: false,
+      mostrarModalPDF: false,
+      pdfURL: null,
       metodosPago: [],
       isSubmitting: false,
       formCobro: {
@@ -637,13 +681,15 @@ export default {
           responseType: 'blob'
         })
 
-        // Crear blob y abrir en nueva pestaña
+        // Crear blob y mostrar en modal
         const file = new Blob([response.data], { type: 'application/pdf' })
         const fileURL = URL.createObjectURL(file)
-        window.open(fileURL, '_blank')
+        
+        // Guardar URL y mostrar modal
+        this.pdfURL = fileURL
+        this.mostrarModalCobro = false
+        this.mostrarModalPDF = true
 
-        alert('Comprobante generado exitosamente')
-        this.$router.push('/caja')
       } catch (error) {
         console.error('Error al generar comprobante:', error)
         if (error.response?.status === 422) {
@@ -757,6 +803,30 @@ export default {
       }
     },
 
+    cerrarModalPDF() {
+      // Liberar el objeto URL para evitar fugas de memoria
+      if (this.pdfURL) {
+        URL.revokeObjectURL(this.pdfURL)
+        this.pdfURL = null
+      }
+      this.mostrarModalPDF = false
+      
+      // Redirigir a la página de caja
+      this.$router.push('/caja')
+    },
+
+    imprimirPDF() {
+      if (this.pdfURL) {
+        // Abrir en nueva ventana solo para imprimir
+        const ventanaImpresion = window.open(this.pdfURL, '_blank')
+        if (ventanaImpresion) {
+          ventanaImpresion.onload = function() {
+            ventanaImpresion.print()
+          }
+        }
+      }
+    },
+
     formatearTiempo(fechaApertura) {
       const ahora = new Date()
       const apertura = new Date(fechaApertura)
@@ -856,6 +926,13 @@ export default {
     filtrarProductos() {
       if (!this.categoriaSeleccionada) return this.productos
       return this.productos.filter(p => p.categoria.id == this.categoriaSeleccionada)
+    }
+  },
+
+  beforeUnmount() {
+    // Liberar el objeto URL si existe
+    if (this.pdfURL) {
+      URL.revokeObjectURL(this.pdfURL)
     }
   }
 }
