@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\MesaController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CajaController;
@@ -56,6 +57,20 @@ Route::middleware(['web', 'auth'])->withoutMiddleware([\Illuminate\Foundation\Ht
     // API routes for products
     Route::get('/api/productos', [ProductController::class, 'index']);
     Route::get('/api/productos/categorias', [ProductController::class, 'categories']);
+    
+    // Admin product management routes
+    Route::get('/api/admin/productos', [ProductController::class, 'adminIndex']);
+    Route::get('/api/admin/productos/{product}', [ProductController::class, 'show']);
+    Route::post('/api/admin/productos', [ProductController::class, 'store']);
+    Route::put('/api/admin/productos/{product}', [ProductController::class, 'update']);
+    Route::delete('/api/admin/productos/{product}', [ProductController::class, 'destroy']);
+    
+    // Admin category management routes
+    Route::get('/api/admin/categorias', [CategoryController::class, 'index']);
+    Route::get('/api/admin/categorias/{category}', [CategoryController::class, 'show']);
+    Route::post('/api/admin/categorias', [CategoryController::class, 'store']);
+    Route::put('/api/admin/categorias/{category}', [CategoryController::class, 'update']);
+    Route::delete('/api/admin/categorias/{category}', [CategoryController::class, 'destroy']);
     
     // API routes for comprobantes
     Route::post('/api/pedidos/{pedidoId}/comprobante', [ComprobanteController::class, 'create']);
