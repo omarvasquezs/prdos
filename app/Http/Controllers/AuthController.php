@@ -40,7 +40,13 @@ class AuthController extends Controller
             // If user has only one role, set it as active immediately
             if (count($roles) === 1) {
                 $request->session()->put('active_role', $roles[0]);
-                $redirect = '/dashboard';
+                
+                // Redirect based on the role
+                if ($roles[0] === 'Administrador') {
+                    $redirect = '/dashboard';
+                } else {
+                    $redirect = '/caja';
+                }
             } else {
                 $redirect = '/select-role';
             }
