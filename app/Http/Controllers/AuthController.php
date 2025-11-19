@@ -124,8 +124,8 @@ class AuthController extends Controller
 
         // Determinar redirección basada en el rol
         $redirect = match($role) {
-            'caja' => '/caja',
-            'administrador' => '/dashboard',
+            'Caja' => '/caja',
+            'Administrador' => '/dashboard',
             default => '/dashboard'
         };
 
