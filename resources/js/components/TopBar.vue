@@ -3,7 +3,7 @@
     <div class="top-bar-left">
       <h4 class="mb-0">
         <i class="fas fa-utensils me-2"></i>
-        Pollería P'rdos
+        POLLERIA PARD'S
       </h4>
     </div>
     <div class="top-bar-right">
@@ -96,7 +96,7 @@ export default {
     async cerrarSesion() {
       this.showUserMenu = false;
       await this.authStore.logout();
-      this.router.push('/login');
+      window.location.href = '/login';
     }
   }
 };
