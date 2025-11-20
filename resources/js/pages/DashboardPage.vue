@@ -38,6 +38,17 @@
             Categorías
           </button>
         </li>
+        <li class="nav-item" role="presentation">
+          <button 
+            class="nav-link" 
+            :class="{ active: activeTab === 'usuarios' }"
+            @click="activeTab = 'usuarios'"
+            type="button"
+          >
+            <i class="fas fa-users me-2"></i>
+            Usuarios
+          </button>
+        </li>
       </ul>
 
       <!-- Tab Content -->
@@ -314,6 +325,137 @@
             </div>
           </div>
         </div>
+
+        <!-- Usuarios Tab -->
+        <div v-show="activeTab === 'usuarios'" class="tab-pane show">
+          <div class="card shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0">
+                <i class="fas fa-list me-2"></i>
+                Lista de Usuarios
+              </h5>
+              <button class="btn btn-primary" @click="abrirModalUsuario()">
+                <i class="fas fa-plus me-2"></i>
+                Nuevo Usuario
+              </button>
+            </div>
+            <div class="card-body">
+              <!-- Filtros -->
+              <div class="row mb-3">
+                <div class="col-md-9">
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    placeholder="Buscar usuarios..."
+                    v-model="searchUsuarios"
+                    @input="buscarUsuarios"
+                  >
+                </div>
+                <div class="col-md-3">
+                  <select class="form-select" v-model="paginationUsuarios.per_page" @change="cambiarPerPageUsuarios">
+                    <option :value="10">10 por página</option>
+                    <option :value="15">15 por página</option>
+                    <option :value="25">25 por página</option>
+                    <option :value="50">50 por página</option>
+                    <option :value="100">100 por página</option>
+                  </select>
+                </div>
+              </div>
+              
+              <!-- Tabla de usuarios -->
+              <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Nombre</th>
+                      <th>Username</th>
+                      <th>Email</th>
+                      <th>Roles</th>
+                      <th class="text-end">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-if="loadingUsuarios">
+                      <td colspan="5" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                          <span class="visually-hidden">Cargando...</span>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr v-else-if="usuarios.length === 0">
+                      <td colspan="5" class="text-center text-muted py-4">
+                        No hay usuarios registrados
+                      </td>
+                    </tr>
+                    <tr v-else v-for="usuario in usuarios" :key="usuario.id">
+                      <td><strong>{{ usuario.name }}</strong></td>
+                      <td>{{ usuario.username }}</td>
+                      <td>{{ usuario.email }}</td>
+                      <td>
+                        <span 
+                          v-for="role in usuario.roles" 
+                          :key="role.id" 
+                          class="badge bg-info me-1"
+                        >
+                          {{ role.name }}
+                        </span>
+                      </td>
+                      <td class="text-end">
+                        <button 
+                          class="btn btn-sm btn-outline-primary me-1"
+                          @click="abrirModalUsuario(usuario)"
+                          title="Editar"
+                        >
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button 
+                          class="btn btn-sm btn-outline-danger"
+                          @click="eliminarUsuario(usuario)"
+                          title="Eliminar"
+                        >
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              <!-- Paginación -->
+              <div v-if="paginationUsuarios.last_page > 1" class="d-flex justify-content-between align-items-center mt-3">
+                <div class="text-muted">
+                  Mostrando {{ ((paginationUsuarios.current_page - 1) * paginationUsuarios.per_page) + 1 }} 
+                  a {{ Math.min(paginationUsuarios.current_page * paginationUsuarios.per_page, paginationUsuarios.total) }} 
+                  de {{ paginationUsuarios.total }} usuarios
+                </div>
+                <nav>
+                  <ul class="pagination mb-0">
+                    <li class="page-item" :class="{ disabled: paginationUsuarios.current_page === 1 }">
+                      <a class="page-link" href="#" @click.prevent="cambiarPaginaUsuarios(paginationUsuarios.current_page - 1)">
+                        <i class="fas fa-chevron-left"></i>
+                      </a>
+                    </li>
+                    <li 
+                      v-for="page in getPaginationPages(paginationUsuarios)" 
+                      :key="page"
+                      class="page-item" 
+                      :class="{ active: page === paginationUsuarios.current_page, disabled: page === '...' }"
+                    >
+                      <a class="page-link" href="#" @click.prevent="page !== '...' && cambiarPaginaUsuarios(page)">
+                        {{ page }}
+                      </a>
+                    </li>
+                    <li class="page-item" :class="{ disabled: paginationUsuarios.current_page === paginationUsuarios.last_page }">
+                      <a class="page-link" href="#" @click.prevent="cambiarPaginaUsuarios(paginationUsuarios.current_page + 1)">
+                        <i class="fas fa-chevron-right"></i>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Modal Producto -->
@@ -489,6 +631,142 @@
           </div>
         </div>
       </div>
+
+      <!-- Modal Usuario -->
+      <div v-if="mostrarModalUsuario" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title">
+                <i :class="usuarioEditando ? 'fas fa-edit' : 'fas fa-plus'" class="me-2"></i>
+                {{ usuarioEditando ? 'Editar Usuario' : 'Nuevo Usuario' }}
+              </h5>
+              <button type="button" class="btn-close btn-close-white" @click="cerrarModalUsuario"></button>
+            </div>
+            <form @submit.prevent="guardarUsuario">
+              <div class="modal-body">
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="userName" class="form-label">Nombre completo *</label>
+                    <input 
+                      type="text" 
+                      class="form-control" 
+                      id="userName"
+                      v-model="formUsuario.name"
+                      required
+                    >
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="userUsername" class="form-label">Username *</label>
+                    <input 
+                      type="text" 
+                      class="form-control" 
+                      id="userUsername"
+                      v-model="formUsuario.username"
+                      required
+                    >
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-12 mb-3">
+                    <label for="userEmail" class="form-label">Email *</label>
+                    <input 
+                      type="email" 
+                      class="form-control" 
+                      id="userEmail"
+                      v-model="formUsuario.email"
+                      required
+                    >
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-12 mb-3">
+                    <label for="userPassword" class="form-label">
+                      Contraseña {{ usuarioEditando ? '(dejar vacío para no cambiar)' : '*' }}
+                    </label>
+                    <input 
+                      type="password" 
+                      class="form-control" 
+                      id="userPassword"
+                      v-model="formUsuario.password"
+                      :required="!usuarioEditando"
+                      minlength="6"
+                    >
+                    <small class="text-muted">Mínimo 6 caracteres</small>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-12 mb-3">
+                    <label class="form-label">Roles *</label>
+                    
+                    <!-- Autocomplete tipo Drupal -->
+                    <div class="drupal-autocomplete-wrapper">
+                      <!-- Tags seleccionados -->
+                      <div class="selected-tags mb-2">
+                        <span 
+                          v-for="roleId in formUsuario.roles" 
+                          :key="roleId"
+                          class="badge bg-primary me-2 mb-1 p-2"
+                        >
+                          {{ getRoleName(roleId) }}
+                          <i 
+                            class="fas fa-times ms-2" 
+                            style="cursor: pointer;"
+                            @click="removeRole(roleId)"
+                          ></i>
+                        </span>
+                      </div>
+                      
+                      <!-- Input de búsqueda -->
+                      <div class="position-relative">
+                        <input 
+                          type="text" 
+                          class="form-control" 
+                          placeholder="Buscar roles..."
+                          v-model="roleSearchQuery"
+                          @focus="showRoleDropdown = true"
+                          @input="filterRoles"
+                        >
+                        
+                        <!-- Dropdown de roles -->
+                        <div 
+                          v-if="showRoleDropdown && filteredRoles.length > 0"
+                          class="autocomplete-dropdown"
+                        >
+                          <div 
+                            v-for="role in filteredRoles" 
+                            :key="role.id"
+                            class="autocomplete-item"
+                            @click="addRole(role.id)"
+                          >
+                            {{ role.name }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <small class="text-muted">Selecciona uno o más roles para el usuario</small>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @click="cerrarModalUsuario">
+                  Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary" :disabled="guardandoUsuario || formUsuario.roles.length === 0">
+                  <span v-if="guardandoUsuario">
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    Guardando...
+                  </span>
+                  <span v-else>
+                    <i class="fas fa-save me-2"></i>
+                    Guardar
+                  </span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   </AdminLayout>
 </template>
@@ -530,13 +808,31 @@ export default {
         total: 0
       },
       
+      // Usuarios
+      usuarios: [],
+      loadingUsuarios: false,
+      searchUsuarios: '',
+      paginationUsuarios: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 10,
+        total: 0
+      },
+      rolesDisponibles: [],
+      roleSearchQuery: '',
+      filteredRoles: [],
+      showRoleDropdown: false,
+      
       // Modales
       mostrarModalProducto: false,
       mostrarModalCategoria: false,
+      mostrarModalUsuario: false,
       productoEditando: null,
       categoriaEditando: null,
+      usuarioEditando: null,
       guardandoProducto: false,
       guardandoCategoria: false,
+      guardandoUsuario: false,
       
       // Formularios
       formProducto: {
@@ -552,6 +848,13 @@ export default {
         is_active: true,
         order: 0
       },
+      formUsuario: {
+        name: '',
+        email: '',
+        username: '',
+        password: '',
+        roles: []
+      },
       
       searchTimeout: null
     }
@@ -560,10 +863,13 @@ export default {
   async mounted() {
     console.log('DashboardPage mounted');
     await this.cargarCategoriasActivas();
+    await this.cargarRolesDisponibles();
     await this.cargarCategorias();
     await this.cargarProductos();
+    await this.cargarUsuarios();
     console.log('Productos cargados:', this.productos.length);
     console.log('Categorías cargadas:', this.categorias.length);
+    console.log('Usuarios cargados:', this.usuarios.length);
   },
   
   methods: {
@@ -839,6 +1145,169 @@ export default {
         console.error('Error al eliminar categoría:', error);
         alert(error.response?.data?.error || 'Error al eliminar la categoría');
       }
+    },
+    
+    // Usuarios
+    async cargarUsuarios(page = 1) {
+      this.loadingUsuarios = true;
+      try {
+        const params = {
+          page,
+          per_page: this.paginationUsuarios.per_page,
+          search: this.searchUsuarios
+        };
+        
+        const response = await axios.get('/api/admin/usuarios', { params });
+        
+        this.usuarios = response.data.data;
+        this.paginationUsuarios = {
+          current_page: response.data.current_page,
+          last_page: response.data.last_page,
+          per_page: response.data.per_page,
+          total: response.data.total
+        };
+      } catch (error) {
+        console.error('Error al cargar usuarios:', error);
+        alert('Error al cargar los usuarios');
+      } finally {
+        this.loadingUsuarios = false;
+      }
+    },
+    
+    buscarUsuarios() {
+      clearTimeout(this.searchTimeout);
+      this.searchTimeout = setTimeout(() => {
+        this.cargarUsuarios(1);
+      }, 500);
+    },
+    
+    cambiarPaginaUsuarios(page) {
+      if (page >= 1 && page <= this.paginationUsuarios.last_page) {
+        this.cargarUsuarios(page);
+      }
+    },
+    
+    cambiarPerPageUsuarios() {
+      this.cargarUsuarios(1);
+    },
+    
+    async cargarRolesDisponibles() {
+      try {
+        const response = await axios.get('/api/admin/usuarios/roles');
+        this.rolesDisponibles = response.data;
+        this.filteredRoles = response.data;
+      } catch (error) {
+        console.error('Error al cargar roles:', error);
+      }
+    },
+    
+    filterRoles() {
+      const query = this.roleSearchQuery.toLowerCase();
+      this.filteredRoles = this.rolesDisponibles.filter(role => 
+        role.name.toLowerCase().includes(query) && 
+        !this.formUsuario.roles.includes(role.id)
+      );
+      this.showRoleDropdown = true;
+    },
+    
+    addRole(roleId) {
+      if (!this.formUsuario.roles.includes(roleId)) {
+        this.formUsuario.roles.push(roleId);
+      }
+      this.roleSearchQuery = '';
+      this.filteredRoles = this.rolesDisponibles.filter(role => 
+        !this.formUsuario.roles.includes(role.id)
+      );
+      this.showRoleDropdown = false;
+    },
+    
+    removeRole(roleId) {
+      const index = this.formUsuario.roles.indexOf(roleId);
+      if (index > -1) {
+        this.formUsuario.roles.splice(index, 1);
+      }
+      this.filteredRoles = this.rolesDisponibles.filter(role => 
+        !this.formUsuario.roles.includes(role.id)
+      );
+    },
+    
+    getRoleName(roleId) {
+      const role = this.rolesDisponibles.find(r => r.id === roleId);
+      return role ? role.name : '';
+    },
+    
+    abrirModalUsuario(usuario = null) {
+      this.usuarioEditando = usuario;
+      if (usuario) {
+        this.formUsuario = {
+          name: usuario.name,
+          email: usuario.email,
+          username: usuario.username,
+          password: '',
+          roles: usuario.roles.map(r => r.id)
+        };
+      } else {
+        this.formUsuario = {
+          name: '',
+          email: '',
+          username: '',
+          password: '',
+          roles: []
+        };
+      }
+      this.roleSearchQuery = '';
+      this.filteredRoles = this.rolesDisponibles.filter(role => 
+        !this.formUsuario.roles.includes(role.id)
+      );
+      this.showRoleDropdown = false;
+      this.mostrarModalUsuario = true;
+    },
+    
+    cerrarModalUsuario() {
+      this.mostrarModalUsuario = false;
+      this.usuarioEditando = null;
+      this.roleSearchQuery = '';
+      this.showRoleDropdown = false;
+    },
+    
+    async guardarUsuario() {
+      this.guardandoUsuario = true;
+      try {
+        if (this.usuarioEditando) {
+          await axios.put(`/api/admin/usuarios/${this.usuarioEditando.id}`, this.formUsuario);
+          alert('Usuario actualizado exitosamente');
+        } else {
+          await axios.post('/api/admin/usuarios', this.formUsuario);
+          alert('Usuario creado exitosamente');
+        }
+        this.cerrarModalUsuario();
+        await this.cargarUsuarios(this.paginationUsuarios.current_page);
+      } catch (error) {
+        console.error('Error al guardar usuario:', error);
+        if (error.response?.data?.errors) {
+          const errores = Object.values(error.response.data.errors).flat().join('\n');
+          alert('Errores de validación:\n' + errores);
+        } else {
+          alert(error.response?.data?.error || 'Error al guardar el usuario');
+        }
+      } finally {
+        this.guardandoUsuario = false;
+      }
+    },
+    
+    async eliminarUsuario(usuario) {
+      if (!confirm(`¿Estás seguro de eliminar el usuario "${usuario.name}"?`)) {
+        return;
+      }
+      
+      try {
+        await axios.delete(`/api/admin/usuarios/${usuario.id}`);
+        alert('Usuario eliminado exitosamente');
+        await this.cargarUsuarios(this.paginationUsuarios.current_page);
+      } catch (error) {
+        console.error('Error al eliminar usuario:', error);
+        alert(error.response?.data?.error || 'Error al eliminar el usuario');
+      }
     }
   }
 }
@@ -952,5 +1421,57 @@ export default {
 .form-select:focus {
   border-color: #0d6efd;
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Autocomplete tipo Drupal */
+.drupal-autocomplete-wrapper {
+  position: relative;
+}
+
+.selected-tags .badge {
+  font-size: 0.9rem;
+  font-weight: normal;
+  display: inline-flex;
+  align-items: center;
+}
+
+.selected-tags .badge i {
+  margin-left: 0.5rem;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.selected-tags .badge i:hover {
+  opacity: 1;
+}
+
+.autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  margin-top: 2px;
+}
+
+.autocomplete-item {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-item:hover {
+  background-color: #f8f9fa;
 }
 </style>

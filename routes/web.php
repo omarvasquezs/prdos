@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\MesaController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\CajaController;
 use App\Http\Controllers\Api\PedidoController;
 use App\Http\Controllers\ComprobanteController;
@@ -72,6 +73,14 @@ Route::middleware(['web', 'auth'])->withoutMiddleware([\Illuminate\Foundation\Ht
     Route::post('/api/admin/categorias', [CategoryController::class, 'store']);
     Route::put('/api/admin/categorias/{category}', [CategoryController::class, 'update']);
     Route::delete('/api/admin/categorias/{category}', [CategoryController::class, 'destroy']);
+    
+    // Admin user management routes
+    Route::get('/api/admin/usuarios/roles', [UserController::class, 'getRoles']);
+    Route::get('/api/admin/usuarios', [UserController::class, 'index']);
+    Route::get('/api/admin/usuarios/{user}', [UserController::class, 'show']);
+    Route::post('/api/admin/usuarios', [UserController::class, 'store']);
+    Route::put('/api/admin/usuarios/{user}', [UserController::class, 'update']);
+    Route::delete('/api/admin/usuarios/{user}', [UserController::class, 'destroy']);
     
     // API routes for comprobantes
     Route::post('/api/pedidos/{pedidoId}/comprobante', [ComprobanteController::class, 'create']);
