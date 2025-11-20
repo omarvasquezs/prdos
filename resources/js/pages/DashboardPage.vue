@@ -265,7 +265,7 @@
             <form @submit.prevent="guardarProducto">
               <div class="modal-body">
                 <div class="row">
-                  <div class="col-md-8 mb-3">
+                  <div class="col-md-12 mb-3">
                     <label for="productoNombre" class="form-label">Nombre *</label>
                     <input 
                       type="text" 
@@ -273,16 +273,6 @@
                       id="productoNombre"
                       v-model="formProducto.name"
                       required
-                    >
-                  </div>
-                  <div class="col-md-4 mb-3">
-                    <label for="productoOrden" class="form-label">Orden</label>
-                    <input 
-                      type="number" 
-                      class="form-control" 
-                      id="productoOrden"
-                      v-model.number="formProducto.order"
-                      min="0"
                     >
                   </div>
                 </div>
@@ -322,6 +312,23 @@
                       </option>
                     </select>
                   </div>
+                </div>
+                <!-- Campo de orden solo al editar -->
+                <div v-if="productoEditando" class="mb-3">
+                  <label for="productoOrden" class="form-label">
+                    Posición en el menú
+                    <small class="text-muted">(Orden de aparición en la categoría)</small>
+                  </label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    id="productoOrden"
+                    v-model.number="formProducto.order"
+                    min="1"
+                  >
+                  <small class="form-text text-muted">
+                    Un número menor aparecerá primero en la lista. Ejemplo: 1 = primero, 2 = segundo, etc.
+                  </small>
                 </div>
                 <div class="mb-3">
                   <div class="form-check form-switch">
