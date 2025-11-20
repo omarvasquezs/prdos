@@ -86,20 +86,19 @@
                       <th>Categoría</th>
                       <th>Precio</th>
                       <th>Estado</th>
-                      <th>Orden</th>
                       <th class="text-end">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-if="loadingProductos">
-                      <td colspan="6" class="text-center py-4">
+                      <td colspan="5" class="text-center py-4">
                         <div class="spinner-border text-primary" role="status">
                           <span class="visually-hidden">Cargando...</span>
                         </div>
                       </td>
                     </tr>
                     <tr v-else-if="productos.length === 0">
-                      <td colspan="6" class="text-center text-muted py-4">
+                      <td colspan="5" class="text-center text-muted py-4">
                         No hay productos registrados
                       </td>
                     </tr>
@@ -120,7 +119,6 @@
                           {{ producto.is_available ? 'Disponible' : 'No disponible' }}
                         </span>
                       </td>
-                      <td>{{ producto.order }}</td>
                       <td class="text-end">
                         <button 
                           class="btn btn-sm btn-outline-primary me-1"
@@ -313,23 +311,6 @@
                     </select>
                   </div>
                 </div>
-                <!-- Campo de orden solo al editar -->
-                <div v-if="productoEditando" class="mb-3">
-                  <label for="productoOrden" class="form-label">
-                    Posición en el menú
-                    <small class="text-muted">(Orden de aparición en la categoría)</small>
-                  </label>
-                  <input 
-                    type="number" 
-                    class="form-control" 
-                    id="productoOrden"
-                    v-model.number="formProducto.order"
-                    min="1"
-                  >
-                  <small class="form-text text-muted">
-                    Un número menor aparecerá primero en la lista. Ejemplo: 1 = primero, 2 = segundo, etc.
-                  </small>
-                </div>
                 <div class="mb-3">
                   <div class="form-check form-switch">
                     <input 
@@ -488,8 +469,7 @@ export default {
         description: '',
         price: 0,
         category_id: '',
-        is_available: true,
-        order: 0
+        is_available: true
       },
       formCategoria: {
         name: '',
@@ -560,8 +540,7 @@ export default {
           description: producto.description || '',
           price: producto.price,
           category_id: producto.category_id,
-          is_available: producto.is_available,
-          order: producto.order
+          is_available: producto.is_available
         };
       } else {
         this.formProducto = {
@@ -569,8 +548,7 @@ export default {
           description: '',
           price: 0,
           category_id: '',
-          is_available: true,
-          order: 0
+          is_available: true
         };
       }
       this.mostrarModalProducto = true;
