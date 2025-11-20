@@ -66,8 +66,8 @@ Route::middleware(['web', 'auth'])->withoutMiddleware([\Illuminate\Foundation\Ht
     Route::delete('/api/admin/productos/{product}', [ProductController::class, 'destroy']);
     
     // Admin category management routes
-    Route::get('/api/admin/categorias', [CategoryController::class, 'index']);
     Route::get('/api/admin/categorias/activas', [CategoryController::class, 'listActive']);
+    Route::get('/api/admin/categorias', [CategoryController::class, 'index']);
     Route::get('/api/admin/categorias/{category}', [CategoryController::class, 'show']);
     Route::post('/api/admin/categorias', [CategoryController::class, 'store']);
     Route::put('/api/admin/categorias/{category}', [CategoryController::class, 'update']);
