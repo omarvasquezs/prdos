@@ -1,37 +1,45 @@
 <template>
   <AdminLayout>
     <div class="dashboard-container">
-      <!-- Sidebar -->
+      <!-- Fixed Sidebar -->
       <div class="dashboard-sidebar">
-        <div class="sidebar-header">
-          <h5><i class="fas fa-cogs me-2"></i>Administración</h5>
+        <div class="sidebar-content">
+          <nav class="sidebar-nav">
+            <router-link 
+              to="/dashboard" 
+              class="nav-item"
+              active-class="active"
+              exact
+            >
+              <i class="fas fa-chart-line"></i>
+              <span>Dashboard</span>
+            </router-link>
+            <router-link 
+              to="/dashboard/productos" 
+              class="nav-item"
+              active-class="active"
+            >
+              <i class="fas fa-box"></i>
+              <span>Productos</span>
+            </router-link>
+            <router-link 
+              to="/dashboard/categorias" 
+              class="nav-item"
+              active-class="active"
+            >
+              <i class="fas fa-tags"></i>
+              <span>Categorías</span>
+            </router-link>
+            <router-link 
+              to="/dashboard/usuarios" 
+              class="nav-item"
+              active-class="active"
+            >
+              <i class="fas fa-users"></i>
+              <span>Usuarios</span>
+            </router-link>
+          </nav>
         </div>
-        <nav class="sidebar-nav">
-          <router-link 
-            to="/dashboard/productos" 
-            class="nav-item"
-            active-class="active"
-          >
-            <i class="fas fa-box"></i>
-            <span>Productos</span>
-          </router-link>
-          <router-link 
-            to="/dashboard/categorias" 
-            class="nav-item"
-            active-class="active"
-          >
-            <i class="fas fa-tags"></i>
-            <span>Categorías</span>
-          </router-link>
-          <router-link 
-            to="/dashboard/usuarios" 
-            class="nav-item"
-            active-class="active"
-          >
-            <i class="fas fa-users"></i>
-            <span>Usuarios</span>
-          </router-link>
-        </nav>
       </div>
 
       <!-- Main Content -->
@@ -56,32 +64,29 @@ export default {
 <style scoped>
 .dashboard-container {
   display: flex;
+  padding-top: 60px; /* Height of TopBar */
   min-height: 100vh;
-  background: #f8f9fa;
 }
 
 .dashboard-sidebar {
+  position: fixed;
+  left: 0;
+  top: 60px;
   width: 250px;
+  height: calc(100vh - 60px);
   background: white;
   border-right: 1px solid #dee2e6;
-  padding: 0;
+  overflow-y: auto;
+  z-index: 100;
 }
 
-.sidebar-header {
-  padding: 1.5rem 1rem;
-  border-bottom: 1px solid #dee2e6;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.sidebar-header h5 {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
+.sidebar-content {
+  padding: 1rem 0;
 }
 
 .sidebar-nav {
-  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .nav-item {
@@ -98,6 +103,7 @@ export default {
   font-size: 1.1rem;
   width: 24px;
   margin-right: 0.75rem;
+  color: #6c757d;
 }
 
 .nav-item span {
@@ -109,6 +115,10 @@ export default {
   color: #667eea;
 }
 
+.nav-item:hover i {
+  color: #667eea;
+}
+
 .nav-item.active {
   background: #e7f1ff;
   color: #667eea;
@@ -116,9 +126,14 @@ export default {
   font-weight: 600;
 }
 
+.nav-item.active i {
+  color: #667eea;
+}
+
 .dashboard-content {
+  margin-left: 250px; /* Width of sidebar */
   flex: 1;
   padding: 2rem;
-  overflow-y: auto;
+  min-height: calc(100vh - 60px);
 }
 </style>

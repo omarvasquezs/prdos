@@ -4,14 +4,18 @@ import { useAuthStore } from '@/stores/auth';
 const routes = [
   {
     path: '/',
-    redirect: '/dashboard/productos'
+    redirect: '/dashboard'
   },
   {
     path: '/dashboard',
     component: () => import('@/pages/DashboardPage.vue'),
     meta: { requiresAuth: true },
-    redirect: '/dashboard/productos',
     children: [
+      {
+        path: '',
+        name: 'dashboard-home',
+        component: () => import('@/pages/admin/DashboardHome.vue')
+      },
       {
         path: 'productos',
         name: 'dashboard-productos',
