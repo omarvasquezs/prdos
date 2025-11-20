@@ -43,7 +43,7 @@
       <!-- Tab Content -->
       <div class="tab-content">
         <!-- Productos Tab -->
-        <div v-show="activeTab === 'productos'" class="tab-pane">
+        <div v-show="activeTab === 'productos'" class="tab-pane show active">
           <div class="card shadow-sm">
             <div class="card-header bg-light d-flex justify-content-between align-items-center">
               <h5 class="card-title mb-0">
@@ -174,7 +174,7 @@
         </div>
 
         <!-- Categorías Tab -->
-        <div v-show="activeTab === 'categorias'" class="tab-pane">
+        <div v-show="activeTab === 'categorias'" class="tab-pane show">
           <div class="card shadow-sm">
             <div class="card-header bg-light d-flex justify-content-between align-items-center">
               <h5 class="card-title mb-0">
@@ -496,8 +496,11 @@ export default {
   },
   
   async mounted() {
+    console.log('DashboardPage mounted');
     await this.cargarCategorias();
     await this.cargarProductos();
+    console.log('Productos cargados:', this.productos.length);
+    console.log('Categorías cargadas:', this.categorias.length);
   },
   
   methods: {
