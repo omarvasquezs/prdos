@@ -70,7 +70,6 @@ class ProductController extends Controller
                         'id' => $category->id,
                         'nombre' => $category->name,
                         'descripcion' => $category->description,
-                        'orden' => $category->order,
                         'productos' => $category->activeProducts->map(function ($product) {
                             return [
                                 'id' => $product->id,

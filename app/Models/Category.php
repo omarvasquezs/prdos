@@ -14,7 +14,6 @@ class Category extends Model
     protected $fillable = [
         'name',
         'description',
-        'order',
         'is_active',
         'created_by',
         'updated_by'
@@ -67,10 +66,10 @@ class Category extends Model
     }
 
     /**
-     * Scope para ordenar por orden
+     * Scope para ordenar por ID
      */
     public function scopeOrdered($query)
     {
-        return $query->orderBy('order');
+        return $query->orderBy('id');
     }
 }
