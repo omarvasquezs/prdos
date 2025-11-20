@@ -16,7 +16,7 @@ class CategoryController extends Controller
     {
         try {
             $categories = Category::with(['creator', 'updater'])
-                ->orderBy('order')
+                ->orderBy('id')
                 ->get();
 
             return response()->json(
@@ -59,16 +59,10 @@ class CategoryController extends Controller
                 'name' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'is_active' => 'boolean',
-                'order' => 'nullable|integer|min:0',
             ]);
 
             $validated['created_by'] = $request->user()->id;
             $validated['updated_by'] = $request->user()->id;
-            
-            // Si no se proporciona orden, usar el siguiente disponible
-            if (!isset($validated['order'])) {
-                $validated['order'] = Category::max('order') + 1;
-            }
 
             $category = Category::create($validated);
             $category->load(['creator', 'updater']);
@@ -101,7 +95,6 @@ class CategoryController extends Controller
                 'name' => 'sometimes|required|string|max:255',
                 'description' => 'nullable|string',
                 'is_active' => 'boolean',
-                'order' => 'nullable|integer|min:0',
             ]);
 
             $validated['updated_by'] = $request->user()->id;
@@ -164,7 +157,6 @@ class CategoryController extends Controller
             'name' => $category->name,
             'description' => $category->description,
             'is_active' => $category->is_active,
-            'order' => $category->order,
             'products_count' => $category->products()->count(),
             'created_by' => $category->creator?->name,
             'updated_by' => $category->updater?->name,

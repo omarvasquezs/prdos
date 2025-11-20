@@ -619,15 +619,13 @@ export default {
         this.formCategoria = {
           name: categoria.name,
           description: categoria.description || '',
-          is_active: categoria.is_active,
-          order: categoria.order
+          is_active: categoria.is_active
         };
       } else {
         this.formCategoria = {
           name: '',
           description: '',
-          is_active: true,
-          order: 0
+          is_active: true
         };
       }
       this.mostrarModalCategoria = true;
