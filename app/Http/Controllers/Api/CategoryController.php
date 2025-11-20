@@ -33,9 +33,9 @@ class CategoryController extends Controller
             $categories = $query->paginate($perPage);
 
             return response()->json([
-                'data' => $categories->items()->map(function ($category) {
+                'data' => collect($categories->items())->map(function ($category) {
                     return $this->transformCategory($category);
-                }),
+                })->values(),
                 'current_page' => $categories->currentPage(),
                 'last_page' => $categories->lastPage(),
                 'per_page' => $categories->perPage(),
