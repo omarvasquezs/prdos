@@ -39,7 +39,7 @@ class Category extends Model
      */
     public function activeProducts(): HasMany
     {
-        return $this->hasMany(Product::class)->where('is_available', true)->orderBy('order');
+        return $this->hasMany(Product::class)->where('is_available', true)->orderBy('id');
     }
 
     /**

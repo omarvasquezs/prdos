@@ -112,7 +112,7 @@ class ProductController extends Controller
                     return $query->where('category_id', $categoryId);
                 })
                 ->orderBy('category_id')
-                ->orderBy('order')
+                ->orderBy('id')
                 ->paginate($perPage);
 
             return response()->json([
@@ -161,17 +161,10 @@ class ProductController extends Controller
                 'price' => 'required|numeric|min:0',
                 'category_id' => 'required|exists:categories,id',
                 'is_available' => 'boolean',
-                'order' => 'nullable|integer|min:0',
             ]);
 
             $validated['created_by'] = $request->user()->id;
             $validated['updated_by'] = $request->user()->id;
-            
-            // Si no se proporciona orden, usar el siguiente disponible
-            if (!isset($validated['order'])) {
-                $validated['order'] = Product::where('category_id', $validated['category_id'])
-                    ->max('order') + 1;
-            }
 
             $product = Product::create($validated);
             $product->load(['category', 'creator', 'updater']);
@@ -206,7 +199,6 @@ class ProductController extends Controller
                 'price' => 'sometimes|required|numeric|min:0',
                 'category_id' => 'sometimes|required|exists:categories,id',
                 'is_available' => 'boolean',
-                'order' => 'nullable|integer|min:0',
             ]);
 
             $validated['updated_by'] = $request->user()->id;
@@ -269,7 +261,6 @@ class ProductController extends Controller
                 'name' => $product->category->name
             ],
             'is_available' => $product->is_available,
-            'order' => $product->order,
             'created_by' => $product->creator?->name,
             'updated_by' => $product->updater?->name,
             'created_at' => $product->created_at?->format('Y-m-d H:i:s'),

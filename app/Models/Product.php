@@ -17,7 +17,6 @@ class Product extends Model
         'category_id',
         'image_url',
         'is_available',
-        'order',
         'created_by',
         'updated_by'
     ];
@@ -62,11 +61,11 @@ class Product extends Model
     }
 
     /**
-     * Scope para ordenar por orden
+     * Scope para ordenar por ID (orden de creación)
      */
     public function scopeOrdered($query)
     {
-        return $query->orderBy('order');
+        return $query->orderBy('id');
     }
 
     /**
