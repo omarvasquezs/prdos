@@ -58,7 +58,7 @@
             <div class="card-body">
               <!-- Filtros -->
               <div class="row mb-3">
-                <div class="col-md-6">
+                <div class="col-md-5">
                   <input 
                     type="text" 
                     class="form-control" 
@@ -70,9 +70,18 @@
                 <div class="col-md-4">
                   <select class="form-select" v-model="filterCategoria" @change="cargarProductos">
                     <option value="">Todas las categorías</option>
-                    <option v-for="cat in categorias" :key="cat.id" :value="cat.id">
+                    <option v-for="cat in categoriasActivas" :key="cat.id" :value="cat.id">
                       {{ cat.name }}
                     </option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <select class="form-select" v-model="paginationProductos.per_page" @change="cambiarPerPageProductos">
+                    <option :value="10">10 por página</option>
+                    <option :value="15">15 por página</option>
+                    <option :value="25">25 por página</option>
+                    <option :value="50">50 por página</option>
+                    <option :value="100">100 por página</option>
                   </select>
                 </div>
               </div>
@@ -141,27 +150,32 @@
               </div>
 
               <!-- Paginación -->
-              <div v-if="paginationProductos.last_page > 1" class="d-flex justify-content-center mt-3">
+              <div v-if="paginationProductos.last_page > 1" class="d-flex justify-content-between align-items-center mt-3">
+                <div class="text-muted">
+                  Mostrando {{ ((paginationProductos.current_page - 1) * paginationProductos.per_page) + 1 }} 
+                  a {{ Math.min(paginationProductos.current_page * paginationProductos.per_page, paginationProductos.total) }} 
+                  de {{ paginationProductos.total }} productos
+                </div>
                 <nav>
-                  <ul class="pagination">
+                  <ul class="pagination mb-0">
                     <li class="page-item" :class="{ disabled: paginationProductos.current_page === 1 }">
                       <a class="page-link" href="#" @click.prevent="cambiarPaginaProductos(paginationProductos.current_page - 1)">
-                        Anterior
+                        <i class="fas fa-chevron-left"></i>
                       </a>
                     </li>
                     <li 
-                      v-for="page in paginationProductos.last_page" 
+                      v-for="page in getPaginationPages(paginationProductos)" 
                       :key="page"
                       class="page-item" 
-                      :class="{ active: page === paginationProductos.current_page }"
+                      :class="{ active: page === paginationProductos.current_page, disabled: page === '...' }"
                     >
-                      <a class="page-link" href="#" @click.prevent="cambiarPaginaProductos(page)">
+                      <a class="page-link" href="#" @click.prevent="page !== '...' && cambiarPaginaProductos(page)">
                         {{ page }}
                       </a>
                     </li>
                     <li class="page-item" :class="{ disabled: paginationProductos.current_page === paginationProductos.last_page }">
                       <a class="page-link" href="#" @click.prevent="cambiarPaginaProductos(paginationProductos.current_page + 1)">
-                        Siguiente
+                        <i class="fas fa-chevron-right"></i>
                       </a>
                     </li>
                   </ul>
@@ -185,6 +199,28 @@
               </button>
             </div>
             <div class="card-body">
+              <!-- Filtros -->
+              <div class="row mb-3">
+                <div class="col-md-9">
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    placeholder="Buscar categorías..."
+                    v-model="searchCategorias"
+                    @input="buscarCategorias"
+                  >
+                </div>
+                <div class="col-md-3">
+                  <select class="form-select" v-model="paginationCategorias.per_page" @change="cambiarPerPageCategorias">
+                    <option :value="10">10 por página</option>
+                    <option :value="15">15 por página</option>
+                    <option :value="25">25 por página</option>
+                    <option :value="50">50 por página</option>
+                    <option :value="100">100 por página</option>
+                  </select>
+                </div>
+              </div>
+              
               <!-- Tabla de categorías -->
               <div class="table-responsive">
                 <table class="table table-hover align-middle">
@@ -194,20 +230,19 @@
                       <th>Descripción</th>
                       <th>Productos</th>
                       <th>Estado</th>
-                      <th>Orden</th>
                       <th class="text-end">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-if="loadingCategorias">
-                      <td colspan="6" class="text-center py-4">
+                      <td colspan="5" class="text-center py-4">
                         <div class="spinner-border text-primary" role="status">
                           <span class="visually-hidden">Cargando...</span>
                         </div>
                       </td>
                     </tr>
                     <tr v-else-if="categorias.length === 0">
-                      <td colspan="6" class="text-center text-muted py-4">
+                      <td colspan="5" class="text-center text-muted py-4">
                         No hay categorías registradas
                       </td>
                     </tr>
@@ -222,7 +257,6 @@
                           {{ categoria.is_active ? 'Activa' : 'Inactiva' }}
                         </span>
                       </td>
-                      <td>{{ categoria.order }}</td>
                       <td class="text-end">
                         <button 
                           class="btn btn-sm btn-outline-primary me-1"
@@ -243,6 +277,39 @@
                     </tr>
                   </tbody>
                 </table>
+              </div>
+              
+              <!-- Paginación -->
+              <div v-if="paginationCategorias.last_page > 1" class="d-flex justify-content-between align-items-center mt-3">
+                <div class="text-muted">
+                  Mostrando {{ ((paginationCategorias.current_page - 1) * paginationCategorias.per_page) + 1 }} 
+                  a {{ Math.min(paginationCategorias.current_page * paginationCategorias.per_page, paginationCategorias.total) }} 
+                  de {{ paginationCategorias.total }} categorías
+                </div>
+                <nav>
+                  <ul class="pagination mb-0">
+                    <li class="page-item" :class="{ disabled: paginationCategorias.current_page === 1 }">
+                      <a class="page-link" href="#" @click.prevent="cambiarPaginaCategorias(paginationCategorias.current_page - 1)">
+                        <i class="fas fa-chevron-left"></i>
+                      </a>
+                    </li>
+                    <li 
+                      v-for="page in getPaginationPages(paginationCategorias)" 
+                      :key="page"
+                      class="page-item" 
+                      :class="{ active: page === paginationCategorias.current_page, disabled: page === '...' }"
+                    >
+                      <a class="page-link" href="#" @click.prevent="page !== '...' && cambiarPaginaCategorias(page)">
+                        {{ page }}
+                      </a>
+                    </li>
+                    <li class="page-item" :class="{ disabled: paginationCategorias.current_page === paginationCategorias.last_page }">
+                      <a class="page-link" href="#" @click.prevent="cambiarPaginaCategorias(paginationCategorias.current_page + 1)">
+                        <i class="fas fa-chevron-right"></i>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
               </div>
             </div>
           </div>
@@ -305,7 +372,7 @@
                       required
                     >
                       <option value="">Seleccionar categoría</option>
-                      <option v-for="cat in categorias" :key="cat.id" :value="cat.id">
+                      <option v-for="cat in categoriasActivas" :key="cat.id" :value="cat.id">
                         {{ cat.name }}
                       </option>
                     </select>
@@ -453,7 +520,15 @@ export default {
       
       // Categorías
       categorias: [],
+      categoriasActivas: [], // Para el dropdown de filtro
       loadingCategorias: false,
+      searchCategorias: '',
+      paginationCategorias: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 15,
+        total: 0
+      },
       
       // Modales
       mostrarModalProducto: false,
@@ -484,6 +559,7 @@ export default {
   
   async mounted() {
     console.log('DashboardPage mounted');
+    await this.cargarCategoriasActivas();
     await this.cargarCategorias();
     await this.cargarProductos();
     console.log('Productos cargados:', this.productos.length);
@@ -491,6 +567,16 @@ export default {
   },
   
   methods: {
+    // Cargar categorías activas para el dropdown
+    async cargarCategoriasActivas() {
+      try {
+        const response = await axios.get('/api/admin/categorias/activas');
+        this.categoriasActivas = response.data;
+      } catch (error) {
+        console.error('Error al cargar categorías activas:', error);
+      }
+    },
+    
     // Productos
     async cargarProductos(page = 1) {
       this.loadingProductos = true;
@@ -530,6 +616,40 @@ export default {
       if (page >= 1 && page <= this.paginationProductos.last_page) {
         this.cargarProductos(page);
       }
+    },
+    
+    cambiarPerPageProductos() {
+      this.cargarProductos(1);
+    },
+    
+    getPaginationPages(pagination) {
+      const pages = [];
+      const current = pagination.current_page;
+      const last = pagination.last_page;
+      
+      if (last <= 7) {
+        for (let i = 1; i <= last; i++) {
+          pages.push(i);
+        }
+      } else {
+        if (current <= 3) {
+          for (let i = 1; i <= 5; i++) pages.push(i);
+          pages.push('...');
+          pages.push(last);
+        } else if (current >= last - 2) {
+          pages.push(1);
+          pages.push('...');
+          for (let i = last - 4; i <= last; i++) pages.push(i);
+        } else {
+          pages.push(1);
+          pages.push('...');
+          for (let i = current - 1; i <= current + 1; i++) pages.push(i);
+          pages.push('...');
+          pages.push(last);
+        }
+      }
+      
+      return pages;
     },
     
     abrirModalProducto(producto = null) {
@@ -600,17 +720,53 @@ export default {
     },
     
     // Categorías
-    async cargarCategorias() {
+    async cargarCategorias(page = 1) {
       this.loadingCategorias = true;
       try {
-        const response = await axios.get('/api/admin/categorias');
-        this.categorias = response.data;
+        const params = {
+          page,
+          per_page: this.paginationCategorias.per_page,
+          search: this.searchCategorias
+        };
+        
+        const response = await axios.get('/api/admin/categorias', { params });
+        
+        if (response.data.data) {
+          // Respuesta paginada
+          this.categorias = response.data.data;
+          this.paginationCategorias = {
+            current_page: response.data.current_page,
+            last_page: response.data.last_page,
+            per_page: response.data.per_page,
+            total: response.data.total
+          };
+        } else {
+          // Respuesta sin paginar (backward compatibility)
+          this.categorias = response.data;
+        }
       } catch (error) {
         console.error('Error al cargar categorías:', error);
         alert('Error al cargar las categorías');
       } finally {
         this.loadingCategorias = false;
       }
+    },
+    
+    buscarCategorias() {
+      clearTimeout(this.searchTimeout);
+      this.searchTimeout = setTimeout(() => {
+        this.cargarCategorias(1);
+      }, 500);
+    },
+    
+    cambiarPaginaCategorias(page) {
+      if (page >= 1 && page <= this.paginationCategorias.last_page) {
+        this.cargarCategorias(page);
+      }
+    },
+    
+    cambiarPerPageCategorias() {
+      this.cargarCategorias(1);
     },
     
     abrirModalCategoria(categoria = null) {
@@ -648,6 +804,7 @@ export default {
         }
         this.cerrarModalCategoria();
         await this.cargarCategorias();
+        await this.cargarCategoriasActivas(); // Actualizar dropdown
         if (this.activeTab === 'productos') {
           await this.cargarProductos(this.paginationProductos.current_page);
         }

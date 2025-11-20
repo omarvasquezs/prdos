@@ -12,18 +12,35 @@ class CategoryController extends Controller
     /**
      * Listar todas las categorías
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         try {
-            $categories = Category::with(['creator', 'updater'])
-                ->orderBy('id')
-                ->get();
+            $perPage = $request->input('per_page', 15);
+            $search = $request->input('search', '');
+            
+            $query = Category::with(['creator', 'updater'])
+                ->orderBy('id');
+            
+            // Búsqueda
+            if (!empty($search)) {
+                $query->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%");
+                });
+            }
+            
+            // Paginación
+            $categories = $query->paginate($perPage);
 
-            return response()->json(
-                $categories->map(function ($category) {
+            return response()->json([
+                'data' => $categories->items()->map(function ($category) {
                     return $this->transformCategory($category);
-                })
-            );
+                }),
+                'current_page' => $categories->currentPage(),
+                'last_page' => $categories->lastPage(),
+                'per_page' => $categories->perPage(),
+                'total' => $categories->total(),
+            ]);
 
         } catch (\Exception $e) {
             return response()->json([
@@ -163,5 +180,24 @@ class CategoryController extends Controller
             'created_at' => $category->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $category->updated_at?->format('Y-m-d H:i:s'),
         ];
+    }
+    
+    /**
+     * Listar categorías activas (sin paginación, para dropdowns)
+     */
+    public function listActive(): JsonResponse
+    {
+        try {
+            $categories = Category::where('is_active', true)
+                ->orderBy('id')
+                ->get(['id', 'name']);
+
+            return response()->json($categories);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al obtener categorías',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }
