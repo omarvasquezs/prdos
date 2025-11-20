@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
@@ -171,7 +172,7 @@ class UserController extends Controller
     {
         try {
             // No permitir eliminar el usuario actual
-            if ($user->id === auth()->id()) {
+            if ($user->id === Auth::id()) {
                 return response()->json([
                     'error' => 'No puedes eliminar tu propio usuario'
                 ], 422);
