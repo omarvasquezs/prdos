@@ -98,7 +98,7 @@ class ProductController extends Controller
     public function adminIndex(Request $request): JsonResponse
     {
         try {
-            $perPage = $request->get('per_page', 15);
+            $perPage = $request->input('per_page', 10);
             $search = $request->get('search');
             $categoryId = $request->get('category_id');
 
