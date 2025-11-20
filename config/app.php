@@ -14,7 +14,7 @@ return [
     */
 
     // Nombre de la aplicación (valor por defecto si no está en .env)
-    'name' => env('APP_NAME', "Polleria P'rdos"),
+    'name' => env('APP_NAME', "POLLERIA PARD'S"),
 
     /*
     |--------------------------------------------------------------------------
