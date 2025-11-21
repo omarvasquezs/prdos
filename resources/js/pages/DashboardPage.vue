@@ -8,8 +8,7 @@
             <router-link 
               to="/dashboard" 
               class="nav-item"
-              active-class="active"
-              exact
+              exact-active-class="active"
             >
               <i class="fas fa-chart-line"></i>
               <span>Dashboard</span>
@@ -17,7 +16,7 @@
             <router-link 
               to="/dashboard/productos" 
               class="nav-item"
-              active-class="active"
+              exact-active-class="active"
             >
               <i class="fas fa-box"></i>
               <span>Productos</span>
@@ -25,7 +24,7 @@
             <router-link 
               to="/dashboard/categorias" 
               class="nav-item"
-              active-class="active"
+              exact-active-class="active"
             >
               <i class="fas fa-tags"></i>
               <span>Categorías</span>
@@ -33,7 +32,7 @@
             <router-link 
               to="/dashboard/usuarios" 
               class="nav-item"
-              active-class="active"
+              exact-active-class="active"
             >
               <i class="fas fa-users"></i>
               <span>Usuarios</span>
