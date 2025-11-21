@@ -15,13 +15,8 @@
         <!-- Filtros -->
         <div class="row mb-3">
           <div class="col-md-9">
-            <input 
-              type="text" 
-              class="form-control" 
-              placeholder="Buscar categorías..."
-              v-model="searchCategorias"
-              @input="buscarCategorias"
-            >
+            <input type="text" class="form-control" placeholder="Buscar categorías..." v-model="searchCategorias"
+              @input="buscarCategorias">
           </div>
           <div class="col-md-3">
             <select class="form-select" v-model="paginationCategorias.per_page" @change="cambiarPerPageCategorias">
@@ -79,18 +74,12 @@
                     </span>
                   </td>
                   <td class="text-center">
-                    <button 
-                      class="btn btn-sm btn-outline-primary me-1" 
-                      @click="abrirModalCategoria(categoria)"
-                      title="Editar"
-                    >
+                    <button class="btn btn-sm btn-outline-primary me-1" @click="abrirModalCategoria(categoria)"
+                      title="Editar">
                       <i class="fas fa-edit"></i>
                     </button>
-                    <button 
-                      class="btn btn-sm btn-outline-danger" 
-                      @click="eliminarCategoria(categoria)"
-                      title="Eliminar"
-                    >
+                    <button class="btn btn-sm btn-outline-danger" @click="eliminarCategoria(categoria)"
+                      title="Eliminar">
                       <i class="fas fa-trash"></i>
                     </button>
                   </td>
@@ -103,16 +92,18 @@
         <!-- Paginación -->
         <div class="d-flex justify-content-between align-items-center mt-3">
           <div class="text-muted">
-            Mostrando {{ paginationCategorias.from }} a {{ paginationCategorias.to }} de {{ paginationCategorias.total }} categorías
+            Mostrando {{ paginationCategorias.from }} a {{ paginationCategorias.to }} de {{ paginationCategorias.total
+            }} categorías
           </div>
           <nav v-if="paginationCategorias.last_page > 1">
             <ul class="pagination mb-0">
               <li class="page-item" :class="{ disabled: paginationCategorias.current_page === 1 }">
-                <a class="page-link" href="#" @click.prevent="cambiarPaginaCategorias(paginationCategorias.current_page - 1)">
+                <a class="page-link" href="#"
+                  @click.prevent="cambiarPaginaCategorias(paginationCategorias.current_page - 1)">
                   <i class="fas fa-chevron-left"></i>
                 </a>
               </li>
-              
+
               <template v-for="page in getVisiblePages()" :key="page">
                 <li v-if="page === '...'" class="page-item disabled">
                   <span class="page-link">...</span>
@@ -124,8 +115,10 @@
                 </li>
               </template>
 
-              <li class="page-item" :class="{ disabled: paginationCategorias.current_page === paginationCategorias.last_page }">
-                <a class="page-link" href="#" @click.prevent="cambiarPaginaCategorias(paginationCategorias.current_page + 1)">
+              <li class="page-item"
+                :class="{ disabled: paginationCategorias.current_page === paginationCategorias.last_page }">
+                <a class="page-link" href="#"
+                  @click.prevent="cambiarPaginaCategorias(paginationCategorias.current_page + 1)">
                   <i class="fas fa-chevron-right"></i>
                 </a>
               </li>
@@ -150,13 +143,8 @@
             <form @submit.prevent="guardarCategoria">
               <div class="mb-3">
                 <label class="form-label">Nombre <span class="text-danger">*</span></label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  v-model="categoriaForm.name"
-                  :class="{ 'is-invalid': erroresCategoria.name }"
-                  required
-                >
+                <input type="text" class="form-control" v-model="categoriaForm.name"
+                  :class="{ 'is-invalid': erroresCategoria.name }" required>
                 <div class="invalid-feedback" v-if="erroresCategoria.name">
                   {{ erroresCategoria.name[0] }}
                 </div>
@@ -164,12 +152,8 @@
 
               <div class="mb-3">
                 <label class="form-label">Descripción</label>
-                <textarea 
-                  class="form-control" 
-                  v-model="categoriaForm.description"
-                  :class="{ 'is-invalid': erroresCategoria.description }"
-                  rows="3"
-                ></textarea>
+                <textarea class="form-control" v-model="categoriaForm.description"
+                  :class="{ 'is-invalid': erroresCategoria.description }" rows="3"></textarea>
                 <div class="invalid-feedback" v-if="erroresCategoria.description">
                   {{ erroresCategoria.description[0] }}
                 </div>
@@ -177,12 +161,7 @@
 
               <div class="mb-3">
                 <div class="form-check form-switch">
-                  <input 
-                    class="form-check-input" 
-                    type="checkbox" 
-                    id="isActive"
-                    v-model="categoriaForm.is_active"
-                  >
+                  <input class="form-check-input" type="checkbox" id="isActive" v-model="categoriaForm.is_active">
                   <label class="form-check-label" for="isActive">
                     Categoría activa
                   </label>
@@ -299,7 +278,7 @@ const getVisiblePages = () => {
   const pages = [];
   const current = paginationCategorias.current_page;
   const last = paginationCategorias.last_page;
-  
+
   if (last <= 7) {
     for (let i = 1; i <= last; i++) {
       pages.push(i);
@@ -321,14 +300,14 @@ const getVisiblePages = () => {
       pages.push(last);
     }
   }
-  
+
   return pages;
 };
 
 const abrirModalCategoria = (categoria = null) => {
   categoriaEditando.value = categoria;
   erroresCategoria.value = {};
-  
+
   if (categoria) {
     categoriaForm.name = categoria.name;
     categoriaForm.description = categoria.description || '';
@@ -338,21 +317,21 @@ const abrirModalCategoria = (categoria = null) => {
     categoriaForm.description = '';
     categoriaForm.is_active = true;
   }
-  
+
   modalCategoriaInstance.show();
 };
 
 const guardarCategoria = async () => {
   guardandoCategoria.value = true;
   erroresCategoria.value = {};
-  
+
   try {
     if (categoriaEditando.value) {
       await axios.put(`/api/admin/categorias/${categoriaEditando.value.id}`, categoriaForm);
     } else {
       await axios.post('/api/admin/categorias', categoriaForm);
     }
-    
+
     modalCategoriaInstance.hide();
     cargarCategorias();
     alert(categoriaEditando.value ? 'Categoría actualizada exitosamente' : 'Categoría creada exitosamente');
@@ -371,7 +350,7 @@ const eliminarCategoria = async (categoria) => {
   if (!confirm(`¿Estás seguro de eliminar la categoría "${categoria.name}"?`)) {
     return;
   }
-  
+
   try {
     await axios.delete(`/api/admin/categorias/${categoria.id}`);
     cargarCategorias();
@@ -448,7 +427,7 @@ const eliminarCategoria = async (categoria) => {
 }
 
 .table-body-wrapper {
-  height: calc(100vh - 380px);
+  height: calc(100vh - 400px);
   overflow-y: auto;
   overflow-x: hidden;
 }

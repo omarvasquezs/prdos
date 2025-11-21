@@ -15,13 +15,8 @@
         <!-- Filtros -->
         <div class="row mb-3">
           <div class="col-md-9">
-            <input 
-              type="text" 
-              class="form-control" 
-              placeholder="Buscar usuarios..."
-              v-model="searchUsuarios"
-              @input="buscarUsuarios"
-            >
+            <input type="text" class="form-control" placeholder="Buscar usuarios..." v-model="searchUsuarios"
+              @input="buscarUsuarios">
           </div>
           <div class="col-md-3">
             <select class="form-select" v-model="paginationUsuarios.per_page" @change="cambiarPerPageUsuarios">
@@ -72,34 +67,20 @@
                   <td>{{ usuario.username }}</td>
                   <td>{{ usuario.email }}</td>
                   <td>
-                    <span 
-                      v-for="role in usuario.roles" 
-                      :key="role.id" 
-                      class="badge bg-primary me-1"
-                    >
+                    <span v-for="role in usuario.roles" :key="role.id" class="badge bg-primary me-1">
                       {{ role.name }}
                     </span>
                   </td>
                   <td class="text-center">
-                    <button 
-                      class="btn btn-sm btn-outline-primary me-1" 
-                      @click="abrirModalUsuario(usuario)"
-                      title="Editar"
-                    >
+                    <button class="btn btn-sm btn-outline-primary me-1" @click="abrirModalUsuario(usuario)"
+                      title="Editar">
                       <i class="fas fa-edit"></i>
                     </button>
-                    <button 
-                      class="btn btn-sm btn-outline-warning me-1" 
-                      @click="abrirModalPassword(usuario)"
-                      title="Cambiar contraseña"
-                    >
+                    <button class="btn btn-sm btn-outline-warning me-1" @click="abrirModalPassword(usuario)"
+                      title="Cambiar contraseña">
                       <i class="fas fa-key"></i>
                     </button>
-                    <button 
-                      class="btn btn-sm btn-outline-danger" 
-                      @click="eliminarUsuario(usuario)"
-                      title="Eliminar"
-                    >
+                    <button class="btn btn-sm btn-outline-danger" @click="eliminarUsuario(usuario)" title="Eliminar">
                       <i class="fas fa-trash"></i>
                     </button>
                   </td>
@@ -112,16 +93,18 @@
         <!-- Paginación -->
         <div class="d-flex justify-content-between align-items-center mt-3">
           <div class="text-muted">
-            Mostrando {{ paginationUsuarios.from }} a {{ paginationUsuarios.to }} de {{ paginationUsuarios.total }} usuarios
+            Mostrando {{ paginationUsuarios.from }} a {{ paginationUsuarios.to }} de {{ paginationUsuarios.total }}
+            usuarios
           </div>
           <nav v-if="paginationUsuarios.last_page > 1">
             <ul class="pagination mb-0">
               <li class="page-item" :class="{ disabled: paginationUsuarios.current_page === 1 }">
-                <a class="page-link" href="#" @click.prevent="cambiarPaginaUsuarios(paginationUsuarios.current_page - 1)">
+                <a class="page-link" href="#"
+                  @click.prevent="cambiarPaginaUsuarios(paginationUsuarios.current_page - 1)">
                   <i class="fas fa-chevron-left"></i>
                 </a>
               </li>
-              
+
               <template v-for="page in getVisiblePages()" :key="page">
                 <li v-if="page === '...'" class="page-item disabled">
                   <span class="page-link">...</span>
@@ -133,8 +116,10 @@
                 </li>
               </template>
 
-              <li class="page-item" :class="{ disabled: paginationUsuarios.current_page === paginationUsuarios.last_page }">
-                <a class="page-link" href="#" @click.prevent="cambiarPaginaUsuarios(paginationUsuarios.current_page + 1)">
+              <li class="page-item"
+                :class="{ disabled: paginationUsuarios.current_page === paginationUsuarios.last_page }">
+                <a class="page-link" href="#"
+                  @click.prevent="cambiarPaginaUsuarios(paginationUsuarios.current_page + 1)">
                   <i class="fas fa-chevron-right"></i>
                 </a>
               </li>
@@ -160,13 +145,8 @@
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label class="form-label">Nombre <span class="text-danger">*</span></label>
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    v-model="usuarioForm.name"
-                    :class="{ 'is-invalid': erroresUsuario.name }"
-                    required
-                  >
+                  <input type="text" class="form-control" v-model="usuarioForm.name"
+                    :class="{ 'is-invalid': erroresUsuario.name }" required>
                   <div class="invalid-feedback" v-if="erroresUsuario.name">
                     {{ erroresUsuario.name[0] }}
                   </div>
@@ -174,13 +154,8 @@
 
                 <div class="col-md-6 mb-3">
                   <label class="form-label">Usuario <span class="text-danger">*</span></label>
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    v-model="usuarioForm.username"
-                    :class="{ 'is-invalid': erroresUsuario.username }"
-                    required
-                  >
+                  <input type="text" class="form-control" v-model="usuarioForm.username"
+                    :class="{ 'is-invalid': erroresUsuario.username }" required>
                   <div class="invalid-feedback" v-if="erroresUsuario.username">
                     {{ erroresUsuario.username[0] }}
                   </div>
@@ -189,12 +164,8 @@
 
               <div class="mb-3">
                 <label class="form-label">Email</label>
-                <input 
-                  type="email" 
-                  class="form-control" 
-                  v-model="usuarioForm.email"
-                  :class="{ 'is-invalid': erroresUsuario.email }"
-                >
+                <input type="email" class="form-control" v-model="usuarioForm.email"
+                  :class="{ 'is-invalid': erroresUsuario.email }">
                 <div class="invalid-feedback" v-if="erroresUsuario.email">
                   {{ erroresUsuario.email[0] }}
                 </div>
@@ -202,16 +173,11 @@
 
               <div class="mb-3" v-if="!usuarioEditando">
                 <label class="form-label">
-                  Contraseña 
+                  Contraseña
                   <span class="text-danger">*</span>
                 </label>
-                <input 
-                  type="password" 
-                  class="form-control" 
-                  v-model="usuarioForm.password"
-                  :class="{ 'is-invalid': erroresUsuario.password }"
-                  required
-                >
+                <input type="password" class="form-control" v-model="usuarioForm.password"
+                  :class="{ 'is-invalid': erroresUsuario.password }" required>
                 <div class="invalid-feedback" v-if="erroresUsuario.password">
                   {{ erroresUsuario.password[0] }}
                 </div>
@@ -219,16 +185,11 @@
 
               <div class="mb-3" v-if="!usuarioEditando">
                 <label class="form-label">
-                  Confirmar Contraseña 
+                  Confirmar Contraseña
                   <span class="text-danger">*</span>
                 </label>
-                <input 
-                  type="password" 
-                  class="form-control" 
-                  v-model="usuarioForm.password_confirmation"
-                  :class="{ 'is-invalid': erroresUsuario.password_confirmation }"
-                  required
-                >
+                <input type="password" class="form-control" v-model="usuarioForm.password_confirmation"
+                  :class="{ 'is-invalid': erroresUsuario.password_confirmation }" required>
                 <div class="invalid-feedback" v-if="erroresUsuario.password_confirmation">
                   {{ erroresUsuario.password_confirmation[0] }}
                 </div>
@@ -237,21 +198,12 @@
               <!-- Selector de Roles estilo Drupal -->
               <div class="mb-3">
                 <label class="form-label">Roles <span class="text-danger">*</span></label>
-                
+
                 <!-- Tags de roles seleccionados -->
                 <div class="roles-tags mb-2" v-if="selectedRoles.length > 0">
-                  <span 
-                    v-for="role in selectedRoles" 
-                    :key="role.id" 
-                    class="role-tag"
-                  >
+                  <span v-for="role in selectedRoles" :key="role.id" class="role-tag">
                     {{ role.name }}
-                    <button 
-                      type="button" 
-                      class="btn-remove-role" 
-                      @click="removeRole(role.id)"
-                      title="Remover rol"
-                    >
+                    <button type="button" class="btn-remove-role" @click="removeRole(role.id)" title="Remover rol">
                       ×
                     </button>
                   </span>
@@ -259,27 +211,13 @@
 
                 <!-- Input de búsqueda -->
                 <div class="role-search-container" ref="roleSearchContainer">
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    :class="{ 'is-invalid': erroresUsuario.roles }"
-                    placeholder="Buscar roles..."
-                    v-model="roleSearchQuery"
-                    @focus="showRoleDropdown = true"
-                    @input="filterRoles"
-                  >
-                  
+                  <input type="text" class="form-control" :class="{ 'is-invalid': erroresUsuario.roles }"
+                    placeholder="Buscar roles..." v-model="roleSearchQuery" @focus="showRoleDropdown = true"
+                    @input="filterRoles">
+
                   <!-- Dropdown de roles -->
-                  <div 
-                    class="roles-dropdown" 
-                    v-if="showRoleDropdown && filteredRoles.length > 0"
-                  >
-                    <div 
-                      v-for="role in filteredRoles" 
-                      :key="role.id"
-                      class="role-option"
-                      @click="addRole(role)"
-                    >
+                  <div class="roles-dropdown" v-if="showRoleDropdown && filteredRoles.length > 0">
+                    <div v-for="role in filteredRoles" :key="role.id" class="role-option" @click="addRole(role)">
                       {{ role.name }}
                     </div>
                   </div>
@@ -341,14 +279,8 @@
               <div v-if="passwordForm.action === 'new'">
                 <div class="mb-3">
                   <label class="form-label">Nueva Contraseña <span class="text-danger">*</span></label>
-                  <input 
-                    type="password" 
-                    class="form-control" 
-                    v-model="passwordForm.new_password"
-                    :class="{ 'is-invalid': erroresPassword.new_password }"
-                    minlength="6"
-                    required
-                  >
+                  <input type="password" class="form-control" v-model="passwordForm.new_password"
+                    :class="{ 'is-invalid': erroresPassword.new_password }" minlength="6" required>
                   <div class="invalid-feedback" v-if="erroresPassword.new_password">
                     {{ erroresPassword.new_password[0] }}
                   </div>
@@ -356,14 +288,8 @@
 
                 <div class="mb-3">
                   <label class="form-label">Confirmar Contraseña <span class="text-danger">*</span></label>
-                  <input 
-                    type="password" 
-                    class="form-control" 
-                    v-model="passwordForm.new_password_confirmation"
-                    :class="{ 'is-invalid': erroresPassword.new_password_confirmation }"
-                    minlength="6"
-                    required
-                  >
+                  <input type="password" class="form-control" v-model="passwordForm.new_password_confirmation"
+                    :class="{ 'is-invalid': erroresPassword.new_password_confirmation }" minlength="6" required>
                   <div class="invalid-feedback" v-if="erroresPassword.new_password_confirmation">
                     {{ erroresPassword.new_password_confirmation[0] }}
                   </div>
@@ -457,9 +383,9 @@ let searchTimeout = null;
 const filteredRoles = computed(() => {
   const query = roleSearchQuery.value.toLowerCase();
   const selectedIds = selectedRoles.value.map(r => r.id);
-  
-  return allRoles.value.filter(role => 
-    !selectedIds.includes(role.id) && 
+
+  return allRoles.value.filter(role =>
+    !selectedIds.includes(role.id) &&
     role.name.toLowerCase().includes(query)
   );
 });
@@ -469,7 +395,7 @@ onMounted(() => {
   cargarRoles();
   modalUsuarioInstance = new Modal(modalUsuario.value);
   modalPasswordInstance = new Modal(modalPassword.value);
-  
+
   // Click fuera del dropdown para cerrarlo
   document.addEventListener('click', handleClickOutside);
 });
@@ -539,7 +465,7 @@ const getVisiblePages = () => {
   const pages = [];
   const current = paginationUsuarios.current_page;
   const last = paginationUsuarios.last_page;
-  
+
   if (last <= 7) {
     for (let i = 1; i <= last; i++) {
       pages.push(i);
@@ -561,7 +487,7 @@ const getVisiblePages = () => {
       pages.push(last);
     }
   }
-  
+
   return pages;
 };
 
@@ -585,7 +511,7 @@ const abrirModalUsuario = (usuario = null) => {
   erroresUsuario.value = {};
   selectedRoles.value = [];
   roleSearchQuery.value = '';
-  
+
   if (usuario) {
     usuarioForm.name = usuario.name;
     usuarioForm.username = usuario.username;
@@ -600,14 +526,14 @@ const abrirModalUsuario = (usuario = null) => {
     usuarioForm.password = '';
     usuarioForm.password_confirmation = '';
   }
-  
+
   modalUsuarioInstance.show();
 };
 
 const guardarUsuario = async () => {
   guardandoUsuario.value = true;
   erroresUsuario.value = {};
-  
+
   // Preparar datos
   const data = {
     name: usuarioForm.name,
@@ -615,20 +541,20 @@ const guardarUsuario = async () => {
     email: usuarioForm.email || null,
     roles: selectedRoles.value.map(r => r.id)
   };
-  
+
   // Solo agregar password en creación
   if (!usuarioEditando.value) {
     data.password = usuarioForm.password;
     data.password_confirmation = usuarioForm.password_confirmation;
   }
-  
+
   try {
     if (usuarioEditando.value) {
       await axios.put(`/api/admin/usuarios/${usuarioEditando.value.id}`, data);
     } else {
       await axios.post('/api/admin/usuarios', data);
     }
-    
+
     modalUsuarioInstance.hide();
     cargarUsuarios();
     alert(usuarioEditando.value ? 'Usuario actualizado exitosamente' : 'Usuario creado exitosamente');
@@ -647,7 +573,7 @@ const eliminarUsuario = async (usuario) => {
   if (!confirm(`¿Estás seguro de eliminar el usuario "${usuario.name}"?`)) {
     return;
   }
-  
+
   try {
     await axios.delete(`/api/admin/usuarios/${usuario.id}`);
     cargarUsuarios();
@@ -670,22 +596,22 @@ const abrirModalPassword = (usuario) => {
 const cambiarPassword = async () => {
   guardandoPassword.value = true;
   erroresPassword.value = {};
-  
+
   try {
     const data = {
       action: passwordForm.action
     };
-    
+
     if (passwordForm.action === 'new') {
       data.new_password = passwordForm.new_password;
       data.new_password_confirmation = passwordForm.new_password_confirmation;
     }
-    
+
     await axios.post(`/api/admin/usuarios/${usuarioPassword.value.id}/change-password`, data);
-    
+
     modalPasswordInstance.hide();
-    alert(passwordForm.action === 'reset' 
-      ? 'Contraseña restablecida a 12345678' 
+    alert(passwordForm.action === 'reset'
+      ? 'Contraseña restablecida a 12345678'
       : 'Contraseña actualizada exitosamente'
     );
   } catch (error) {
@@ -838,7 +764,7 @@ const cambiarPassword = async () => {
 }
 
 .table-body-wrapper {
-  height: calc(100vh - 380px);
+  height: calc(100vh - 400px);
   overflow-y: auto;
   overflow-x: hidden;
 }
