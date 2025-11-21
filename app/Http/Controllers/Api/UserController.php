@@ -78,9 +78,9 @@ class UserController extends Controller
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email',
+                'email' => 'nullable|email|unique:users,email',
                 'username' => 'required|string|unique:users,username|max:255',
-                'password' => 'required|string|min:6',
+                'password' => 'required|string|min:6|confirmed',
                 'roles' => 'required|array|min:1',
                 'roles.*' => 'exists:roles,id',
             ]);
@@ -124,19 +124,11 @@ class UserController extends Controller
         try {
             $validated = $request->validate([
                 'name' => 'sometimes|required|string|max:255',
-                'email' => 'sometimes|required|email|unique:users,email,' . $user->id,
+                'email' => 'nullable|email|unique:users,email,' . $user->id,
                 'username' => 'sometimes|required|string|unique:users,username,' . $user->id . '|max:255',
-                'password' => 'nullable|string|min:6',
                 'roles' => 'sometimes|required|array|min:1',
                 'roles.*' => 'exists:roles,id',
             ]);
-
-            // Actualizar contraseña solo si se proporciona
-            if (!empty($validated['password'])) {
-                $validated['password'] = Hash::make($validated['password']);
-            } else {
-                unset($validated['password']);
-            }
 
             // Actualizar roles si se proporcionan
             if (isset($validated['roles'])) {
@@ -203,6 +195,46 @@ class UserController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Error al obtener roles',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Cambiar o restablecer contraseña de usuario
+     */
+    public function changePassword(Request $request, User $user): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'action' => 'required|in:new,reset',
+                'new_password' => 'required_if:action,new|nullable|string|min:6|confirmed',
+            ]);
+
+            if ($validated['action'] === 'reset') {
+                // Restablecer a 12345678
+                $user->password = Hash::make('12345678');
+                $message = 'Contraseña restablecida a 12345678';
+            } else {
+                // Nueva contraseña personalizada
+                $user->password = Hash::make($validated['new_password']);
+                $message = 'Contraseña actualizada exitosamente';
+            }
+
+            $user->save();
+
+            return response()->json([
+                'message' => $message
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al cambiar contraseña',
                 'message' => $e->getMessage()
             ], 500);
         }

@@ -80,6 +80,7 @@ Route::middleware(['web', 'auth'])->withoutMiddleware([\Illuminate\Foundation\Ht
     Route::get('/api/admin/usuarios/{user}', [UserController::class, 'show']);
     Route::post('/api/admin/usuarios', [UserController::class, 'store']);
     Route::put('/api/admin/usuarios/{user}', [UserController::class, 'update']);
+    Route::post('/api/admin/usuarios/{user}/change-password', [UserController::class, 'changePassword']);
     Route::delete('/api/admin/usuarios/{user}', [UserController::class, 'destroy']);
     
     // API routes for comprobantes
