@@ -43,66 +43,72 @@
         </div>
 
         <!-- Tabla de productos -->
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>Nombre</th>
-                <th>Categoría</th>
-                <th>Precio</th>
-                <th>Estado</th>
-                <th class="text-end">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="loadingProductos">
-                <td colspan="5" class="text-center py-4">
-                  <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Cargando...</span>
-                  </div>
-                </td>
-              </tr>
-              <tr v-else-if="productos.length === 0">
-                <td colspan="5" class="text-center text-muted py-4">
-                  No hay productos registrados
-                </td>
-              </tr>
-              <tr v-else v-for="producto in productos" :key="producto.id">
-                <td>
-                  <strong>{{ producto.name }}</strong>
-                  <br>
-                  <small class="text-muted">{{ producto.description }}</small>
-                </td>
-                <td>
-                  <span class="badge bg-info">{{ producto.category.name }}</span>
-                </td>
-                <td>
-                  <strong>{{ producto.price_formatted }}</strong>
-                </td>
-                <td>
-                  <span class="badge" :class="producto.is_available ? 'bg-success' : 'bg-secondary'">
-                    {{ producto.is_available ? 'Disponible' : 'No disponible' }}
-                  </span>
-                </td>
-                <td class="text-end">
-                  <button 
-                    class="btn btn-sm btn-outline-primary me-1"
-                    @click="abrirModalProducto(producto)"
-                    title="Editar"
-                  >
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button 
-                    class="btn btn-sm btn-outline-danger"
-                    @click="eliminarProducto(producto)"
-                    title="Eliminar"
-                  >
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="table-container">
+          <div class="table-wrapper">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Nombre</th>
+                  <th>Categoría</th>
+                  <th>Precio</th>
+                  <th>Estado</th>
+                  <th class="text-end">Acciones</th>
+                </tr>
+              </thead>
+            </table>
+          </div>
+          <div class="table-body-wrapper">
+            <table class="table table-hover align-middle mb-0">
+              <tbody>
+                <tr v-if="loadingProductos">
+                  <td colspan="5" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Cargando...</span>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-else-if="productos.length === 0">
+                  <td colspan="5" class="text-center text-muted py-4">
+                    No hay productos registrados
+                  </td>
+                </tr>
+                <tr v-else v-for="producto in productos" :key="producto.id">
+                  <td>
+                    <strong>{{ producto.name }}</strong>
+                    <br>
+                    <small class="text-muted">{{ producto.description }}</small>
+                  </td>
+                  <td>
+                    <span class="badge bg-info">{{ producto.category.name }}</span>
+                  </td>
+                  <td>
+                    <strong>{{ producto.price_formatted }}</strong>
+                  </td>
+                  <td>
+                    <span class="badge" :class="producto.is_available ? 'bg-success' : 'bg-secondary'">
+                      {{ producto.is_available ? 'Disponible' : 'No disponible' }}
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    <button 
+                      class="btn btn-sm btn-outline-primary me-1"
+                      @click="abrirModalProducto(producto)"
+                      title="Editar"
+                    >
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button 
+                      class="btn btn-sm btn-outline-danger"
+                      @click="eliminarProducto(producto)"
+                      title="Eliminar"
+                    >
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- Paginación -->
@@ -436,5 +442,94 @@ export default {
 <style scoped>
 .productos-page {
   padding: 1rem;
+}
+
+/* Fixed Table Styles */
+.table-container {
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.table-wrapper {
+  background: #f8f9fa;
+}
+
+.table-wrapper table {
+  margin-bottom: 0;
+}
+
+.table-wrapper thead th {
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  z-index: 10;
+}
+
+.table-body-wrapper {
+  height: calc(100vh - 400px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.table-body-wrapper table {
+  margin-bottom: 0;
+}
+
+.table-body-wrapper thead {
+  visibility: collapse;
+}
+
+/* Asegurar que las columnas tengan el mismo ancho en header y body */
+.table-wrapper table,
+.table-body-wrapper table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.table-wrapper th:nth-child(1),
+.table-body-wrapper td:nth-child(1) {
+  width: 35%;
+}
+
+.table-wrapper th:nth-child(2),
+.table-body-wrapper td:nth-child(2) {
+  width: 15%;
+}
+
+.table-wrapper th:nth-child(3),
+.table-body-wrapper td:nth-child(3) {
+  width: 15%;
+}
+
+.table-wrapper th:nth-child(4),
+.table-body-wrapper td:nth-child(4) {
+  width: 20%;
+}
+
+.table-wrapper th:nth-child(5),
+.table-body-wrapper td:nth-child(5) {
+  width: 15%;
+}
+
+/* Scroll personalizado */
+.table-body-wrapper::-webkit-scrollbar {
+  width: 8px;
+}
+
+.table-body-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.table-body-wrapper::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.table-body-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 </style>
