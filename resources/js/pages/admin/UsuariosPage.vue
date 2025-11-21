@@ -89,6 +89,13 @@
                       <i class="fas fa-edit"></i>
                     </button>
                     <button 
+                      class="btn btn-sm btn-outline-warning me-1" 
+                      @click="abrirModalPassword(usuario)"
+                      title="Cambiar contraseña"
+                    >
+                      <i class="fas fa-key"></i>
+                    </button>
+                    <button 
                       class="btn btn-sm btn-outline-danger" 
                       @click="eliminarUsuario(usuario)"
                       title="Eliminar"
@@ -181,34 +188,49 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label">Email <span class="text-danger">*</span></label>
+                <label class="form-label">Email</label>
                 <input 
                   type="email" 
                   class="form-control" 
                   v-model="usuarioForm.email"
                   :class="{ 'is-invalid': erroresUsuario.email }"
-                  required
                 >
                 <div class="invalid-feedback" v-if="erroresUsuario.email">
                   {{ erroresUsuario.email[0] }}
                 </div>
               </div>
 
-              <div class="mb-3">
+              <div class="mb-3" v-if="!usuarioEditando">
                 <label class="form-label">
                   Contraseña 
-                  <span class="text-danger" v-if="!usuarioEditando">*</span>
-                  <span class="text-muted" v-if="usuarioEditando">(dejar vacío para no cambiar)</span>
+                  <span class="text-danger">*</span>
                 </label>
                 <input 
                   type="password" 
                   class="form-control" 
                   v-model="usuarioForm.password"
                   :class="{ 'is-invalid': erroresUsuario.password }"
-                  :required="!usuarioEditando"
+                  required
                 >
                 <div class="invalid-feedback" v-if="erroresUsuario.password">
                   {{ erroresUsuario.password[0] }}
+                </div>
+              </div>
+
+              <div class="mb-3" v-if="!usuarioEditando">
+                <label class="form-label">
+                  Confirmar Contraseña 
+                  <span class="text-danger">*</span>
+                </label>
+                <input 
+                  type="password" 
+                  class="form-control" 
+                  v-model="usuarioForm.password_confirmation"
+                  :class="{ 'is-invalid': erroresUsuario.password_confirmation }"
+                  required
+                >
+                <div class="invalid-feedback" v-if="erroresUsuario.password_confirmation">
+                  {{ erroresUsuario.password_confirmation[0] }}
                 </div>
               </div>
 
@@ -289,6 +311,90 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal de Cambiar Contraseña -->
+    <div class="modal fade" ref="modalPassword" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-key me-2"></i>
+              Cambiar Contraseña
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="cambiarPassword">
+              <div class="mb-3">
+                <p class="text-muted">Usuario: <strong>{{ usuarioPassword?.name }}</strong></p>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Acción</label>
+                <select class="form-select" v-model="passwordForm.action" required>
+                  <option value="">Seleccionar acción...</option>
+                  <option value="new">Establecer nueva contraseña</option>
+                  <option value="reset">Restablecer a 12345678</option>
+                </select>
+              </div>
+
+              <div v-if="passwordForm.action === 'new'">
+                <div class="mb-3">
+                  <label class="form-label">Nueva Contraseña <span class="text-danger">*</span></label>
+                  <input 
+                    type="password" 
+                    class="form-control" 
+                    v-model="passwordForm.new_password"
+                    :class="{ 'is-invalid': erroresPassword.new_password }"
+                    minlength="6"
+                    required
+                  >
+                  <div class="invalid-feedback" v-if="erroresPassword.new_password">
+                    {{ erroresPassword.new_password[0] }}
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Confirmar Contraseña <span class="text-danger">*</span></label>
+                  <input 
+                    type="password" 
+                    class="form-control" 
+                    v-model="passwordForm.new_password_confirmation"
+                    :class="{ 'is-invalid': erroresPassword.new_password_confirmation }"
+                    minlength="6"
+                    required
+                  >
+                  <div class="invalid-feedback" v-if="erroresPassword.new_password_confirmation">
+                    {{ erroresPassword.new_password_confirmation[0] }}
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="passwordForm.action === 'reset'" class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                La contraseña se restablecerá a: <strong>12345678</strong>
+              </div>
+
+              <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                  Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary" :disabled="guardandoPassword">
+                  <span v-if="guardandoPassword">
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    Procesando...
+                  </span>
+                  <span v-else>
+                    <i class="fas fa-save me-2"></i>
+                    Guardar
+                  </span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -304,6 +410,12 @@ const usuarioEditando = ref(null);
 const guardandoUsuario = ref(false);
 const modalUsuario = ref(null);
 let modalUsuarioInstance = null;
+
+// Password modal
+const usuarioPassword = ref(null);
+const guardandoPassword = ref(false);
+const modalPassword = ref(null);
+let modalPasswordInstance = null;
 
 // Roles
 const allRoles = ref([]);
@@ -326,10 +438,18 @@ const usuarioForm = reactive({
   username: '',
   email: '',
   password: '',
+  password_confirmation: '',
   roles: []
 });
 
+const passwordForm = reactive({
+  action: '',
+  new_password: '',
+  new_password_confirmation: ''
+});
+
 const erroresUsuario = ref({});
+const erroresPassword = ref({});
 
 let searchTimeout = null;
 
@@ -348,6 +468,7 @@ onMounted(() => {
   cargarUsuarios();
   cargarRoles();
   modalUsuarioInstance = new Modal(modalUsuario.value);
+  modalPasswordInstance = new Modal(modalPassword.value);
   
   // Click fuera del dropdown para cerrarlo
   document.addEventListener('click', handleClickOutside);
@@ -468,14 +589,16 @@ const abrirModalUsuario = (usuario = null) => {
   if (usuario) {
     usuarioForm.name = usuario.name;
     usuarioForm.username = usuario.username;
-    usuarioForm.email = usuario.email;
+    usuarioForm.email = usuario.email || '';
     usuarioForm.password = '';
+    usuarioForm.password_confirmation = '';
     selectedRoles.value = [...usuario.roles];
   } else {
     usuarioForm.name = '';
     usuarioForm.username = '';
     usuarioForm.email = '';
     usuarioForm.password = '';
+    usuarioForm.password_confirmation = '';
   }
   
   modalUsuarioInstance.show();
@@ -489,12 +612,14 @@ const guardarUsuario = async () => {
   const data = {
     name: usuarioForm.name,
     username: usuarioForm.username,
-    email: usuarioForm.email,
+    email: usuarioForm.email || null,
     roles: selectedRoles.value.map(r => r.id)
   };
   
-  if (usuarioForm.password) {
+  // Solo agregar password en creación
+  if (!usuarioEditando.value) {
     data.password = usuarioForm.password;
+    data.password_confirmation = usuarioForm.password_confirmation;
   }
   
   try {
@@ -530,6 +655,47 @@ const eliminarUsuario = async (usuario) => {
   } catch (error) {
     const message = error.response?.data?.error || 'Error al eliminar el usuario';
     alert(message);
+  }
+};
+
+const abrirModalPassword = (usuario) => {
+  usuarioPassword.value = usuario;
+  erroresPassword.value = {};
+  passwordForm.action = '';
+  passwordForm.new_password = '';
+  passwordForm.new_password_confirmation = '';
+  modalPasswordInstance.show();
+};
+
+const cambiarPassword = async () => {
+  guardandoPassword.value = true;
+  erroresPassword.value = {};
+  
+  try {
+    const data = {
+      action: passwordForm.action
+    };
+    
+    if (passwordForm.action === 'new') {
+      data.new_password = passwordForm.new_password;
+      data.new_password_confirmation = passwordForm.new_password_confirmation;
+    }
+    
+    await axios.post(`/api/admin/usuarios/${usuarioPassword.value.id}/change-password`, data);
+    
+    modalPasswordInstance.hide();
+    alert(passwordForm.action === 'reset' 
+      ? 'Contraseña restablecida a 12345678' 
+      : 'Contraseña actualizada exitosamente'
+    );
+  } catch (error) {
+    if (error.response?.status === 422) {
+      erroresPassword.value = error.response.data.errors || {};
+    } else {
+      alert('Error al cambiar la contraseña');
+    }
+  } finally {
+    guardandoPassword.value = false;
   }
 };
 </script>
