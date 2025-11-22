@@ -825,7 +825,10 @@ export default {
       // Movimientos
       showMovimientosModal: false,
       isLoadingMovimientos: false,
-      fechaMovimientos: new Date().toISOString().split('T')[0], // Fecha actual por defecto
+      fechaMovimientos: (() => {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      })(), // Fecha actual local
       movimientos: [],
       movimientosResumen: {
         totalRegistros: 0,
@@ -881,7 +884,8 @@ export default {
     },
 
     hoy() {
-      return new Date().toISOString().split('T')[0]
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     },
 
     mesasDisponibles() {
