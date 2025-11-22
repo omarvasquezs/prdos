@@ -16,6 +16,7 @@ class RoleSeeder extends Seeder
         // Create the two required roles
         $admin = Role::firstOrCreate(['name' => 'administrador']);
         $caja = Role::firstOrCreate(['name' => 'caja']);
+        $contador = Role::firstOrCreate(['name' => 'contador']);
 
         // Attach roles to seeded users if they exist.
         // Assumption: user 'admin' exists and will receive both roles; 'test' gets 'caja'.
