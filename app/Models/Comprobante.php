@@ -21,6 +21,8 @@ class Comprobante extends Model
         'metodo_pago_id',
         'num_ruc',
         'razon_social',
+        'nombre_cliente',
+        'dni_ce_cliente',
         'observaciones',
         'last_updated_by',
         'cod_comprobante',
