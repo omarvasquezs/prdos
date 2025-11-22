@@ -139,7 +139,11 @@ export default {
       this.navigating = true;
 
       try {
-        const res = await axios.post('/select-role', { role: this.selectedRole });
+        // Ejecutar selección de rol y esperar al menos 1 segundo para mostrar la animación
+        const [res] = await Promise.all([
+          axios.post('/select-role', { role: this.selectedRole }),
+          new Promise(resolve => setTimeout(resolve, 1000))
+        ]);
         const redirect = res.data?.redirect || '/dashboard';
 
         // Keep the spinner visible during navigation
