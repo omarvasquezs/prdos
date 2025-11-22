@@ -83,6 +83,10 @@
               <i class="fas" :class="isProcessingCierre ? 'fa-spinner fa-spin' : 'fa-cash-register'"></i>
               <span class="atencion-label">Cerrar Caja</span>
             </button>
+            <button v-if="hasMultipleRoles" class="atencion-sidebar-item sidebar-action" @click="goSelectRole">
+              <i class="fas fa-users-cog"></i>
+              <span class="atencion-label">Cambiar Rol</span>
+            </button>
             <button class="atencion-sidebar-item sidebar-action sidebar-logout" @click="logout"
               :disabled="isLoggingOut">
               <i class="fas" :class="isLoggingOut ? 'fa-spinner fa-spin' : 'fa-sign-out-alt'"></i>
@@ -557,11 +561,16 @@
 <script>
 import axios from 'axios'
 import MovimientosModal from '@/components/MovimientosModal.vue'
+import { useAuthStore } from '@/stores/auth'
 
 export default {
   name: 'CajaPage',
   components: {
     MovimientosModal
+  },
+  setup() {
+    const authStore = useAuthStore()
+    return { authStore }
   },
   data() {
     return {
@@ -629,6 +638,10 @@ export default {
   },
 
   computed: {
+    hasMultipleRoles() {
+      return Array.isArray(this.authStore.user?.roles) && this.authStore.user.roles.length > 1
+    },
+
     cajaEstaAbierta() {
       return this.cajaStatus.isOpen
     },
@@ -1097,6 +1110,10 @@ export default {
 
       // Aquí puedes navegar a la página del pedido
       this.$router.push(`/caja/pedido/${mesa.pedido_activo.id}`)
+    },
+
+    goSelectRole() {
+      this.$router.push('/select-role')
     },
 
     async logout() {
