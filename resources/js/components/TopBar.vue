@@ -11,7 +11,7 @@
         <div class="user-avatar">
           <i class="fas fa-user"></i>
         </div>
-        <span class="user-name">{{ userName }}</span>
+        <span class="user-name">{{ userUsername }}</span>
         <i class="fas fa-chevron-down ms-2"></i>
 
         <!-- Dropdown Menu -->
@@ -19,14 +19,10 @@
           <div class="dropdown-header">
             <div class="user-info">
               <strong>{{ userName }}</strong>
-              <small class="text-muted d-block">{{ userRole }}</small>
             </div>
           </div>
           <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item" @click.prevent="verPerfil">
-            <i class="fas fa-user-circle me-2"></i>
-            Mi Perfil
-          </a>
+
           <a href="#" class="dropdown-item" @click.prevent="abrirModalCambiarPassword">
             <i class="fas fa-key me-2"></i>
             Cambiar contraseña
@@ -35,10 +31,7 @@
             <i class="fas fa-tags me-2"></i>
             Seleccionar rol
           </a>
-          <a href="#" class="dropdown-item" @click.prevent="configuracion">
-            <i class="fas fa-cog me-2"></i>
-            Configuración
-          </a>
+
           <div class="dropdown-divider"></div>
           <a href="#" class="dropdown-item text-danger" @click.prevent="cerrarSesion">
             <i class="fas fa-sign-out-alt me-2"></i>
@@ -114,9 +107,10 @@ export default {
     userName() {
       return this.authStore.user?.name || 'Usuario';
     },
-    userRole() {
-      return this.authStore.user?.active_role || 'Sin rol';
+    userUsername() {
+      return this.authStore.user?.username || 'Usuario';
     },
+
     hasMultipleRoles() {
       return Array.isArray(this.authStore.user?.roles) && this.authStore.user.roles.length > 1;
     }
@@ -136,14 +130,7 @@ export default {
         this.showUserMenu = false;
       }
     },
-    verPerfil() {
-      this.showUserMenu = false;
-      alert('Ver perfil (por implementar)');
-    },
-    configuracion() {
-      this.showUserMenu = false;
-      alert('Configuración (por implementar)');
-    },
+
     goSelectRole() {
       this.showUserMenu = false;
       this.router.push('/select-role');
@@ -280,9 +267,7 @@ export default {
   font-size: 0.95rem;
 }
 
-.user-info small {
-  font-size: 0.8rem;
-}
+
 
 .dropdown-divider {
   height: 1px;
