@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\CajaController;
 use App\Http\Controllers\Api\PedidoController;
+use App\Http\Controllers\Api\ExportController;
 use App\Http\Controllers\ComprobanteController;
 
 // Rutas de autenticación
@@ -93,6 +94,7 @@ Route::middleware(['web', 'auth'])->withoutMiddleware([\Illuminate\Foundation\Ht
     Route::post('/api/caja/abrir', [CajaController::class, 'abrir']);
     Route::post('/api/caja/cerrar', [CajaController::class, 'cerrar']);
     Route::get('/api/caja/movimientos', [CajaController::class, 'movimientos']);
+    Route::get('/api/export', [ExportController::class, 'export']);
 
     // API routes for delivery/recojo pedidos
     Route::get('/api/pedidos-cola', [PedidoController::class, 'index']);
