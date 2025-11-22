@@ -16,10 +16,7 @@
       <div class="header-section mb-3">
         <div class="d-flex align-items-center justify-content-between flex-wrap">
           <div class="d-flex align-items-center">
-            <button 
-              @click="volverAMesas" 
-              class="btn btn-outline-secondary btn-lg me-3"
-            >
+            <button @click="volverAMesas" class="btn btn-outline-secondary btn-lg me-3">
               <i class="fas fa-arrow-left me-2"></i>
               Volver
             </button>
@@ -36,10 +33,10 @@
               </div>
               <p class="page-subtitle mb-0 text-muted">
                 <template v-if="pedido?.tipo_atencion === 'P'">
-                  {{ pedido?.comensales }} {{ pedido?.comensales === 1 ? 'comensal' : 'comensales' }} • 
+                  {{ pedido?.comensales }} {{ pedido?.comensales === 1 ? 'comensal' : 'comensales' }} •
                 </template>
                 <template v-else>
-                  {{ pedido?.cliente_nombre }} • {{ pedido?.cliente_telefono }} • 
+                  {{ pedido?.cliente_nombre }} • {{ pedido?.cliente_telefono }} •
                 </template>
                 Iniciado {{ formatearTiempo(pedido?.fecha_apertura) }}
               </p>
@@ -51,7 +48,8 @@
               Abierto
             </span>
             <!-- Badge de estado de entrega para Delivery/Recojo -->
-            <span v-if="pedido?.tipo_atencion !== 'P' && pedido?.estado_entrega" class="badge fs-5 px-3 py-2 me-2" :class="estadoEntregaBadgeClass">
+            <span v-if="pedido?.tipo_atencion !== 'P' && pedido?.estado_entrega" class="badge fs-5 px-3 py-2 me-2"
+              :class="estadoEntregaBadgeClass">
               <i :class="estadoEntregaIcon" class="me-1"></i>
               {{ pedido?.estado_entrega_texto }}
             </span>
@@ -91,11 +89,7 @@
             </div>
             <div class="card-body p-0 d-flex flex-column items-scroll-container">
               <div v-if="pedido.items && pedido.items.length > 0" class="list-group list-group-flush flex-fill">
-                <div 
-                  v-for="item in pedido.items" 
-                  :key="item.id"
-                  class="list-group-item py-3"
-                >
+                <div v-for="item in pedido.items" :key="item.id" class="list-group-item py-3">
                   <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
                       <h6 class="mb-1">{{ item.producto }}</h6>
@@ -108,11 +102,8 @@
                         <span class="badge bg-primary fs-6">
                           {{ item.cantidad }}
                         </span>
-                        <button 
-                          class="btn btn-outline-danger btn-sm"
-                          @click="eliminarItem(item.id)"
-                          style="padding: 0.25rem 0.5rem;"
-                        >
+                        <button class="btn btn-outline-danger btn-sm" @click="eliminarItem(item.id)"
+                          style="padding: 0.25rem 0.5rem;">
                           <i class="fas fa-trash"></i>
                         </button>
                       </div>
@@ -159,8 +150,10 @@
                   <div class="mb-3 p-3 bg-light rounded">
                     <h6 class="mb-2"><i class="fas fa-user me-2"></i>{{ pedido.cliente_nombre }}</h6>
                     <p class="mb-1 small"><i class="fas fa-phone me-2"></i>{{ pedido.cliente_telefono }}</p>
-                    <p v-if="pedido.direccion_entrega" class="mb-1 small"><i class="fas fa-map-marker-alt me-2"></i>{{ pedido.direccion_entrega }}</p>
-                    <p v-if="pedido.notas" class="mb-0 small text-muted"><i class="fas fa-sticky-note me-2"></i>{{ pedido.notas }}</p>
+                    <p v-if="pedido.direccion_entrega" class="mb-1 small"><i class="fas fa-map-marker-alt me-2"></i>{{
+                      pedido.direccion_entrega }}</p>
+                    <p v-if="pedido.notas" class="mb-0 small text-muted"><i class="fas fa-sticky-note me-2"></i>{{
+                      pedido.notas }}</p>
                   </div>
                 </template>
 
@@ -182,54 +175,42 @@
                   <span class="fs-4 fw-bold text-success">S/ {{ parseFloat(pedido?.total || 0).toFixed(2) }}</span>
                 </div>
               </div>
-              
+
               <!-- Controls for Delivery/Recojo -->
               <div v-if="pedido.tipo_atencion !== 'P'" class="mb-3">
                 <h6 class="mb-2"><i class="fas fa-tasks me-2"></i>Estado del Pedido</h6>
                 <div class="d-grid gap-2">
-                  <button 
-                    class="btn btn-sm" 
+                  <button class="btn btn-sm"
                     :class="pedido.estado_entrega === 'P' ? 'btn-warning' : 'btn-outline-warning'"
-                    @click="cambiarEstado('P')"
-                    :disabled="pedido.estado_entrega === 'P'"
-                  >
+                    @click="cambiarEstado('P')" :disabled="pedido.estado_entrega === 'P'">
                     <i class="fas fa-clock me-2"></i>
                     En Preparación
                   </button>
-                  <button 
-                    class="btn btn-sm" 
-                    :class="pedido.estado_entrega === 'L' ? 'btn-info' : 'btn-outline-info'"
-                    @click="cambiarEstado('L')"
-                    :disabled="pedido.estado_entrega === 'L'"
-                  >
+                  <button class="btn btn-sm" :class="pedido.estado_entrega === 'L' ? 'btn-info' : 'btn-outline-info'"
+                    @click="cambiarEstado('L')" :disabled="pedido.estado_entrega === 'L'">
                     <i class="fas fa-check me-2"></i>
                     Listo
                   </button>
-                  <button 
-                    class="btn btn-sm" 
+                  <button class="btn btn-sm"
                     :class="pedido.estado_entrega === 'E' ? 'btn-success' : 'btn-outline-success'"
-                    @click="cambiarEstado('E')"
-                    :disabled="pedido.estado_entrega === 'E'"
-                  >
+                    @click="cambiarEstado('E')" :disabled="pedido.estado_entrega === 'E'">
                     <i class="fas fa-check-double me-2"></i>
                     Entregado/Recogido
                   </button>
                 </div>
-                
+
                 <!-- Button to mark as paid (if not paid yet) -->
-                <button 
-                  v-if="!pedido.pagado && pedido.total > 0" 
-                  class="btn btn-outline-primary btn-sm w-100 mt-2"
-                  @click="abrirModalMarcarPagado"
-                >
+                <button v-if="!pedido.pagado && pedido.total > 0" class="btn btn-outline-primary btn-sm w-100 mt-2"
+                  @click="abrirModalMarcarPagado">
                   <i class="fas fa-money-bill-wave me-2"></i>
                   Marcar como Pagado
                 </button>
               </div>
-              
+
               <!-- Actions - Always at bottom -->
               <div class="d-grid gap-2 mt-auto">
-                <button class="btn btn-success btn-lg" @click="abrirModalCobro" :disabled="!pedido || !pedido.items || pedido.items.length === 0">
+                <button class="btn btn-success btn-lg" @click="abrirModalCobro"
+                  :disabled="!pedido || !pedido.items || pedido.items.length === 0">
                   <i class="fas fa-money-bill me-2"></i>
                   {{ pedido?.tipo_atencion === 'P' ? 'Cobrar Pedido' : 'Generar Comprobante y Cerrar' }}
                 </button>
@@ -257,7 +238,8 @@
     </div>
 
     <!-- Modal de Cobro -->
-    <div v-if="mostrarModalCobro" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div v-if="mostrarModalCobro" class="modal fade show d-block" tabindex="-1"
+      style="background-color: rgba(0,0,0,0.5);">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
@@ -273,13 +255,16 @@
               <div class="mb-3">
                 <label class="form-label fw-bold">Tipo de Comprobante</label>
                 <div class="btn-group d-flex" role="group">
-                  <input type="radio" class="btn-check" name="tipoComprobante" id="tipoN" value="N" v-model="formCobro.tipo_comprobante">
+                  <input type="radio" class="btn-check" name="tipoComprobante" id="tipoN" value="N"
+                    v-model="formCobro.tipo_comprobante">
                   <label class="btn btn-outline-primary" for="tipoN">Nota de Venta</label>
-                  
-                  <input type="radio" class="btn-check" name="tipoComprobante" id="tipoB" value="B" v-model="formCobro.tipo_comprobante">
+
+                  <input type="radio" class="btn-check" name="tipoComprobante" id="tipoB" value="B"
+                    v-model="formCobro.tipo_comprobante">
                   <label class="btn btn-outline-primary" for="tipoB">Boleta</label>
-                  
-                  <input type="radio" class="btn-check" name="tipoComprobante" id="tipoF" value="F" v-model="formCobro.tipo_comprobante">
+
+                  <input type="radio" class="btn-check" name="tipoComprobante" id="tipoF" value="F"
+                    v-model="formCobro.tipo_comprobante">
                   <label class="btn btn-outline-primary" for="tipoF">Factura</label>
                 </div>
               </div>
@@ -287,11 +272,13 @@
               <!-- Campos para Factura -->
               <div v-if="formCobro.tipo_comprobante === 'F'" class="mb-3">
                 <label for="ruc" class="form-label fw-bold">RUC *</label>
-                <input type="text" id="ruc" v-model="formCobro.num_ruc" class="form-control" placeholder="11 dígitos" maxlength="11" required>
+                <input type="text" id="ruc" v-model="formCobro.num_ruc" class="form-control" placeholder="11 dígitos"
+                  maxlength="11" required>
               </div>
               <div v-if="formCobro.tipo_comprobante === 'F'" class="mb-3">
                 <label for="razon_social" class="form-label fw-bold">Razón Social *</label>
-                <input type="text" id="razon_social" v-model="formCobro.razon_social" class="form-control" placeholder="Nombre de la empresa" required>
+                <input type="text" id="razon_social" v-model="formCobro.razon_social" class="form-control"
+                  placeholder="Nombre de la empresa" required>
               </div>
 
               <!-- Método de Pago -->
@@ -308,7 +295,8 @@
               <!-- Observaciones -->
               <div class="mb-3">
                 <label for="observaciones" class="form-label">Observaciones</label>
-                <textarea id="observaciones" v-model="formCobro.observaciones" class="form-control" rows="2" placeholder="Notas adicionales (opcional)"></textarea>
+                <textarea id="observaciones" v-model="formCobro.observaciones" class="form-control" rows="2"
+                  placeholder="Notas adicionales (opcional)"></textarea>
               </div>
 
               <!-- Resumen -->
@@ -318,11 +306,13 @@
 
               <div class="d-grid gap-2">
                 <button type="submit" class="btn btn-success btn-lg" :disabled="isSubmitting">
-                  <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"
+                    aria-hidden="true"></span>
                   <i v-else class="fas fa-check me-2"></i>
                   {{ isSubmitting ? 'Procesando...' : 'Generar y Cobrar' }}
                 </button>
-                <button type="button" class="btn btn-outline-secondary" @click="cerrarModalCobro" :disabled="isSubmitting">
+                <button type="button" class="btn btn-outline-secondary" @click="cerrarModalCobro"
+                  :disabled="isSubmitting">
                   Cancelar
                 </button>
               </div>
@@ -333,7 +323,8 @@
     </div>
 
     <!-- Modal de Productos -->
-    <div v-if="mostrarModalProductos" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div v-if="mostrarModalProductos" class="modal fade show d-block" tabindex="-1"
+      style="background-color: rgba(0,0,0,0.5);">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -348,11 +339,7 @@
             <div class="row mb-3">
               <div class="col-md-6">
                 <label for="categoriaSelect" class="form-label">Filtrar por categoría:</label>
-                <select 
-                  id="categoriaSelect" 
-                  class="form-select" 
-                  v-model="categoriaSeleccionada"
-                >
+                <select id="categoriaSelect" class="form-select" v-model="categoriaSeleccionada">
                   <option value="">Todas las categorías</option>
                   <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
                     {{ categoria.nombre }}
@@ -361,29 +348,21 @@
               </div>
               <div class="col-md-6">
                 <label for="cantidadInput" class="form-label">Cantidad:</label>
-                <input 
-                  id="cantidadInput"
-                  type="number" 
-                  class="form-control" 
-                  v-model.number="cantidadItem"
-                  min="1"
-                  max="99"
-                >
+                <input id="cantidadInput" type="number" class="form-control" v-model.number="cantidadItem" min="1"
+                  max="99">
               </div>
             </div>
 
             <!-- Lista de productos -->
             <div class="row">
-              <div 
-                v-for="producto in filtrarProductos()" 
-                :key="producto.id" 
-                class="col-lg-4 col-md-6 mb-3"
-              >
+              <div v-for="producto in filtrarProductos()" :key="producto.id" class="col-lg-4 col-md-6 mb-3">
                 <div class="card h-100 producto-card" @click="confirmarAgregarItem(producto)">
                   <div class="card-body d-flex flex-column">
                     <span class="badge bg-secondary mb-2 align-self-start">{{ producto.categoria?.nombre }}</span>
                     <h6 class="card-title">{{ producto.nombre }}</h6>
-                    <p class="card-text text-muted small flex-grow-1 mb-3">{{ producto.descripcion || 'Sin descripción' }}</p>
+                    <p class="card-text text-muted small flex-grow-1 mb-3">{{ producto.descripcion || 'Sin descripción'
+                    }}
+                    </p>
                     <div class="d-flex justify-content-end align-items-center mt-auto">
                       <strong class="text-success">S/ {{ parseFloat(producto.precio).toFixed(2) }}</strong>
                     </div>
@@ -408,7 +387,8 @@
     </div>
 
     <!-- Modal Marcar como Pagado -->
-    <div v-if="mostrarModalMarcarPagado" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div v-if="mostrarModalMarcarPagado" class="modal fade show d-block" tabindex="-1"
+      style="background-color: rgba(0,0,0,0.5);">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-primary text-white">
@@ -420,7 +400,7 @@
           </div>
           <div class="modal-body">
             <p class="text-muted mb-3">El pedido permanecerá abierto pero se registrará que ya fue pagado.</p>
-            
+
             <!-- Método de Pago -->
             <div class="mb-3">
               <label class="form-label fw-bold">Método de Pago *</label>
@@ -441,7 +421,8 @@
             <button type="button" class="btn btn-secondary" @click="cerrarModalMarcarPagado" :disabled="isSubmitting">
               Cancelar
             </button>
-            <button type="button" class="btn btn-primary" @click="marcarComoPagado" :disabled="isSubmitting || !formMarcarPagado.metodo_pago_id">
+            <button type="button" class="btn btn-primary" @click="marcarComoPagado"
+              :disabled="isSubmitting || !formMarcarPagado.metodo_pago_id">
               <span v-if="isSubmitting">
                 <span class="spinner-border spinner-border-sm me-2"></span>
                 Procesando...
@@ -457,7 +438,8 @@
     </div>
 
     <!-- Modal de Vista Previa PDF -->
-    <div v-if="mostrarModalPDF" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.7);">
+    <div v-if="mostrarModalPDF" class="modal fade show d-block" tabindex="-1"
+      style="background-color: rgba(0,0,0,0.7);">
       <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-primary text-white">
@@ -468,20 +450,11 @@
             <button type="button" class="btn-close btn-close-white" @click="cerrarModalPDF"></button>
           </div>
           <div class="modal-body p-0" style="height: 80vh;">
-            <iframe 
-              v-if="pdfURL"
-              :src="pdfURL" 
-              style="width: 100%; height: 100%; border: none;"
-              title="Vista previa del comprobante"
-            ></iframe>
+            <iframe v-if="pdfURL" :src="pdfURL" style="width: 100%; height: 100%; border: none;"
+              title="Vista previa del comprobante"></iframe>
           </div>
           <div class="modal-footer">
-            <a 
-              v-if="pdfURL"
-              :href="pdfURL" 
-              download="comprobante.pdf" 
-              class="btn btn-success"
-            >
+            <a v-if="pdfURL" :href="pdfURL" download="comprobante.pdf" class="btn btn-success">
               <i class="fas fa-download me-2"></i>
               Descargar PDF
             </a>
@@ -542,7 +515,7 @@ export default {
 
     pedidoTitulo() {
       if (!this.pedido) return ''
-      
+
       if (this.pedido.tipo_atencion === 'P') {
         return `- Mesa ${this.pedido.mesa?.num_mesa || ''}`
       } else if (this.pedido.tipo_atencion === 'D') {
@@ -555,7 +528,7 @@ export default {
 
     pedidoIcon() {
       if (!this.pedido) return 'fas fa-receipt'
-      
+
       if (this.pedido.tipo_atencion === 'D') return 'fas fa-motorcycle'
       if (this.pedido.tipo_atencion === 'R') return 'fas fa-shopping-bag'
       return 'fas fa-receipt'
@@ -563,7 +536,7 @@ export default {
 
     pedidoBadgeClass() {
       if (!this.pedido) return 'bg-secondary'
-      
+
       if (this.pedido.tipo_atencion === 'P') return 'bg-danger'
       if (this.pedido.tipo_atencion === 'D') return 'bg-info'
       return 'bg-warning'
@@ -571,7 +544,7 @@ export default {
 
     pedidoBadgeIcon() {
       if (!this.pedido) return 'fas fa-question'
-      
+
       if (this.pedido.tipo_atencion === 'P') return 'fas fa-users'
       if (this.pedido.tipo_atencion === 'D') return 'fas fa-motorcycle'
       return 'fas fa-shopping-bag'
@@ -579,7 +552,7 @@ export default {
 
     pedidoBadgeText() {
       if (!this.pedido) return ''
-      
+
       if (this.pedido.tipo_atencion === 'P') return 'Ocupada'
       if (this.pedido.tipo_atencion === 'D') return 'Delivery'
       return 'Recojo'
@@ -587,7 +560,7 @@ export default {
 
     estadoEntregaBadgeClass() {
       if (!this.pedido?.estado_entrega) return 'bg-secondary'
-      
+
       if (this.pedido.estado_entrega === 'P') return 'bg-warning'
       if (this.pedido.estado_entrega === 'L') return 'bg-info'
       if (this.pedido.estado_entrega === 'E') return 'bg-success'
@@ -596,7 +569,7 @@ export default {
 
     estadoEntregaIcon() {
       if (!this.pedido?.estado_entrega) return 'fas fa-question'
-      
+
       if (this.pedido.estado_entrega === 'P') return 'fas fa-clock'
       if (this.pedido.estado_entrega === 'L') return 'fas fa-check'
       if (this.pedido.estado_entrega === 'E') return 'fas fa-check-double'
@@ -614,11 +587,11 @@ export default {
       try {
         this.isLoading = true
         const pedidoId = this.$route.params.id
-        
+
         // Obtener el pedido directamente
         const response = await axios.get(`/api/pedidos/${pedidoId}`)
         this.pedido = response.data
-        
+
       } catch (error) {
         console.error('Error al cargar pedido:', error)
         if (error.response?.status === 404) {
@@ -684,7 +657,7 @@ export default {
         // Crear blob y mostrar en modal
         const file = new Blob([response.data], { type: 'application/pdf' })
         const fileURL = URL.createObjectURL(file)
-        
+
         // Guardar URL y mostrar modal
         this.pdfURL = fileURL
         this.mostrarModalCobro = false
@@ -693,12 +666,26 @@ export default {
       } catch (error) {
         console.error('Error al generar comprobante:', error)
         if (error.response?.status === 422) {
-          // Errores de validación
-          const errores = error.response.data.errors
-          const mensajeErrores = Object.values(errores).flat().join('\n')
-          alert('Errores en el formulario:\n' + mensajeErrores)
+          // Si la respuesta es un Blob (porque esperamos PDF), debemos leerla
+          if (error.response.data instanceof Blob) {
+            try {
+              const text = await error.response.data.text();
+              const data = JSON.parse(text);
+              const errores = data.errors || {};
+              const mensajeErrores = Object.values(errores).flat().join('\n') || data.message || 'Error de validación desconocido';
+              alert('Errores en el formulario:\n' + mensajeErrores);
+            } catch (e) {
+              console.error('Error al parsear respuesta de error:', e);
+              alert('Error de validación desconocido (no se pudo leer el error)');
+            }
+          } else {
+            // Fallback por si no es Blob (aunque con responseType: blob debería serlo)
+            const errores = error.response.data.errors || {};
+            const mensajeErrores = Object.values(errores).flat().join('\n') || 'Error de validación desconocido';
+            alert('Errores en el formulario:\n' + mensajeErrores);
+          }
         } else {
-          alert('Error al generar el comprobante. Intenta nuevamente.')
+          alert('Error al generar el comprobante. Intenta nuevamente.');
         }
       } finally {
         this.isSubmitting = false
@@ -710,11 +697,11 @@ export default {
       try {
         this.isLoading = true
         const response = await axios.post(`/api/pedidos/${this.pedido.id}/cobrar`)
-        
+
         // Si llegamos aquí, la respuesta fue exitosa
         alert('Pedido cobrado exitosamente')
         this.$router.push('/caja')
-        
+
       } catch (error) {
         console.error('Error al cobrar pedido:', error)
         alert('Error al procesar el cobro. Intenta nuevamente.')
@@ -731,15 +718,15 @@ export default {
       try {
         this.isLoading = true
         const response = await axios.post(`/api/pedidos/${this.pedido.id}/cancelar`)
-        
+
         // Si llegamos aquí, la respuesta fue exitosa
         alert('Pedido cancelado exitosamente')
         this.$router.push('/caja')
-        
+
       } catch (error) {
         console.error('Error al cancelar pedido:', error)
         alert('Error al cancelar el pedido. Intenta nuevamente.')
-            } finally {
+      } finally {
         this.isLoading = false
       }
     },
@@ -810,7 +797,7 @@ export default {
         this.pdfURL = null
       }
       this.mostrarModalPDF = false
-      
+
       // Redirigir a la página de caja
       this.$router.push('/caja')
     },
@@ -820,7 +807,7 @@ export default {
         // Abrir en nueva ventana solo para imprimir
         const ventanaImpresion = window.open(this.pdfURL, '_blank')
         if (ventanaImpresion) {
-          ventanaImpresion.onload = function() {
+          ventanaImpresion.onload = function () {
             ventanaImpresion.print()
           }
         }
@@ -832,7 +819,7 @@ export default {
       const apertura = new Date(fechaApertura)
       const diffMs = ahora - apertura
       const diffMinutos = Math.floor(diffMs / 60000)
-      
+
       if (diffMinutos < 60) {
         return `hace ${diffMinutos} min`
       } else {
@@ -878,7 +865,7 @@ export default {
 
     async confirmarAgregarItem(producto) {
       const cantidad = parseInt(this.cantidadItem) || 1
-      
+
       try {
         const response = await axios.post(`/api/pedidos/${this.pedido.id}/items`, {
           producto_id: producto.id,
@@ -889,7 +876,7 @@ export default {
         // Recargar el pedido para mostrar los cambios
         await this.cargarPedido()
         this.cerrarModalProductos()
-        
+
         // Mostrar mensaje de éxito opcional
         // alert(`${producto.nombre} agregado al pedido`)
 
@@ -910,7 +897,7 @@ export default {
         // Si llegamos aquí, la respuesta fue exitosa (código 200)
         // Recargar el pedido para mostrar los cambios
         await this.cargarPedido()
-        
+
       } catch (error) {
         console.error('Error al eliminar item:', error)
         alert('Error al eliminar el producto del pedido')
@@ -1075,15 +1062,15 @@ export default {
   .page-title {
     font-size: 1.4rem;
   }
-  
+
   .page-subtitle {
     font-size: 0.85rem;
   }
-  
+
   .items-scroll-container {
     max-height: calc(100vh - 220px);
   }
-  
+
   .btn-lg {
     padding: 0.75rem 1.5rem;
   }
@@ -1093,13 +1080,13 @@ export default {
   .page-title {
     font-size: 1.75rem;
   }
-  
+
   .header-actions {
     width: 100%;
     justify-content: center;
     margin-top: 1rem;
   }
-  
+
   .header-actions .badge {
     margin: 0 0.25rem;
   }
@@ -1109,22 +1096,22 @@ export default {
   .page-title {
     font-size: 1.5rem;
   }
-  
+
   .d-flex.align-items-center.mb-1 {
     flex-direction: column;
     align-items: flex-start !important;
     gap: 0.5rem;
   }
-  
+
   .container-fluid {
     padding-left: 1rem;
     padding-right: 1rem;
   }
-  
+
   .card-body {
     padding: 1rem;
   }
-  
+
   /* Productos en móvil - 2 columnas */
   .modal-body .row .col-lg-4 {
     flex: 0 0 50%;
@@ -1133,6 +1120,7 @@ export default {
 }
 
 @media (min-width: 768px) and (max-width: 991px) {
+
   /* Tablets - 2 columnas */
   .modal-body .row .col-lg-4 {
     flex: 0 0 50%;
