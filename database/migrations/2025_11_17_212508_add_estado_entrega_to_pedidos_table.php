@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasColumn('pedidos', 'estado_entrega')) {
+            return;
+        }
+
         Schema::table('pedidos', function (Blueprint $table) {
             // Estado de entrega para delivery/recojo
             // 'P' = En Preparación
