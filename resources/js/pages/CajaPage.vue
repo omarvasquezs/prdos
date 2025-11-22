@@ -427,161 +427,150 @@
               :disabled="isLoadingMovimientos"></button>
           </div>
 
-          <div class="modal-body">
-            <!-- Caja Status Info -->
-            <div class="alert mb-4" :class="cajaEstaAbierta ? 'alert-success' : 'alert-warning'">
-              <div class="d-flex align-items-center">
-                <div class="flex-shrink-0 me-3">
-                  <i :class="cajaEstaAbierta ? 'fas fa-cash-register' : 'fas fa-lock'" class="fs-2"></i>
+          <div class="modal-body p-0 d-flex flex-column" style="height: 80vh;">
+            <!-- Top Toolbar: Status + Date Filter -->
+            <div class="bg-light border-bottom p-3">
+              <div class="row g-3 align-items-center">
+                <!-- Caja Status (Compact) -->
+                <div class="col-lg-5">
+                  <div class="d-flex align-items-center" :class="cajaEstaAbierta ? 'text-success' : 'text-warning'">
+                    <i :class="cajaEstaAbierta ? 'fas fa-cash-register' : 'fas fa-lock'" class="fs-4 me-2"></i>
+                    <div>
+                      <div class="fw-bold">{{ cajaStatusText }}</div>
+                      <small class="text-muted" v-if="cajaRegistro">
+                        {{ cajaEstaAbierta ? 'Apertura:' : 'Cierre:' }}
+                        {{ formatDateTime(cajaEstaAbierta ? cajaRegistro.datetime_apertura :
+                          cajaRegistro.datetime_cierre ||
+                          cajaRegistro.datetime_apertura) }}
+                      </small>
+                    </div>
+                  </div>
                 </div>
-                <div class="flex-grow-1">
-                  <h6 class="alert-heading mb-1">
-                    {{ cajaStatusText }}
-                  </h6>
-                  <p class="mb-2 small">
-                    <template v-if="cajaEstaAbierta && cajaRegistro">
-                      La caja se abrió el {{ formatDateTime(cajaRegistro.datetime_apertura) }} por
-                      {{ cajaRegistro.usuario_apertura || 'usuario desconocido' }} con un monto inicial de
-                      {{ formatCurrency(cajaRegistro.monto_apertura) }}.
-                    </template>
-                    <template v-else-if="cajaStatus.hasRecordToday && cajaRegistro">
-                      La caja está cerrada. La última apertura fue el {{ formatDateTime(cajaRegistro.datetime_apertura)
-                      }}.
-                      <span v-if="cajaRegistro.datetime_cierre">
-                        Se cerró el {{ formatDateTime(cajaRegistro.datetime_cierre) }}<span
-                          v-if="cajaRegistro.usuario_cierre"> por {{ cajaRegistro.usuario_cierre }}</span><span
-                          v-else-if="cajaRegistro.usuario_apertura"> por {{ cajaRegistro.usuario_apertura }}</span>.
+
+                <!-- Date Filter (Compact) -->
+                <div class="col-lg-7">
+                  <div class="d-flex gap-2 justify-content-end">
+                    <div class="input-group" style="max-width: 300px;">
+                      <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-calendar-alt text-muted"></i>
                       </span>
-                      <span v-else>
-                        Aún no registra un cierre.
-                      </span>
-                    </template>
-                    <template v-else>
-                      Debes abrir la caja para registrar las operaciones del día actual.
-                    </template>
-                  </p>
-                  <div class="d-flex flex-wrap gap-3 small" v-if="cajaRegistro">
-                    <span>
-                      <i class="fas fa-hourglass-start me-1"></i>
-                      Apertura: {{ formatDateTime(cajaRegistro.datetime_apertura) }}
-                    </span>
-                    <span>
-                      <i class="fas fa-coins me-1"></i>
-                      Monto apertura: {{ formatCurrency(cajaRegistro.monto_apertura) }}
-                    </span>
-                    <span v-if="cajaRegistro.datetime_cierre">
-                      <i class="fas fa-hourglass-end me-1"></i>
-                      Cierre: {{ formatDateTime(cajaRegistro.datetime_cierre) }}
-                    </span>
-                    <span v-if="cajaRegistro.monto_cierre !== null">
-                      <i class="fas fa-wallet me-1"></i>
-                      Monto cierre: {{ formatCurrency(cajaRegistro.monto_cierre) }}
-                    </span>
+                      <input type="date" class="form-control border-start-0 ps-0" v-model="fechaMovimientos"
+                        :disabled="isLoadingMovimientos" :max="hoy">
+                    </div>
+                    <button class="btn btn-primary" @click="fetchMovimientos" :disabled="isLoadingMovimientos">
+                      <i class="fas" :class="isLoadingMovimientos ? 'fa-spinner fa-spin' : 'fa-search'"></i>
+                      <span class="d-none d-sm-inline ms-2">Consultar</span>
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Filtro de fecha -->
-            <div class="mb-4 date-filter-section">
-              <div class="row align-items-end g-3">
-                <div class="col-md-8">
-                  <label for="fechaMovimientos" class="form-label fw-bold">
-                    <i class="fas fa-calendar-alt me-2"></i>
-                    Fecha de consulta
-                  </label>
-                  <input type="date" id="fechaMovimientos" class="form-control form-control-lg"
-                    v-model="fechaMovimientos" :disabled="isLoadingMovimientos" :max="hoy">
-                </div>
-                <div class="col-md-4">
-                  <button class="btn btn-primary btn-lg w-100" @click="fetchMovimientos"
-                    :disabled="isLoadingMovimientos">
-                    <i class="fas" :class="isLoadingMovimientos ? 'fa-spinner fa-spin' : 'fa-search'"></i>
-                    <span class="ms-2">Consultar</span>
-                  </button>
-                </div>
+            <!-- Content Area -->
+            <div class="flex-grow-1 overflow-hidden d-flex flex-column bg-white">
+              <div v-if="isLoadingMovimientos"
+                class="d-flex flex-column align-items-center justify-content-center h-100">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <p class="text-muted">Cargando movimientos...</p>
               </div>
-            </div>
 
-            <div v-if="isLoadingMovimientos" class="text-center py-5">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Cargando...</span>
-              </div>
-              <p class="mt-3 text-muted">Obteniendo movimientos...</p>
-            </div>
-
-            <div v-else>
-              <div v-if="movimientosError" class="alert alert-danger" role="alert">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                {{ movimientosError }}
+              <div v-else-if="movimientosError" class="p-4">
+                <div class="alert alert-danger">
+                  <i class="fas fa-exclamation-triangle me-2"></i>
+                  {{ movimientosError }}
+                </div>
               </div>
 
               <template v-else>
-                <div class="row g-3 movimientos-summary mb-4">
-                  <div class="col-md-4">
-                    <div class="summary-card h-100">
-                      <div class="summary-icon bg-success-subtle text-success">
-                        <i class="fas fa-wallet"></i>
+                <!-- Compact Summary Stats -->
+                <div class="p-3 border-bottom bg-white">
+                  <div class="row g-2">
+                    <!-- General Stats -->
+                    <div class="col-6 col-md-3 col-lg-2">
+                      <div class="p-2 border rounded bg-light h-100">
+                        <div class="small text-muted text-uppercase fw-bold mb-1">Total Cobrado</div>
+                        <div class="h5 mb-0 text-success">{{ formatCurrency(movimientosResumen.montoTotal) }}</div>
                       </div>
-                      <div class="summary-label">Total cobrado</div>
-                      <div class="summary-value">{{ formatCurrency(movimientosResumen.montoTotal) }}</div>
                     </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="summary-card h-100">
-                      <div class="summary-icon bg-info-subtle text-info">
-                        <i class="fas fa-receipt"></i>
+                    <div class="col-6 col-md-3 col-lg-2">
+                      <div class="p-2 border rounded bg-light h-100">
+                        <div class="small text-muted text-uppercase fw-bold mb-1">Operaciones</div>
+                        <div class="h5 mb-0 text-dark">{{ movimientosResumen.totalRegistros }}</div>
                       </div>
-                      <div class="summary-label">Operaciones</div>
-                      <div class="summary-value">{{ movimientosResumen.totalRegistros }}</div>
                     </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="summary-card h-100">
-                      <div class="summary-icon bg-warning-subtle text-warning">
-                        <i class="fas fa-layer-group"></i>
-                      </div>
-                      <div class="summary-label">Métodos de pago</div>
-                      <div class="summary-value">{{ movimientosResumen.porMetodo.length }}</div>
-                    </div>
-                  </div>
-                </div>
 
-                <div class="metodo-breakdown mb-4" v-if="movimientosResumen.porMetodo.length">
-                  <h6 class="text-uppercase text-muted fw-bold mb-3">Detalle por método de pago</h6>
-                  <div class="row g-3">
-                    <div class="col-md-6 col-lg-4" v-for="item in movimientosResumen.porMetodo"
-                      :key="`metodo-${item.metodo_pago_id}`">
-                      <div class="metodo-card">
-                        <div class="metodo-header d-flex justify-content-between align-items-center">
-                          <span class="metodo-nombre">{{ item.metodo_pago }}</span>
-                          <span class="badge bg-light text-dark">{{ item.cantidad }} ops</span>
+                    <!-- Document Types Breakdown -->
+                    <div class="col-12">
+                      <h6 class="small text-muted fw-bold mb-2">Comprobantes</h6>
+                      <div class="row g-2">
+                        <div class="col-md-4" v-for="(data, tipo) in resumenComprobantes" :key="tipo">
+                          <div class="p-2 border rounded h-100 d-flex align-items-center"
+                            :class="`bg-${data.color}-subtle border-${data.color}-subtle`">
+                            <div class="me-2 rounded-circle p-2 d-flex align-items-center justify-content-center"
+                              :class="`bg-${data.color} text-white`" style="width: 32px; height: 32px;">
+                              <i :class="data.icon" class="small"></i>
+                            </div>
+                            <div class="overflow-hidden">
+                              <div class="small fw-bold text-truncate" :class="`text-${data.color}`">{{ tipo }}s</div>
+                              <div class="d-flex align-items-baseline gap-1">
+                                <span class="fw-bold">{{ data.cantidad }}</span>
+                                <span class="small text-muted">({{ formatCurrency(data.total) }})</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div class="metodo-monto">{{ formatCurrency(item.monto_total) }}</div>
+                      </div>
+                    </div>
+
+                    <!-- Payment Methods Breakdown -->
+                    <div class="col-12 mt-2">
+                      <h6 class="small text-muted fw-bold mb-2">Métodos de Pago</h6>
+                      <div class="row g-2">
+                        <div class="col-md-4" v-for="(data, metodo) in resumenMetodosPago" :key="metodo">
+                          <div class="p-2 border rounded h-100 d-flex align-items-center bg-white">
+                            <div class="me-2 rounded-circle p-2 d-flex align-items-center justify-content-center"
+                              :class="`bg-${data.color} text-white`" style="width: 32px; height: 32px;">
+                              <i :class="data.icon" class="small"></i>
+                            </div>
+                            <div class="overflow-hidden">
+                              <div class="small fw-bold text-truncate text-dark">{{ metodo }}</div>
+                              <div class="d-flex align-items-baseline gap-1">
+                                <span class="fw-bold">{{ data.cantidad }} ops</span>
+                                <span class="small text-muted fw-bold text-primary">{{ formatCurrency(data.total)
+                                  }}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div v-if="movimientos.length" class="table-responsive movimientos-table">
-                  <table class="table table-striped align-middle">
-                    <thead>
+                <!-- Table (Scrollable) -->
+                <div class="flex-grow-1 overflow-auto p-0">
+                  <table class="table table-striped table-hover mb-0 align-middle sticky-header">
+                    <thead class="table-light">
                       <tr>
-                        <th scope="col">Hora</th>
-                        <th scope="col">Comprobante</th>
-                        <th scope="col">Tipo</th>
-                        <th scope="col">Atención</th>
-                        <th scope="col">Método de pago</th>
-                        <th scope="col" class="text-end">Monto</th>
-                        <th scope="col">Registrado por</th>
-                        <th scope="col" class="text-center">Acciones</th>
+                        <th class="ps-4">Hora</th>
+                        <th>Comprobante</th>
+                        <th>Tipo</th>
+                        <th>Atención</th>
+                        <th>Método</th>
+                        <th class="text-end">Monto</th>
+                        <th>Usuario</th>
+                        <th class="text-center pe-4">Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr v-for="mov in movimientos" :key="mov.id">
-                        <td>{{ formatHour(mov.fecha) }}</td>
-                        <td>{{ mov.cod_comprobante || '—' }}</td>
-                        <td>{{ mov.tipo_comprobante_nombre || '—' }}</td>
+                        <td class="ps-4 text-nowrap">{{ formatHour(mov.fecha) }}</td>
+                        <td class="fw-bold">{{ mov.cod_comprobante || '—' }}</td>
+                        <td>
+                          <span class="badge bg-light text-dark border">
+                            {{ mov.tipo_comprobante_nombre || 'Nota de Venta' }}
+                          </span>
+                        </td>
                         <td>
                           <span class="badge" :class="getTipoAtencionBadgeClass(mov.tipo_atencion)">
                             <i :class="getTipoAtencionIcon(mov.tipo_atencion)" class="me-1"></i>
@@ -589,23 +578,23 @@
                           </span>
                         </td>
                         <td>{{ mov.metodo_pago }}</td>
-                        <td class="text-end">{{ formatCurrency(mov.monto) }}</td>
-                        <td>{{ mov.usuario || '—' }}</td>
-                        <td class="text-center">
-                          <button class="btn btn-sm btn-primary" @click="verComprobante(mov.cod_comprobante)"
-                            :disabled="!mov.cod_comprobante">
-                            <i class="fas fa-file-alt me-1"></i>
-                            Ver
+                        <td class="text-end fw-bold">{{ formatCurrency(mov.monto) }}</td>
+                        <td class="small text-muted">{{ mov.usuario || '—' }}</td>
+                        <td class="text-center pe-4">
+                          <button class="btn btn-sm btn-outline-primary" @click="verComprobante(mov.cod_comprobante)"
+                            :disabled="!mov.cod_comprobante" title="Ver Comprobante">
+                            <i class="fas fa-eye"></i>
                           </button>
+                        </td>
+                      </tr>
+                      <tr v-if="movimientos.length === 0">
+                        <td colspan="8" class="text-center py-5 text-muted">
+                          <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+                          <p class="mb-0">No se encontraron movimientos para esta fecha.</p>
                         </td>
                       </tr>
                     </tbody>
                   </table>
-                </div>
-
-                <div v-else class="text-center text-muted py-4">
-                  <i class="fas fa-inbox fa-2x mb-3"></i>
-                  <p class="mb-0">Aún no se registran movimientos en el día actual.</p>
                 </div>
               </template>
             </div>
@@ -890,6 +879,59 @@ export default {
 
     mesasDisponibles() {
       return this.mesas.filter(mesa => mesa.estado === 'D').length
+    },
+
+    resumenComprobantes() {
+      const resumen = {
+        'Boleta': { cantidad: 0, total: 0, icon: 'fas fa-file-invoice', color: 'info' },
+        'Factura': { cantidad: 0, total: 0, icon: 'fas fa-file-invoice-dollar', color: 'primary' },
+        'Nota de Venta': { cantidad: 0, total: 0, icon: 'fas fa-sticky-note', color: 'warning' }
+      };
+
+      this.movimientos.forEach(mov => {
+        const tipo = mov.tipo_comprobante_nombre || 'Nota de Venta';
+        if (resumen[tipo]) {
+          resumen[tipo].cantidad++;
+          resumen[tipo].total += Number(mov.monto);
+        }
+      });
+
+      return resumen;
+    },
+
+    resumenMetodosPago() {
+      const resumen = {};
+
+      this.movimientos.forEach(mov => {
+        const metodo = mov.metodo_pago || 'Desconocido';
+        if (!resumen[metodo]) {
+          let icon = 'fas fa-money-bill-wave';
+          let color = 'secondary';
+
+          if (metodo.includes('YAPE') || metodo.includes('PLIN')) {
+            icon = 'fas fa-mobile-alt';
+            color = 'primary'; // Purple-ish usually but primary works
+          } else if (metodo.includes('POS') || metodo.includes('TARJETA')) {
+            icon = 'fas fa-credit-card';
+            color = 'info';
+          } else if (metodo.includes('EFECTIVO')) {
+            icon = 'fas fa-coins';
+            color = 'success';
+          }
+
+          resumen[metodo] = {
+            cantidad: 0,
+            total: 0,
+            icon,
+            color
+          };
+        }
+
+        resumen[metodo].cantidad++;
+        resumen[metodo].total += Number(mov.monto);
+      });
+
+      return resumen;
     },
 
     mesasOcupadas() {
