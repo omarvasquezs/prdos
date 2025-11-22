@@ -281,6 +281,20 @@
                   placeholder="Nombre de la empresa" required>
               </div>
 
+              <!-- Campos para Boleta -->
+              <div v-if="formCobro.tipo_comprobante === 'B'" class="mb-3">
+                <label for="nombre_cliente" class="form-label fw-bold">Nombre Completo *</label>
+                <input type="text" id="nombre_cliente" v-model="formCobro.nombre_cliente" class="form-control" 
+                  placeholder="Nombres y apellidos del cliente" required>
+              </div>
+              <div v-if="formCobro.tipo_comprobante === 'B'" class="mb-3">
+                <label for="dni_ce_cliente" class="form-label fw-bold">DNI / CE *</label>
+                <input type="text" id="dni_ce_cliente" v-model="formCobro.dni_ce_cliente" class="form-control" 
+                  placeholder="Documento de identidad" maxlength="9" pattern="[0-9]{8,9}" required
+                  @input="validarDniCe">
+                <small class="text-muted">Máximo 9 dígitos numéricos</small>
+              </div>
+
               <!-- Método de Pago -->
               <div class="mb-3">
                 <label class="form-label fw-bold">Método de Pago *</label>
@@ -499,6 +513,8 @@ export default {
         metodo_pago_id: '',
         num_ruc: '',
         razon_social: '',
+        nombre_cliente: '',
+        dni_ce_cliente: '',
         observaciones: ''
       },
       formMarcarPagado: {
@@ -625,6 +641,8 @@ export default {
         metodo_pago_id: '',
         num_ruc: '',
         razon_social: '',
+        nombre_cliente: '',
+        dni_ce_cliente: '',
         observaciones: ''
       }
     },
@@ -640,6 +658,12 @@ export default {
         console.error('Error al cargar métodos de pago:', error)
         throw error
       }
+    },
+
+    validarDniCe(event) {
+      // Solo permitir números y limitar a 9 caracteres
+      const value = event.target.value.replace(/[^0-9]/g, '').slice(0, 9)
+      this.formCobro.dni_ce_cliente = value
     },
 
     async generarComprobante() {
