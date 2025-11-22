@@ -8,7 +8,7 @@
         <p class="loading-subtext">Por favor espera un momento</p>
       </div>
     </div>
-    
+
     <div class="container">
       <div class="selection-card">
         <h1 class="title">Seleccionar Perfil</h1>
@@ -20,44 +20,29 @@
           </div>
         </div>
 
-        <div v-else class="roles-wrapper" :class="{ 'scroll-mode': roles.length > 2, 'centered-mode': roles.length <= 2 }">
-          <button 
-            v-show="roles.length > 2 && canScrollLeft" 
-            class="scroll-arrow left-arrow"
-            @click="scrollLeft"
-            type="button"
-          >
+        <div v-else class="roles-wrapper"
+          :class="{ 'scroll-mode': roles.length > 4, 'centered-mode': roles.length <= 4 }">
+          <button v-show="roles.length > 4 && canScrollLeft" class="scroll-arrow left-arrow" @click="scrollLeft"
+            type="button">
             <i class="fas fa-chevron-left"></i>
           </button>
-          
-          <div 
-            class="roles-container" 
-            :class="{ 'centered': roles.length <= 2, 'scrollable': roles.length > 2 }"
-            ref="rolesContainer" 
-            @scroll="checkScrollPosition"
-          >
-            <div 
-              v-for="role in roles" 
-              :key="role"
-              class="role-card"
-              :class="{ 'selected': selectedRole === role }"
-              @click="selectRole(role)"
-            >
+
+          <div class="roles-container" :class="{ 'centered': roles.length <= 4, 'scrollable': roles.length > 4 }"
+            ref="rolesContainer" @scroll="checkScrollPosition">
+            <div v-for="role in roles" :key="role" class="role-card" :class="{ 'selected': selectedRole === role }"
+              @click="selectRole(role)">
               <div class="role-icon">
                 <i v-if="role === 'administrador'" class="fas fa-user-tie"></i>
                 <i v-else-if="role === 'caja'" class="fas fa-cash-register"></i>
+                <i v-else-if="role === 'contador'" class="fas fa-calculator"></i>
                 <i v-else class="fas fa-user"></i>
               </div>
               <div class="role-name">{{ getRoleDisplayName(role) }}</div>
             </div>
           </div>
-          
-          <button 
-            v-show="roles.length > 2 && canScrollRight" 
-            class="scroll-arrow right-arrow"
-            @click="scrollRight"
-            type="button"
-          >
+
+          <button v-show="roles.length > 4 && canScrollRight" class="scroll-arrow right-arrow" @click="scrollRight"
+            type="button">
             <i class="fas fa-chevron-right"></i>
           </button>
         </div>
@@ -93,7 +78,7 @@ export default {
       try {
         const res = await axios.get('/api/user');
         this.roles = res.data?.roles || [];
-        
+
         // If user has only one role, auto-select and navigate
         if (this.roles.length === 1) {
           this.selectedRole = this.roles[0];
@@ -108,36 +93,37 @@ export default {
         this.loading = false;
       }
     },
-    
+
     getRoleDisplayName(role) {
       const roleNames = {
         'administrador': 'Administrador',
-        'caja': 'Caja'
+        'caja': 'Caja',
+        'contador': 'Contador'
       };
       return roleNames[role] || role;
     },
-    
+
     selectRole(role) {
       // Evitar navegación múltiple si ya estamos navegando
       if (this.navigating) return;
-      
+
       this.selectedRole = role;
       this.error = '';
-      
+
       // Navegar directamente al seleccionar el rol
       this.continueWithRole();
     },
-    
+
     async continueWithRole() {
       if (!this.selectedRole) return;
-      
+
       this.error = '';
       this.navigating = true;
-      
+
       try {
         const res = await axios.post('/select-role', { role: this.selectedRole });
         const redirect = res.data?.redirect || '/dashboard';
-        
+
         // Keep the spinner visible during navigation
         window.location.href = redirect;
       } catch (e) {
@@ -146,33 +132,33 @@ export default {
       }
       // Note: No finally block - we want the spinner to stay visible until page navigation
     },
-    
+
     checkScrollPosition() {
       const container = this.$refs.rolesContainer;
-      if (!container || this.roles.length <= 2) {
+      if (!container || this.roles.length <= 4) {
         this.canScrollLeft = false;
         this.canScrollRight = false;
         return;
       }
-      
+
       this.canScrollLeft = container.scrollLeft > 0;
       this.canScrollRight = container.scrollLeft < container.scrollWidth - container.clientWidth;
     },
-    
+
     scrollLeft() {
       const container = this.$refs.rolesContainer;
       if (container) {
         container.scrollBy({ left: -200, behavior: 'smooth' });
       }
     },
-    
+
     scrollRight() {
       const container = this.$refs.rolesContainer;
       if (container) {
         container.scrollBy({ left: 200, behavior: 'smooth' });
       }
     },
-    
+
     initializeScrollState() {
       this.$nextTick(() => {
         this.checkScrollPosition();
@@ -184,7 +170,7 @@ export default {
     this.initializeScrollState();
     window.addEventListener('resize', this.checkScrollPosition);
   },
-  
+
   beforeUnmount() {
     window.removeEventListener('resize', this.checkScrollPosition);
   }
@@ -202,7 +188,7 @@ export default {
 }
 
 .container {
-  max-width: 600px;
+  max-width: 1000px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -272,15 +258,18 @@ export default {
 /* Scrollable layout for 3+ roles */
 .roles-container.scrollable {
   overflow-x: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
   flex: 1;
   gap: 20px;
   padding: 10px 0;
 }
 
 .roles-container.scrollable::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
+  display: none;
+  /* Chrome, Safari and Opera */
 }
 
 .role-card {
@@ -427,54 +416,54 @@ export default {
   .selection-card {
     padding: 30px 20px;
   }
-  
+
   .title {
     font-size: 2rem;
   }
-  
+
   .roles-wrapper.scroll-mode {
     gap: 10px;
   }
-  
+
   .scroll-arrow {
     width: 35px;
     height: 35px;
     font-size: 0.9rem;
   }
-  
+
   /* Mobile adjustments for centered layout */
   .roles-container.centered {
     gap: 20px;
     padding: 15px 0;
   }
-  
+
   .roles-container.centered .role-card {
     min-width: 160px;
     width: 160px;
     padding: 25px 15px;
   }
-  
+
   .roles-container.centered .role-icon {
     font-size: 2.8rem;
     margin-bottom: 15px;
   }
-  
+
   .roles-container.centered .role-name {
     font-size: 1rem;
   }
-  
+
   /* Mobile adjustments for scrollable layout */
   .roles-container.scrollable .role-card {
     min-width: 120px;
     width: 120px;
     padding: 20px 10px;
   }
-  
+
   .roles-container.scrollable .role-icon {
     font-size: 2rem;
     margin-bottom: 8px;
   }
-  
+
   .roles-container.scrollable .role-name {
     font-size: 0.75rem;
     letter-spacing: 0.2px;
@@ -525,8 +514,13 @@ export default {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-text {
