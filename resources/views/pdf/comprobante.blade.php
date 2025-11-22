@@ -196,6 +196,18 @@
                 <strong>Razón Social:</strong> {{ substr($comprobante->razon_social ?? '', 0, 35) }}
             </div>
         @endif
+        @if($comprobante->tipo_comprobante === 'B')
+            @if($comprobante->nombre_cliente)
+                <div class="info-line">
+                    <strong>Cliente:</strong> {{ substr($comprobante->nombre_cliente, 0, 35) }}
+                </div>
+            @endif
+            @if($comprobante->dni_ce_cliente)
+                <div class="info-line">
+                    <strong>DNI/CE:</strong> {{ $comprobante->dni_ce_cliente }}
+                </div>
+            @endif
+        @endif
         
         <!-- Información de cliente para Delivery y Recojo -->
         @if($pedido->tipo_atencion === 'D')

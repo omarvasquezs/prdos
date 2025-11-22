@@ -21,6 +21,8 @@ class ComprobanteController extends Controller
             'metodo_pago_id' => 'required|integer|exists:metodo_pago,id',
             'num_ruc' => 'nullable|required_if:tipo_comprobante,F|digits:11',
             'razon_social' => 'nullable|required_if:tipo_comprobante,F|string|max:255',
+            'nombre_cliente' => 'nullable|required_if:tipo_comprobante,B|string|max:255',
+            'dni_ce_cliente' => 'nullable|required_if:tipo_comprobante,B|digits_between:8,9',
             'observaciones' => 'nullable|string',
         ]);
 
@@ -35,6 +37,8 @@ class ComprobanteController extends Controller
             $comprobante->metodo_pago_id = $request->metodo_pago_id;
             $comprobante->num_ruc = $request->num_ruc;
             $comprobante->razon_social = $request->razon_social;
+            $comprobante->nombre_cliente = $request->nombre_cliente;
+            $comprobante->dni_ce_cliente = $request->dni_ce_cliente;
             $comprobante->observaciones = $request->observaciones;
             $comprobante->user_id = Auth::user()->id;
             $comprobante->pedido_id = $pedido->id;
