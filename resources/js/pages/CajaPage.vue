@@ -21,336 +21,298 @@
 
       <!-- Main Content -->
       <div class="container-fluid px-3 py-2">
-      <!-- Alert Messages -->
-      <div v-if="alertMessage" class="alert alert-dismissible fade show" :class="alertClass" role="alert">
-        <i :class="alertIcon" class="me-2"></i>
-        {{ alertMessage }}
-        <button type="button" class="btn-close" @click="clearAlert"></button>
-      </div>
-
-      <!-- Placeholder when caja is closed -->
-      <div v-if="!cajaEstaAbierta" class="caja-closed-placeholder text-center py-5">
-        <h3 class="mb-3">La caja no está abierta</h3>
-        <p class="text-muted mb-4">
-          Abre la caja para gestionar pedidos y movimientos del día.
-        </p>
-        <button
-          class="btn btn-success btn-lg"
-          @click="abrirModalApertura"
-          :disabled="isProcessingApertura"
-        >
-          <span v-if="isProcessingApertura">
-            <span class="spinner-border spinner-border-sm me-2"></span>
-            Abriendo...
-          </span>
-          <span v-else>
-            <i class="fas fa-cash-register me-2"></i>
-            Abrir Caja
-          </span>
-        </button>
-      </div>
-
-      <template v-else>
-        <!-- Sidebar de Tipo de Atención -->
-        <div class="atencion-sidebar">
-          <button 
-            class="atencion-sidebar-item" 
-            :class="{ 'active': tipoAtencionActivo === 'P' }"
-            @click="cambiarTipoAtencion('P')"
-          >
-            <i class="fas fa-utensils"></i>
-            <span class="atencion-label">Presencial</span>
-          </button>
-          <button 
-            class="atencion-sidebar-item" 
-            :class="{ 'active': tipoAtencionActivo === 'D' }"
-            @click="cambiarTipoAtencion('D')"
-          >
-            <i class="fas fa-motorcycle"></i>
-            <span class="atencion-label">Delivery</span>
-            <span class="atencion-badge" v-if="pedidosDelivery.length > 0">{{ pedidosDelivery.length }}</span>
-          </button>
-          <button 
-            class="atencion-sidebar-item" 
-            :class="{ 'active': tipoAtencionActivo === 'R' }"
-            @click="cambiarTipoAtencion('R')"
-          >
-            <i class="fas fa-shopping-bag"></i>
-            <span class="atencion-label">Recojo</span>
-            <span class="atencion-badge" v-if="pedidosRecojo.length > 0">{{ pedidosRecojo.length }}</span>
-          </button>
-          <div class="sidebar-divider"></div>
-          <button 
-            class="atencion-sidebar-item sidebar-action"
-            @click="abrirModalMovimientos"
-            :disabled="isLoadingMovimientos"
-          >
-            <i class="fas" :class="isLoadingMovimientos ? 'fa-spinner fa-spin' : 'fa-list-alt'"></i>
-            <span class="atencion-label">Movimientos</span>
-          </button>
-          <button 
-            class="atencion-sidebar-item sidebar-action sidebar-cerrar-caja"
-            @click="abrirModalCierre"
-            :disabled="isProcessingCierre"
-          >
-            <i class="fas" :class="isProcessingCierre ? 'fa-spinner fa-spin' : 'fa-cash-register'"></i>
-            <span class="atencion-label">Cerrar Caja</span>
-          </button>
-          <button 
-            class="atencion-sidebar-item sidebar-action sidebar-logout"
-            @click="logout"
-            :disabled="isLoggingOut"
-          >
-            <i class="fas" :class="isLoggingOut ? 'fa-spinner fa-spin' : 'fa-sign-out-alt'"></i>
-            <span class="atencion-label">Salir</span>
-          </button>
+        <!-- Alert Messages -->
+        <div v-if="alertMessage" class="alert alert-dismissible fade show" :class="alertClass" role="alert">
+          <i :class="alertIcon" class="me-2"></i>
+          {{ alertMessage }}
+          <button type="button" class="btn-close" @click="clearAlert"></button>
         </div>
 
-        <!-- Contenido Principal con Sidebar -->
-        <div class="contenido-con-sidebar">
-        
-        <!-- Header Section (solo para Presencial) -->
-        <div v-if="tipoAtencionActivo === 'P'" class="header-section mb-3">
-          <div class="d-flex align-items-center justify-content-between flex-wrap">
-            <div>
-              <h1 class="page-title mb-1">
-                <i class="fas fa-utensils text-warning me-2"></i>
-                Selección de Mesa
-              </h1>
-              <p class="page-subtitle mb-0 text-muted">Toca una mesa disponible para iniciar un nuevo pedido</p>
-            </div>
-            <div class="header-actions d-flex align-items-center">
-              <button 
-                @click="refreshMesas" 
-                class="btn btn-outline-secondary btn-lg"
-                :disabled="isRefreshing || !cajaEstaAbierta"
-              >
-                <i class="fas fa-sync-alt" :class="{ 'fa-spin': isRefreshing }"></i>
-                <span class="ms-2 d-none d-md-inline">Actualizar</span>
-              </button>
-            </div>
+        <!-- Placeholder when caja is closed -->
+        <div v-if="!cajaEstaAbierta" class="caja-closed-placeholder text-center py-5">
+          <h3 class="mb-3">La caja no está abierta</h3>
+          <p class="text-muted mb-4">
+            Abre la caja para gestionar pedidos y movimientos del día.
+          </p>
+          <button class="btn btn-success btn-lg" @click="abrirModalApertura" :disabled="isProcessingApertura">
+            <span v-if="isProcessingApertura">
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              Abriendo...
+            </span>
+            <span v-else>
+              <i class="fas fa-cash-register me-2"></i>
+              Abrir Caja
+            </span>
+          </button>
+          <div class="mt-3">
+            <button class="btn btn-danger" @click="logout" :disabled="isLoggingOut">
+              <i class="fas fa-sign-out-alt me-2"></i>
+              Cerrar Sesión
+            </button>
           </div>
         </div>
-        
-        <!-- Mesas Grid (solo si tipo presencial) -->
-        <div v-if="tipoAtencionActivo === 'P'" class="mesas-grid">
-          <div 
-            v-for="mesa in mesas" 
-            :key="mesa.id"
-            class="mesa-card"
-            :class="mesaCardClass(mesa)"
-            @click="seleccionarMesa(mesa)"
-          >
-            <!-- Mesa Icon -->
-            <div class="mesa-icon">
+
+        <template v-else>
+          <!-- Sidebar de Tipo de Atención -->
+          <div class="atencion-sidebar">
+            <button class="atencion-sidebar-item" :class="{ 'active': tipoAtencionActivo === 'P' }"
+              @click="cambiarTipoAtencion('P')">
               <i class="fas fa-utensils"></i>
-            </div>
+              <span class="atencion-label">Presencial</span>
+            </button>
+            <button class="atencion-sidebar-item" :class="{ 'active': tipoAtencionActivo === 'D' }"
+              @click="cambiarTipoAtencion('D')">
+              <i class="fas fa-motorcycle"></i>
+              <span class="atencion-label">Delivery</span>
+              <span class="atencion-badge" v-if="pedidosDelivery.length > 0">{{ pedidosDelivery.length }}</span>
+            </button>
+            <button class="atencion-sidebar-item" :class="{ 'active': tipoAtencionActivo === 'R' }"
+              @click="cambiarTipoAtencion('R')">
+              <i class="fas fa-shopping-bag"></i>
+              <span class="atencion-label">Recojo</span>
+              <span class="atencion-badge" v-if="pedidosRecojo.length > 0">{{ pedidosRecojo.length }}</span>
+            </button>
+            <div class="sidebar-divider"></div>
+            <button class="atencion-sidebar-item sidebar-action" @click="abrirModalMovimientos"
+              :disabled="isLoadingMovimientos">
+              <i class="fas" :class="isLoadingMovimientos ? 'fa-spinner fa-spin' : 'fa-list-alt'"></i>
+              <span class="atencion-label">Movimientos</span>
+            </button>
+            <button class="atencion-sidebar-item sidebar-action sidebar-cerrar-caja" @click="abrirModalCierre"
+              :disabled="isProcessingCierre">
+              <i class="fas" :class="isProcessingCierre ? 'fa-spinner fa-spin' : 'fa-cash-register'"></i>
+              <span class="atencion-label">Cerrar Caja</span>
+            </button>
+            <button class="atencion-sidebar-item sidebar-action sidebar-logout" @click="logout"
+              :disabled="isLoggingOut">
+              <i class="fas" :class="isLoggingOut ? 'fa-spinner fa-spin' : 'fa-sign-out-alt'"></i>
+              <span class="atencion-label">Salir</span>
+            </button>
+          </div>
 
-            <!-- Mesa Info -->
-            <div class="mesa-info">
-              <h3 class="mesa-numero">Mesa {{ mesa.num_mesa }}</h3>
-              
-              <!-- Estado Badge -->
-              <div class="mesa-estado">
-                <span class="badge" :class="estadoBadgeClass(mesa.estado)">
-                  <i :class="estadoIcon(mesa.estado)" class="me-1"></i>
-                  {{ estadoTexto(mesa.estado) }}
-                </span>
-              </div>
+          <!-- Contenido Principal con Sidebar -->
+          <div class="contenido-con-sidebar">
 
-              <!-- Pedido Activo Info -->
-              <div v-if="mesa.pedido_activo" class="pedido-info">
-                <div class="comensales">
-                  <i class="fas fa-users text-muted me-1"></i>
-                  {{ mesa.pedido_activo.comensales }} {{ mesa.pedido_activo.comensales === 1 ? 'comensal' : 'comensales' }}
+            <!-- Header Section (solo para Presencial) -->
+            <div v-if="tipoAtencionActivo === 'P'" class="header-section mb-3">
+              <div class="d-flex align-items-center justify-content-between flex-wrap">
+                <div>
+                  <h1 class="page-title mb-1">
+                    <i class="fas fa-utensils text-warning me-2"></i>
+                    Selección de Mesa
+                  </h1>
+                  <p class="page-subtitle mb-0 text-muted">Toca una mesa disponible para iniciar un nuevo pedido</p>
                 </div>
-                <div class="tiempo">
-                  <i class="fas fa-clock text-muted me-1"></i>
-                  {{ formatearTiempo(mesa.pedido_activo.fecha_apertura) }}
-                </div>
-                <div class="total" v-if="mesa.pedido_activo.total > 0">
-                  <i class="fas fa-money-bill text-success me-1"></i>
-                  S/ {{ mesa.pedido_activo.total.toFixed(2) }}
-                </div>
-              </div>
-            </div>
-
-            <!-- Action Button -->
-            <div class="mesa-action">
-              <button 
-                class="btn btn-sm"
-                :class="actionButtonClass(mesa)"
-                v-if="mesa.estado === 'D'"
-              >
-                <i class="fas fa-plus me-1"></i>
-                Ocupar
-              </button>
-              <button 
-                class="btn btn-sm btn-outline-warning"
-                v-else-if="mesa.estado === 'O'"
-                @click.stop="verPedido(mesa)"
-              >
-                <i class="fas fa-eye me-1"></i>
-                Ver Pedido
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Empty State -->
-        <div v-if="mesas.length === 0 && !isLoading && tipoAtencionActivo === 'P'" class="empty-state text-center py-5">
-          <i class="fas fa-table display-1 text-muted mb-3"></i>
-          <h3 class="text-muted">No hay mesas configuradas</h3>
-          <p class="text-muted">Contacta al administrador para configurar las mesas del restaurante.</p>
-        </div>
-
-        <!-- Vista Delivery -->
-        <div v-if="tipoAtencionActivo === 'D'" class="delivery-view">
-          <div class="header-section mb-3">
-            <div class="d-flex align-items-center justify-content-between flex-wrap">
-              <div>
-                <h1 class="page-title mb-1">
-                  <i class="fas fa-motorcycle text-warning me-2"></i>
-                  Cola de Delivery
-                </h1>
-                <p class="page-subtitle mb-0 text-muted">Gestiona los pedidos a domicilio</p>
-              </div>
-              <div class="header-actions d-flex align-items-center">
-                <button class="btn btn-primary btn-lg" @click="abrirModalNuevoPedido('D')">
-                  <i class="fas fa-plus me-2"></i>
-                  <span class="d-none d-md-inline">Nuevo Pedido</span>
-                  <span class="d-md-none">Nuevo</span>
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <div v-if="isLoadingPedidos" class="text-center py-5">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-3">Cargando pedidos...</p>
-          </div>
-
-          <div v-else-if="pedidosDelivery.length === 0" class="text-center py-5">
-            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-            <h4 class="text-muted">No hay pedidos de delivery pendientes</h4>
-          </div>
-
-          <div v-else class="pedidos-grid">
-            <div 
-              v-for="pedido in pedidosDelivery" 
-              :key="pedido.id"
-              class="pedido-card"
-              @click="verPedidoCola(pedido)"
-            >
-              <div class="pedido-header">
-                <h5>#{{ pedido.id }} - {{ pedido.cliente_nombre }}</h5>
-                <div class="d-flex gap-1 flex-wrap">
-                  <span class="badge" :class="getEstadoEntregaBadgeClass(pedido.estado_entrega)">
-                    <i :class="getEstadoEntregaIcon(pedido.estado_entrega)" class="me-1"></i>
-                    {{ pedido.estado_entrega_texto || 'Abierto' }}
-                  </span>
-                  <span v-if="pedido.pagado" class="badge bg-success">
-                    <i class="fas fa-check-circle me-1"></i>
-                    Pagado
-                  </span>
-                  <span v-else class="badge bg-danger">
-                    <i class="fas fa-times-circle me-1"></i>
-                    No Pagado
-                  </span>
+                <div class="header-actions d-flex align-items-center">
+                  <button @click="refreshMesas" class="btn btn-outline-secondary btn-lg"
+                    :disabled="isRefreshing || !cajaEstaAbierta">
+                    <i class="fas fa-sync-alt" :class="{ 'fa-spin': isRefreshing }"></i>
+                    <span class="ms-2 d-none d-md-inline">Actualizar</span>
+                  </button>
                 </div>
               </div>
-              <div class="pedido-body">
-                <p><i class="fas fa-phone me-2"></i>{{ pedido.cliente_telefono }}</p>
-                <p><i class="fas fa-map-marker-alt me-2"></i>{{ pedido.direccion_entrega }}</p>
-                <p class="text-muted small"><i class="fas fa-clock me-2"></i>{{ formatearTiempo(pedido.fecha_apertura) }}</p>
-              </div>
-              <div class="pedido-footer">
-                <strong>Total: {{ formatCurrency(pedido.total) }}</strong>
-                <span class="badge bg-info">{{ pedido.items.length }} items</span>
-              </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Vista Recojo -->
-        <div v-if="tipoAtencionActivo === 'R'" class="recojo-view">
-          <div class="header-section mb-3">
-            <div class="d-flex align-items-center justify-content-between flex-wrap">
-              <div>
-                <h1 class="page-title mb-1">
-                  <i class="fas fa-shopping-bag text-warning me-2"></i>
-                  Cola de Recojo
-                </h1>
-                <p class="page-subtitle mb-0 text-muted">Gestiona los pedidos para llevar</p>
-              </div>
-              <div class="header-actions d-flex align-items-center">
-                <button class="btn btn-primary btn-lg" @click="abrirModalNuevoPedido('R')">
-                  <i class="fas fa-plus me-2"></i>
-                  <span class="d-none d-md-inline">Nuevo Pedido</span>
-                  <span class="d-md-none">Nuevo</span>
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <div v-if="isLoadingPedidos" class="text-center py-5">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-3">Cargando pedidos...</p>
-          </div>
+            <!-- Mesas Grid (solo si tipo presencial) -->
+            <div v-if="tipoAtencionActivo === 'P'" class="mesas-grid">
+              <div v-for="mesa in mesas" :key="mesa.id" class="mesa-card" :class="mesaCardClass(mesa)"
+                @click="seleccionarMesa(mesa)">
+                <!-- Mesa Icon -->
+                <div class="mesa-icon">
+                  <i class="fas fa-utensils"></i>
+                </div>
 
-          <div v-else-if="pedidosRecojo.length === 0" class="text-center py-5">
-            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-            <h4 class="text-muted">No hay pedidos de recojo pendientes</h4>
-          </div>
+                <!-- Mesa Info -->
+                <div class="mesa-info">
+                  <h3 class="mesa-numero">Mesa {{ mesa.num_mesa }}</h3>
 
-          <div v-else class="pedidos-grid">
-            <div 
-              v-for="pedido in pedidosRecojo" 
-              :key="pedido.id"
-              class="pedido-card"
-              @click="verPedidoCola(pedido)"
-            >
-              <div class="pedido-header">
-                <h5>#{{ pedido.id }} - {{ pedido.cliente_nombre }}</h5>
-                <div class="d-flex gap-1 flex-wrap">
-                  <span class="badge" :class="getEstadoEntregaBadgeClass(pedido.estado_entrega)">
-                    <i :class="getEstadoEntregaIcon(pedido.estado_entrega)" class="me-1"></i>
-                    {{ pedido.estado_entrega_texto || 'Abierto' }}
-                  </span>
-                  <span v-if="pedido.pagado" class="badge bg-success">
-                    <i class="fas fa-check-circle me-1"></i>
-                    Pagado
-                  </span>
-                  <span v-else class="badge bg-danger">
-                    <i class="fas fa-times-circle me-1"></i>
-                    No Pagado
-                  </span>
+                  <!-- Estado Badge -->
+                  <div class="mesa-estado">
+                    <span class="badge" :class="estadoBadgeClass(mesa.estado)">
+                      <i :class="estadoIcon(mesa.estado)" class="me-1"></i>
+                      {{ estadoTexto(mesa.estado) }}
+                    </span>
+                  </div>
+
+                  <!-- Pedido Activo Info -->
+                  <div v-if="mesa.pedido_activo" class="pedido-info">
+                    <div class="comensales">
+                      <i class="fas fa-users text-muted me-1"></i>
+                      {{ mesa.pedido_activo.comensales }} {{ mesa.pedido_activo.comensales === 1 ? 'comensal' :
+                        'comensales' }}
+                    </div>
+                    <div class="tiempo">
+                      <i class="fas fa-clock text-muted me-1"></i>
+                      {{ formatearTiempo(mesa.pedido_activo.fecha_apertura) }}
+                    </div>
+                    <div class="total" v-if="mesa.pedido_activo.total > 0">
+                      <i class="fas fa-money-bill text-success me-1"></i>
+                      S/ {{ mesa.pedido_activo.total.toFixed(2) }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action Button -->
+                <div class="mesa-action">
+                  <button class="btn btn-sm" :class="actionButtonClass(mesa)" v-if="mesa.estado === 'D'">
+                    <i class="fas fa-plus me-1"></i>
+                    Ocupar
+                  </button>
+                  <button class="btn btn-sm btn-outline-warning" v-else-if="mesa.estado === 'O'"
+                    @click.stop="verPedido(mesa)">
+                    <i class="fas fa-eye me-1"></i>
+                    Ver Pedido
+                  </button>
                 </div>
               </div>
-              <div class="pedido-body">
-                <p><i class="fas fa-phone me-2"></i>{{ pedido.cliente_telefono }}</p>
-                <p v-if="pedido.notas" class="text-muted small"><i class="fas fa-sticky-note me-2"></i>{{ pedido.notas }}</p>
-                <p class="text-muted small"><i class="fas fa-clock me-2"></i>{{ formatearTiempo(pedido.fecha_apertura) }}</p>
+            </div>
+
+            <!-- Empty State -->
+            <div v-if="mesas.length === 0 && !isLoading && tipoAtencionActivo === 'P'"
+              class="empty-state text-center py-5">
+              <i class="fas fa-table display-1 text-muted mb-3"></i>
+              <h3 class="text-muted">No hay mesas configuradas</h3>
+              <p class="text-muted">Contacta al administrador para configurar las mesas del restaurante.</p>
+            </div>
+
+            <!-- Vista Delivery -->
+            <div v-if="tipoAtencionActivo === 'D'" class="delivery-view">
+              <div class="header-section mb-3">
+                <div class="d-flex align-items-center justify-content-between flex-wrap">
+                  <div>
+                    <h1 class="page-title mb-1">
+                      <i class="fas fa-motorcycle text-warning me-2"></i>
+                      Cola de Delivery
+                    </h1>
+                    <p class="page-subtitle mb-0 text-muted">Gestiona los pedidos a domicilio</p>
+                  </div>
+                  <div class="header-actions d-flex align-items-center">
+                    <button class="btn btn-primary btn-lg" @click="abrirModalNuevoPedido('D')">
+                      <i class="fas fa-plus me-2"></i>
+                      <span class="d-none d-md-inline">Nuevo Pedido</span>
+                      <span class="d-md-none">Nuevo</span>
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div class="pedido-footer">
-                <strong>Total: {{ formatCurrency(pedido.total) }}</strong>
-                <span class="badge bg-info">{{ pedido.items.length }} items</span>
+
+              <div v-if="isLoadingPedidos" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-3">Cargando pedidos...</p>
+              </div>
+
+              <div v-else-if="pedidosDelivery.length === 0" class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No hay pedidos de delivery pendientes</h4>
+              </div>
+
+              <div v-else class="pedidos-grid">
+                <div v-for="pedido in pedidosDelivery" :key="pedido.id" class="pedido-card"
+                  @click="verPedidoCola(pedido)">
+                  <div class="pedido-header">
+                    <h5>#{{ pedido.id }} - {{ pedido.cliente_nombre }}</h5>
+                    <div class="d-flex gap-1 flex-wrap">
+                      <span class="badge" :class="getEstadoEntregaBadgeClass(pedido.estado_entrega)">
+                        <i :class="getEstadoEntregaIcon(pedido.estado_entrega)" class="me-1"></i>
+                        {{ pedido.estado_entrega_texto || 'Abierto' }}
+                      </span>
+                      <span v-if="pedido.pagado" class="badge bg-success">
+                        <i class="fas fa-check-circle me-1"></i>
+                        Pagado
+                      </span>
+                      <span v-else class="badge bg-danger">
+                        <i class="fas fa-times-circle me-1"></i>
+                        No Pagado
+                      </span>
+                    </div>
+                  </div>
+                  <div class="pedido-body">
+                    <p><i class="fas fa-phone me-2"></i>{{ pedido.cliente_telefono }}</p>
+                    <p><i class="fas fa-map-marker-alt me-2"></i>{{ pedido.direccion_entrega }}</p>
+                    <p class="text-muted small"><i class="fas fa-clock me-2"></i>{{
+                      formatearTiempo(pedido.fecha_apertura) }}</p>
+                  </div>
+                  <div class="pedido-footer">
+                    <strong>Total: {{ formatCurrency(pedido.total) }}</strong>
+                    <span class="badge bg-info">{{ pedido.items.length }} items</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Vista Recojo -->
+            <div v-if="tipoAtencionActivo === 'R'" class="recojo-view">
+              <div class="header-section mb-3">
+                <div class="d-flex align-items-center justify-content-between flex-wrap">
+                  <div>
+                    <h1 class="page-title mb-1">
+                      <i class="fas fa-shopping-bag text-warning me-2"></i>
+                      Cola de Recojo
+                    </h1>
+                    <p class="page-subtitle mb-0 text-muted">Gestiona los pedidos para llevar</p>
+                  </div>
+                  <div class="header-actions d-flex align-items-center">
+                    <button class="btn btn-primary btn-lg" @click="abrirModalNuevoPedido('R')">
+                      <i class="fas fa-plus me-2"></i>
+                      <span class="d-none d-md-inline">Nuevo Pedido</span>
+                      <span class="d-md-none">Nuevo</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="isLoadingPedidos" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-3">Cargando pedidos...</p>
+              </div>
+
+              <div v-else-if="pedidosRecojo.length === 0" class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No hay pedidos de recojo pendientes</h4>
+              </div>
+
+              <div v-else class="pedidos-grid">
+                <div v-for="pedido in pedidosRecojo" :key="pedido.id" class="pedido-card"
+                  @click="verPedidoCola(pedido)">
+                  <div class="pedido-header">
+                    <h5>#{{ pedido.id }} - {{ pedido.cliente_nombre }}</h5>
+                    <div class="d-flex gap-1 flex-wrap">
+                      <span class="badge" :class="getEstadoEntregaBadgeClass(pedido.estado_entrega)">
+                        <i :class="getEstadoEntregaIcon(pedido.estado_entrega)" class="me-1"></i>
+                        {{ pedido.estado_entrega_texto || 'Abierto' }}
+                      </span>
+                      <span v-if="pedido.pagado" class="badge bg-success">
+                        <i class="fas fa-check-circle me-1"></i>
+                        Pagado
+                      </span>
+                      <span v-else class="badge bg-danger">
+                        <i class="fas fa-times-circle me-1"></i>
+                        No Pagado
+                      </span>
+                    </div>
+                  </div>
+                  <div class="pedido-body">
+                    <p><i class="fas fa-phone me-2"></i>{{ pedido.cliente_telefono }}</p>
+                    <p v-if="pedido.notas" class="text-muted small"><i class="fas fa-sticky-note me-2"></i>{{
+                      pedido.notas }}</p>
+                    <p class="text-muted small"><i class="fas fa-clock me-2"></i>{{
+                      formatearTiempo(pedido.fecha_apertura) }}</p>
+                  </div>
+                  <div class="pedido-footer">
+                    <strong>Total: {{ formatCurrency(pedido.total) }}</strong>
+                    <span class="badge bg-info">{{ pedido.items.length }} items</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        </div>
-      </template>
+        </template>
       </div>
     </template>
 
     <!-- Modal de Apertura de Caja -->
-    <div 
-      v-if="showAperturaModal" 
-      class="modal fade show d-block" 
-      tabindex="-1" 
-      style="background-color: rgba(0,0,0,0.5);"
-    >
+    <div v-if="showAperturaModal" class="modal fade show d-block" tabindex="-1"
+      style="background-color: rgba(0,0,0,0.5);">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg">
           <div class="modal-header bg-success text-white">
@@ -358,12 +320,8 @@
               <i class="fas fa-cash-register me-2"></i>
               Abrir caja
             </h5>
-            <button 
-              type="button" 
-              class="btn-close" 
-              @click="cerrarModalApertura"
-              :disabled="isProcessingApertura"
-            ></button>
+            <button type="button" class="btn-close" @click="cerrarModalApertura"
+              :disabled="isProcessingApertura"></button>
           </div>
 
           <div class="modal-body">
@@ -374,15 +332,8 @@
               <label class="form-label">Monto de apertura</label>
               <div class="input-group input-group-lg">
                 <span class="input-group-text">S/</span>
-                <input 
-                  type="number" 
-                  class="form-control" 
-                  min="0" 
-                  step="0.01"
-                  v-model="openForm.monto"
-                  :disabled="isProcessingApertura"
-                  placeholder="0.00"
-                >
+                <input type="number" class="form-control" min="0" step="0.01" v-model="openForm.monto"
+                  :disabled="isProcessingApertura" placeholder="0.00">
               </div>
               <div v-if="openFormError" class="text-danger small mt-2">
                 {{ openFormError }}
@@ -391,20 +342,12 @@
           </div>
 
           <div class="modal-footer">
-            <button 
-              type="button" 
-              class="btn btn-outline-secondary" 
-              @click="cerrarModalApertura"
-              :disabled="isProcessingApertura"
-            >
+            <button type="button" class="btn btn-outline-secondary" @click="cerrarModalApertura"
+              :disabled="isProcessingApertura">
               Cancelar
             </button>
-            <button 
-              type="button" 
-              class="btn btn-success"
-              @click="confirmarApertura"
-              :disabled="isProcessingApertura || openForm.monto === ''"
-            >
+            <button type="button" class="btn btn-success" @click="confirmarApertura"
+              :disabled="isProcessingApertura || openForm.monto === ''">
               <span v-if="isProcessingApertura">
                 <span class="spinner-border spinner-border-sm me-2"></span>
                 Guardando...
@@ -420,12 +363,8 @@
     </div>
 
     <!-- Modal de Cierre de Caja -->
-    <div 
-      v-if="showCierreModal" 
-      class="modal fade show d-block" 
-      tabindex="-1" 
-      style="background-color: rgba(0,0,0,0.5);"
-    >
+    <div v-if="showCierreModal" class="modal fade show d-block" tabindex="-1"
+      style="background-color: rgba(0,0,0,0.5);">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg">
           <div class="modal-header bg-danger text-white">
@@ -433,12 +372,7 @@
               <i class="fas fa-lock me-2"></i>
               Cerrar caja
             </h5>
-            <button 
-              type="button" 
-              class="btn-close" 
-              @click="cerrarModalCierre"
-              :disabled="isProcessingCierre"
-            ></button>
+            <button type="button" class="btn-close" @click="cerrarModalCierre" :disabled="isProcessingCierre"></button>
           </div>
 
           <div class="modal-body">
@@ -449,15 +383,8 @@
               <label class="form-label">Monto de cierre</label>
               <div class="input-group input-group-lg">
                 <span class="input-group-text">S/</span>
-                <input 
-                  type="number" 
-                  class="form-control" 
-                  min="0" 
-                  step="0.01"
-                  v-model="closeForm.monto"
-                  :disabled="isProcessingCierre"
-                  placeholder="0.00"
-                >
+                <input type="number" class="form-control" min="0" step="0.01" v-model="closeForm.monto"
+                  :disabled="isProcessingCierre" placeholder="0.00">
               </div>
               <div v-if="closeFormError" class="text-danger small mt-2">
                 {{ closeFormError }}
@@ -466,20 +393,12 @@
           </div>
 
           <div class="modal-footer">
-            <button 
-              type="button" 
-              class="btn btn-outline-secondary" 
-              @click="cerrarModalCierre"
-              :disabled="isProcessingCierre"
-            >
+            <button type="button" class="btn btn-outline-secondary" @click="cerrarModalCierre"
+              :disabled="isProcessingCierre">
               Cancelar
             </button>
-            <button 
-              type="button" 
-              class="btn btn-danger"
-              @click="confirmarCierre"
-              :disabled="isProcessingCierre || closeForm.monto === ''"
-            >
+            <button type="button" class="btn btn-danger" @click="confirmarCierre"
+              :disabled="isProcessingCierre || closeForm.monto === ''">
               <span v-if="isProcessingCierre">
                 <span class="spinner-border spinner-border-sm me-2"></span>
                 Cerrando...
@@ -495,12 +414,8 @@
     </div>
 
     <!-- Modal de Movimientos -->
-    <div 
-      v-if="showMovimientosModal" 
-      class="modal fade show d-block" 
-      tabindex="-1" 
-      style="background-color: rgba(0,0,0,0.5);"
-    >
+    <div v-if="showMovimientosModal" class="modal fade show d-block" tabindex="-1"
+      style="background-color: rgba(0,0,0,0.5);">
       <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
         <div class="modal-content shadow-lg">
           <div class="modal-header bg-primary text-white">
@@ -508,12 +423,8 @@
               <i class="fas fa-list-alt me-2"></i>
               Movimientos del día
             </h5>
-            <button 
-              type="button" 
-              class="btn-close" 
-              @click="cerrarModalMovimientos"
-              :disabled="isLoadingMovimientos"
-            ></button>
+            <button type="button" class="btn-close" @click="cerrarModalMovimientos"
+              :disabled="isLoadingMovimientos"></button>
           </div>
 
           <div class="modal-body">
@@ -525,7 +436,7 @@
                 </div>
                 <div class="flex-grow-1">
                   <h6 class="alert-heading mb-1">
-                    {{ cajaEstaAbierta ? 'Caja abierta' : cajaStatus.hasRecordToday ? 'Caja cerrada' : 'Caja pendiente de apertura' }}
+                    {{ cajaStatusText }}
                   </h6>
                   <p class="mb-2 small">
                     <template v-if="cajaEstaAbierta && cajaRegistro">
@@ -534,9 +445,12 @@
                       {{ formatCurrency(cajaRegistro.monto_apertura) }}.
                     </template>
                     <template v-else-if="cajaStatus.hasRecordToday && cajaRegistro">
-                      La caja está cerrada. La última apertura fue el {{ formatDateTime(cajaRegistro.datetime_apertura) }}.
+                      La caja está cerrada. La última apertura fue el {{ formatDateTime(cajaRegistro.datetime_apertura)
+                      }}.
                       <span v-if="cajaRegistro.datetime_cierre">
-                        Se cerró el {{ formatDateTime(cajaRegistro.datetime_cierre) }}<span v-if="cajaRegistro.usuario_cierre"> por {{ cajaRegistro.usuario_cierre }}</span><span v-else-if="cajaRegistro.usuario_apertura"> por {{ cajaRegistro.usuario_apertura }}</span>.
+                        Se cerró el {{ formatDateTime(cajaRegistro.datetime_cierre) }}<span
+                          v-if="cajaRegistro.usuario_cierre"> por {{ cajaRegistro.usuario_cierre }}</span><span
+                          v-else-if="cajaRegistro.usuario_apertura"> por {{ cajaRegistro.usuario_apertura }}</span>.
                       </span>
                       <span v-else>
                         Aún no registra un cierre.
@@ -576,21 +490,12 @@
                     <i class="fas fa-calendar-alt me-2"></i>
                     Fecha de consulta
                   </label>
-                  <input 
-                    type="date" 
-                    id="fechaMovimientos"
-                    class="form-control form-control-lg"
-                    v-model="fechaMovimientos"
-                    :disabled="isLoadingMovimientos"
-                    :max="hoy"
-                  >
+                  <input type="date" id="fechaMovimientos" class="form-control form-control-lg"
+                    v-model="fechaMovimientos" :disabled="isLoadingMovimientos" :max="hoy">
                 </div>
                 <div class="col-md-4">
-                  <button 
-                    class="btn btn-primary btn-lg w-100"
-                    @click="fetchMovimientos"
-                    :disabled="isLoadingMovimientos"
-                  >
+                  <button class="btn btn-primary btn-lg w-100" @click="fetchMovimientos"
+                    :disabled="isLoadingMovimientos">
                     <i class="fas" :class="isLoadingMovimientos ? 'fa-spinner fa-spin' : 'fa-search'"></i>
                     <span class="ms-2">Consultar</span>
                   </button>
@@ -645,7 +550,8 @@
                 <div class="metodo-breakdown mb-4" v-if="movimientosResumen.porMetodo.length">
                   <h6 class="text-uppercase text-muted fw-bold mb-3">Detalle por método de pago</h6>
                   <div class="row g-3">
-                    <div class="col-md-6 col-lg-4" v-for="item in movimientosResumen.porMetodo" :key="`metodo-${item.metodo_pago_id}`">
+                    <div class="col-md-6 col-lg-4" v-for="item in movimientosResumen.porMetodo"
+                      :key="`metodo-${item.metodo_pago_id}`">
                       <div class="metodo-card">
                         <div class="metodo-header d-flex justify-content-between align-items-center">
                           <span class="metodo-nombre">{{ item.metodo_pago }}</span>
@@ -686,11 +592,8 @@
                         <td class="text-end">{{ formatCurrency(mov.monto) }}</td>
                         <td>{{ mov.usuario || '—' }}</td>
                         <td class="text-center">
-                          <button 
-                            class="btn btn-sm btn-primary" 
-                            @click="verComprobante(mov.cod_comprobante)"
-                            :disabled="!mov.cod_comprobante"
-                          >
+                          <button class="btn btn-sm btn-primary" @click="verComprobante(mov.cod_comprobante)"
+                            :disabled="!mov.cod_comprobante">
                             <i class="fas fa-file-alt me-1"></i>
                             Ver
                           </button>
@@ -709,12 +612,8 @@
           </div>
 
           <div class="modal-footer">
-            <button 
-              type="button" 
-              class="btn btn-outline-secondary" 
-              @click="cerrarModalMovimientos"
-              :disabled="isLoadingMovimientos"
-            >
+            <button type="button" class="btn btn-outline-secondary" @click="cerrarModalMovimientos"
+              :disabled="isLoadingMovimientos">
               Cerrar
             </button>
           </div>
@@ -723,12 +622,8 @@
     </div>
 
     <!-- Modal Comprobante -->
-    <div 
-      v-if="showComprobanteModal" 
-      class="modal fade show d-block" 
-      tabindex="-1" 
-      style="background-color: rgba(0,0,0,0.5);"
-    >
+    <div v-if="showComprobanteModal" class="modal fade show d-block" tabindex="-1"
+      style="background-color: rgba(0,0,0,0.5);">
       <div class="modal-dialog modal-dialog-centered modal-fullscreen">
         <div class="modal-content shadow-lg">
           <div class="modal-header bg-primary text-white">
@@ -736,28 +631,16 @@
               <i class="fas fa-file-invoice me-2"></i>
               Comprobante: {{ comprobanteSeleccionado }}
             </h5>
-            <button 
-              type="button" 
-              class="btn-close btn-close-white" 
-              @click="cerrarComprobante"
-            ></button>
+            <button type="button" class="btn-close btn-close-white" @click="cerrarComprobante"></button>
           </div>
 
           <div class="modal-body p-0">
-            <iframe 
-              v-if="comprobanteUrl"
-              :src="comprobanteUrl" 
-              style="width: 100%; height: calc(100vh - 120px); border: none;"
-              frameborder="0"
-            ></iframe>
+            <iframe v-if="comprobanteUrl" :src="comprobanteUrl"
+              style="width: 100%; height: calc(100vh - 120px); border: none;" frameborder="0"></iframe>
           </div>
 
           <div class="modal-footer">
-            <button 
-              type="button" 
-              class="btn btn-secondary" 
-              @click="cerrarComprobante"
-            >
+            <button type="button" class="btn btn-secondary" @click="cerrarComprobante">
               <i class="fas fa-arrow-left me-2"></i>
               Regresar
             </button>
@@ -767,12 +650,8 @@
     </div>
 
     <!-- Modal de Comensales -->
-    <div 
-      v-if="showComensalesModal" 
-      class="modal fade show d-block" 
-      tabindex="-1" 
-      style="background-color: rgba(0,0,0,0.5);"
-    >
+    <div v-if="showComensalesModal" class="modal fade show d-block" tabindex="-1"
+      style="background-color: rgba(0,0,0,0.5);">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content shadow-lg">
           <div class="modal-header bg-warning">
@@ -780,30 +659,18 @@
               <i class="fas fa-utensils me-2"></i>
               Mesa {{ mesaSeleccionada?.num_mesa }}
             </h4>
-            <button 
-              type="button" 
-              class="btn-close" 
-              @click="cerrarModalComensales"
-            ></button>
+            <button type="button" class="btn-close" @click="cerrarModalComensales"></button>
           </div>
-          
+
           <div class="modal-body p-4">
             <h5 class="mb-4 text-center">¿Cuántos comensales van a ocupar esta mesa?</h5>
-            
+
             <!-- Selector de Comensales -->
             <div class="comensales-selector">
               <div class="row g-3">
-                <div 
-                  v-for="num in opcionesComensales" 
-                  :key="num"
-                  class="col-4 col-md-3"
-                >
-                  <button
-                    type="button"
-                    class="btn btn-outline-primary btn-lg w-100 comensal-btn"
-                    :class="{ 'active': comensalesSeleccionados === num }"
-                    @click="comensalesSeleccionados = num"
-                  >
+                <div v-for="num in opcionesComensales" :key="num" class="col-4 col-md-3">
+                  <button type="button" class="btn btn-outline-primary btn-lg w-100 comensal-btn"
+                    :class="{ 'active': comensalesSeleccionados === num }" @click="comensalesSeleccionados = num">
                     <div class="d-flex flex-column align-items-center">
                       <i class="fas fa-users mb-2" style="font-size: 1.5rem;"></i>
                       <span class="fw-bold">{{ num }}</span>
@@ -821,33 +688,19 @@
                 <span class="input-group-text">
                   <i class="fas fa-users"></i>
                 </span>
-                <input 
-                  type="number" 
-                  class="form-control" 
-                  v-model.number="comensalesSeleccionados"
-                  min="1" 
-                  max="50"
-                  placeholder="Número de comensales"
-                >
+                <input type="number" class="form-control" v-model.number="comensalesSeleccionados" min="1" max="50"
+                  placeholder="Número de comensales">
               </div>
             </div>
           </div>
 
           <div class="modal-footer">
-            <button 
-              type="button" 
-              class="btn btn-secondary btn-lg me-2" 
-              @click="cerrarModalComensales"
-            >
+            <button type="button" class="btn btn-secondary btn-lg me-2" @click="cerrarModalComensales">
               <i class="fas fa-times me-2"></i>
               Cancelar
             </button>
-            <button 
-              type="button" 
-              class="btn btn-warning btn-lg"
-              :disabled="!comensalesSeleccionados || isOcupandoMesa"
-              @click="confirmarOcuparMesa"
-            >
+            <button type="button" class="btn btn-warning btn-lg" :disabled="!comensalesSeleccionados || isOcupandoMesa"
+              @click="confirmarOcuparMesa">
               <span v-if="isOcupandoMesa">
                 <span class="spinner-border spinner-border-sm me-2"></span>
                 Ocupando...
@@ -863,12 +716,8 @@
     </div>
 
     <!-- Modal Nuevo Pedido Delivery/Recojo -->
-    <div 
-      v-if="showModalNuevoPedido" 
-      class="modal fade show d-block" 
-      tabindex="-1" 
-      style="background-color: rgba(0,0,0,0.5);"
-    >
+    <div v-if="showModalNuevoPedido" class="modal fade show d-block" tabindex="-1"
+      style="background-color: rgba(0,0,0,0.5);">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content shadow-lg">
           <div class="modal-header bg-primary text-white">
@@ -876,24 +725,15 @@
               <i :class="nuevoPedidoForm.tipo === 'D' ? 'fas fa-motorcycle' : 'fas fa-shopping-bag'" class="me-2"></i>
               Nuevo Pedido {{ nuevoPedidoForm.tipo === 'D' ? 'Delivery' : 'Recojo' }}
             </h5>
-            <button 
-              type="button" 
-              class="btn-close btn-close-white" 
-              @click="cerrarModalNuevoPedido"
-            ></button>
+            <button type="button" class="btn-close btn-close-white" @click="cerrarModalNuevoPedido"></button>
           </div>
-          
+
           <div class="modal-body p-4">
             <form @submit.prevent="crearNuevoPedido">
               <div class="mb-3">
                 <label class="form-label fw-bold">Nombre del Cliente *</label>
-                <input 
-                  type="text" 
-                  class="form-control form-control-lg"
-                  v-model="nuevoPedidoForm.cliente_nombre"
-                  placeholder="Ej: Juan Pérez"
-                  required
-                >
+                <input type="text" class="form-control form-control-lg" v-model="nuevoPedidoForm.cliente_nombre"
+                  placeholder="Ej: Juan Pérez" required>
               </div>
 
               <div class="mb-3">
@@ -902,34 +742,20 @@
                   <span v-if="nuevoPedidoForm.tipo === 'D'"> *</span>
                   <span v-else class="text-muted">(Opcional)</span>
                 </label>
-                <input 
-                  type="tel" 
-                  class="form-control form-control-lg"
-                  v-model="nuevoPedidoForm.cliente_telefono"
-                  placeholder="Ej: 987654321"
-                  :required="nuevoPedidoForm.tipo === 'D'"
-                >
+                <input type="tel" class="form-control form-control-lg" v-model="nuevoPedidoForm.cliente_telefono"
+                  placeholder="Ej: 987654321" :required="nuevoPedidoForm.tipo === 'D'">
               </div>
 
               <div class="mb-3" v-if="nuevoPedidoForm.tipo === 'D'">
                 <label class="form-label fw-bold">Dirección de Entrega *</label>
-                <textarea 
-                  class="form-control"
-                  v-model="nuevoPedidoForm.direccion_entrega"
-                  placeholder="Ej: Av. Principal 123, Ref: Frente al parque"
-                  rows="3"
-                  required
-                ></textarea>
+                <textarea class="form-control" v-model="nuevoPedidoForm.direccion_entrega"
+                  placeholder="Ej: Av. Principal 123, Ref: Frente al parque" rows="3" required></textarea>
               </div>
 
               <div class="mb-3">
                 <label class="form-label fw-bold">Notas (Opcional)</label>
-                <textarea 
-                  class="form-control"
-                  v-model="nuevoPedidoForm.notas"
-                  placeholder="Instrucciones especiales, método de pago, etc."
-                  rows="2"
-                ></textarea>
+                <textarea class="form-control" v-model="nuevoPedidoForm.notas"
+                  placeholder="Instrucciones especiales, método de pago, etc." rows="2"></textarea>
               </div>
 
               <div v-if="nuevoPedidoError" class="alert alert-danger">
@@ -939,20 +765,12 @@
           </div>
 
           <div class="modal-footer">
-            <button 
-              type="button" 
-              class="btn btn-secondary" 
-              @click="cerrarModalNuevoPedido"
-              :disabled="isCreatingPedido"
-            >
+            <button type="button" class="btn btn-secondary" @click="cerrarModalNuevoPedido"
+              :disabled="isCreatingPedido">
               Cancelar
             </button>
-            <button 
-              type="button" 
-              class="btn btn-primary" 
-              @click="crearNuevoPedido"
-              :disabled="isCreatingPedido || !nuevoPedidoForm.cliente_nombre || (nuevoPedidoForm.tipo === 'D' && !nuevoPedidoForm.cliente_telefono)"
-            >
+            <button type="button" class="btn btn-primary" @click="crearNuevoPedido"
+              :disabled="isCreatingPedido || !nuevoPedidoForm.cliente_nombre || (nuevoPedidoForm.tipo === 'D' && !nuevoPedidoForm.cliente_telefono)">
               <span v-if="isCreatingPedido">
                 <span class="spinner-border spinner-border-sm me-2"></span>
                 Creando...
@@ -981,7 +799,7 @@ export default {
       isRefreshing: false,
       isOcupandoMesa: false,
       isLoggingOut: false,
-      
+
       // Datos
       mesas: [],
       cajaStatus: {
@@ -1023,7 +841,7 @@ export default {
 
       // Tipo de atención
       tipoAtencionActivo: 'P', // P=Presencial, D=Delivery, R=Recojo
-      
+
       // Pedidos delivery/recojo
       pedidosDelivery: [],
       pedidosRecojo: [],
@@ -1040,13 +858,13 @@ export default {
         notas: ''
       },
       nuevoPedidoError: '',
-      
+
       // Modal de comensales
       showComensalesModal: false,
       mesaSeleccionada: null,
       comensalesSeleccionados: 2,
       opcionesComensales: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-      
+
       // Alertas
       alertMessage: '',
       alertType: 'success' // success, error, warning, info
@@ -1092,6 +910,16 @@ export default {
         info: 'fas fa-info-circle'
       }
       return icons[this.alertType] || 'fas fa-info-circle'
+    },
+
+    cajaStatusText() {
+      if (this.cajaEstaAbierta) {
+        return 'Caja abierta';
+      }
+      if (this.cajaStatus.hasRecordToday) {
+        return 'Caja cerrada';
+      }
+      return 'Caja pendiente de apertura';
     }
   },
 
@@ -1116,7 +944,7 @@ export default {
 
     cambiarTipoAtencion(tipo) {
       this.tipoAtencionActivo = tipo
-      
+
       if (tipo !== 'P') {
         this.cargarPedidosCola()
       }
@@ -1125,7 +953,7 @@ export default {
     async cargarPedidosCola() {
       try {
         this.isLoadingPedidos = true
-        
+
         // Cargar pedidos delivery
         const responseDelivery = await axios.get('/api/pedidos-cola', {
           params: { tipo_atencion: 'D', estado: 'A' }
@@ -1186,7 +1014,7 @@ export default {
 
         this.showAlert('Pedido creado correctamente', 'success')
         this.cerrarModalNuevoPedido()
-        
+
         // Redirigir a la vista del pedido
         this.$router.push(`/caja/pedido/${pedido.id}`)
       } catch (error) {
@@ -1447,7 +1275,7 @@ export default {
       if (!codComprobante) {
         return
       }
-      
+
       this.comprobanteSeleccionado = codComprobante
       this.comprobanteUrl = `/comprobante/${codComprobante}`
       this.showMovimientosModal = false
@@ -1521,7 +1349,7 @@ export default {
 
       try {
         this.isOcupandoMesa = true
-        
+
         const response = await axios.post(`/api/mesas/${this.mesaSeleccionada.id}/ocupar`, {
           comensales: this.comensalesSeleccionados
         })
@@ -1529,8 +1357,8 @@ export default {
         // Actualizar la mesa en la lista
         const mesaIndex = this.mesas.findIndex(m => m.id === this.mesaSeleccionada.id)
         if (mesaIndex !== -1) {
-          this.mesas[mesaIndex] = { 
-            ...this.mesas[mesaIndex], 
+          this.mesas[mesaIndex] = {
+            ...this.mesas[mesaIndex],
             estado: 'O',
             pedido_activo: response.data.pedido
           }
@@ -1567,13 +1395,13 @@ export default {
       if (this.isLoggingOut) return
       try {
         this.isLoggingOut = true
-        
+
         // Ejecutar logout y esperar al menos 1 segundo para mostrar la animación
         await Promise.all([
           axios.post('/logout'),
           new Promise(resolve => setTimeout(resolve, 1000))
         ])
-        
+
         // La animación permanece visible durante la navegación
         window.location.href = '/login'
       } catch (error) {
@@ -1671,7 +1499,7 @@ export default {
       const apertura = new Date(fechaApertura)
       const diffMs = ahora - apertura
       const diffMinutos = Math.floor(diffMs / 60000)
-      
+
       if (diffMinutos < 60) {
         return `${diffMinutos} min`
       } else {
@@ -1684,7 +1512,7 @@ export default {
     showAlert(message, type = 'info') {
       this.alertMessage = message
       this.alertType = type
-      
+
       // Auto-hide después de 5 segundos
       setTimeout(() => {
         this.clearAlert()
@@ -2097,14 +1925,14 @@ export default {
   font-size: 0.8rem;
 }
 
-.pedido-info > div {
+.pedido-info>div {
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.pedido-info > div:last-child {
+.pedido-info>div:last-child {
   margin-bottom: 0;
 }
 
@@ -2207,15 +2035,15 @@ export default {
     grid-template-columns: repeat(3, minmax(280px, 1fr));
     gap: 0.75rem;
   }
-  
+
   .mesa-card {
     min-height: 135px;
   }
-  
+
   .page-title {
     font-size: 1.4rem;
   }
-  
+
   .page-subtitle {
     font-size: 0.85rem;
   }
@@ -2225,7 +2053,7 @@ export default {
   .page-title {
     font-size: 1.75rem;
   }
-  
+
   .header-actions {
     width: 100%;
     justify-content: space-between;
@@ -2239,26 +2067,26 @@ export default {
   .status-actions .btn {
     width: 100%;
   }
-  
+
   .mesas-grid {
     /* On medium/smaller screens limit to 2 columns */
     grid-template-columns: repeat(2, minmax(220px, 1fr));
     gap: 1rem;
   }
-  
+
   .mesa-card {
     min-height: 180px;
     padding: 1.25rem;
   }
-  
+
   .mesa-icon i {
     font-size: 2.5rem;
   }
-  
+
   .mesa-numero {
     font-size: 1.3rem;
   }
-  
+
   .stats-badge {
     justify-content: center;
   }
@@ -2269,12 +2097,12 @@ export default {
     /* On very small screens show one column */
     grid-template-columns: repeat(1, minmax(220px, 1fr));
   }
-  
+
   .comensal-btn {
     min-height: 80px;
     padding: 1rem 0.5rem;
   }
-  
+
   .modal-dialog {
     margin: 0.5rem;
   }
@@ -2282,18 +2110,33 @@ export default {
 
 /* === ANIMACIONES === */
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.02);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 @keyframes logoutFadeIn {
-  to { opacity: 1; }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes logoutSpin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .mesa-disponible {
@@ -2306,7 +2149,7 @@ export default {
     transform: none;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
   }
-  
+
   .comensal-btn:hover {
     border-color: #0d6efd;
     background-color: rgba(13, 110, 253, 0.05);
@@ -2314,11 +2157,11 @@ export default {
     transform: none;
     box-shadow: 0 2px 8px rgba(13, 110, 253, 0.1);
   }
-  
+
   .comensal-btn:hover i {
     color: #0d6efd;
   }
-  
+
   .mesa-disponible {
     animation: none;
   }
@@ -2326,6 +2169,7 @@ export default {
 
 /* === ACCESSIBILITY === */
 @media (prefers-reduced-motion: reduce) {
+
   .mesa-card,
   .comensal-btn,
   * {
@@ -2539,12 +2383,12 @@ export default {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1rem;
   }
-  
+
   .atencion-card {
     min-height: 180px;
     padding: 1.5rem 1rem;
   }
-  
+
   .atencion-icon {
     font-size: 2.5rem;
   }
