@@ -34,6 +34,18 @@ const routes = [
     ]
   },
   {
+    path: '/contador',
+    component: () => import('@/pages/ContadorPage.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'contador-home',
+        component: () => import('@/pages/contador/ContadorHome.vue')
+      }
+    ]
+  },
+  {
     path: '/test',
     name: 'test',
     component: () => import('@/pages/TestPage.vue'),
@@ -68,20 +80,20 @@ const router = createRouter({
 // Navigation guards
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
-  
+
   if (to.meta.requiresAuth) {
     // Check authentication status before deciding
     if (authStore.user === null) {
       await authStore.checkAuth();
     }
-    
+
     if (!authStore.isAuthenticated) {
       // Only redirect if truly not authenticated
       window.location.href = '/login';
       return;
     }
   }
-  
+
   next();
 });
 
