@@ -5,9 +5,13 @@
             <div class="dashboard-sidebar">
                 <div class="sidebar-content">
                     <nav class="sidebar-nav">
-                        <router-link to="/contador" class="nav-item" exact-active-class="active">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Dashboard</span>
+                        <router-link to="/contador/movimientos" class="nav-item" active-class="active">
+                            <i class="fas fa-list-alt"></i>
+                            <span>Movimientos</span>
+                        </router-link>
+                        <router-link to="/contador/exportar" class="nav-item" active-class="active">
+                            <i class="fas fa-file-export"></i>
+                            <span>Exportar</span>
                         </router-link>
                     </nav>
                 </div>

@@ -37,11 +37,17 @@ const routes = [
     path: '/contador',
     component: () => import('@/pages/ContadorPage.vue'),
     meta: { requiresAuth: true },
+    redirect: '/contador/movimientos',
     children: [
       {
-        path: '',
-        name: 'contador-home',
-        component: () => import('@/pages/contador/ContadorHome.vue')
+        path: 'movimientos',
+        name: 'contador-movimientos',
+        component: () => import('@/pages/contador/MovimientosPage.vue')
+      },
+      {
+        path: 'exportar',
+        name: 'contador-exportar',
+        component: () => import('@/pages/contador/ExportarPage.vue')
       }
     ]
   },
