@@ -173,7 +173,7 @@
         <!-- Header -->
         <div class="header">
             <img src="{{ public_path('prdos_chicken_logo_optimizado.jpg') }}" alt="Logo" class="logo">
-            <h1>Pollería Pard's</h1>
+            <h1>POLLERÍA PARD'S CHICKEN</h1>
             <h2>RUC: 10441973361</h2>
             <p>Mz. E Lote 11</p>
             <p>A.H. Señor de los Milagros</p>
