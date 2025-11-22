@@ -9,6 +9,15 @@
       </div>
     </div>
 
+    <!-- Logout Loading Overlay -->
+    <div v-if="isLoggingOut" class="logout-loading-overlay">
+      <div class="logout-loading-content">
+        <div class="logout-loading-spinner"></div>
+        <h3 class="logout-loading-text">Cerrando sesión...</h3>
+        <p class="logout-loading-subtext">Por favor espera un momento</p>
+      </div>
+    </div>
+
     <div class="container">
       <div class="selection-card">
         <h1 class="title">Seleccionar Perfil</h1>
@@ -47,6 +56,14 @@
           </button>
         </div>
 
+        <div class="mt-2">
+          <button class="btn btn-danger btn-lg px-5 py-3 fw-bold text-uppercase" @click="logout"
+            :disabled="navigating || isLoggingOut" style="border-radius: 12px; font-size: 1.1rem;">
+            <i class="fas fa-sign-out-alt me-2"></i>
+            Cerrar Sesión
+          </button>
+        </div>
+
         <div v-if="error" class="error-message">
           <i class="fas fa-exclamation-triangle"></i>
           {{ error }}
@@ -69,7 +86,8 @@ export default {
       selectedRole: '',
       canScrollLeft: false,
       canScrollRight: false,
-      navigating: false
+      navigating: false,
+      isLoggingOut: false
     }
   },
   methods: {
@@ -105,7 +123,7 @@ export default {
 
     selectRole(role) {
       // Evitar navegación múltiple si ya estamos navegando
-      if (this.navigating) return;
+      if (this.navigating || this.isLoggingOut) return;
 
       this.selectedRole = role;
       this.error = '';
@@ -131,6 +149,26 @@ export default {
         this.navigating = false;
       }
       // Note: No finally block - we want the spinner to stay visible until page navigation
+    },
+
+    async logout() {
+      if (this.navigating || this.isLoggingOut) return;
+
+      try {
+        this.isLoggingOut = true;
+
+        // Ejecutar logout y esperar al menos 1 segundo para mostrar la animación
+        await Promise.all([
+          axios.post('/logout'),
+          new Promise(resolve => setTimeout(resolve, 1000))
+        ]);
+
+        window.location.href = '/login';
+      } catch (error) {
+        console.error('Error al cerrar sesión:', error);
+        this.error = 'No se pudo cerrar sesión. Intenta nuevamente.';
+        this.isLoggingOut = false;
+      }
     },
 
     checkScrollPosition() {
@@ -178,6 +216,68 @@ export default {
 </script>
 
 <style scoped>
+/* === LOGOUT LOADING OVERLAY === */
+.logout-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  z-index: 10000;
+  opacity: 0;
+  animation: logoutFadeIn 0.3s ease-out forwards;
+}
+
+.logout-loading-content {
+  text-align: center;
+  color: #ffffff;
+}
+
+.logout-loading-spinner {
+  width: 64px;
+  height: 64px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid #ffffff;
+  border-radius: 50%;
+  animation: logoutSpin 1s linear infinite;
+  margin: 0 auto 28px;
+}
+
+.logout-loading-text {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.logout-loading-subtext {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+}
+
+@keyframes logoutFadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes logoutSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .select-role-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -223,7 +323,7 @@ export default {
 
 .roles-wrapper {
   position: relative;
-  margin-bottom: 50px;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
