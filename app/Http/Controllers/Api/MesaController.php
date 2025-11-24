@@ -347,13 +347,17 @@ class MesaController extends Controller
     public function cancelarPedido(Pedido $pedido): JsonResponse
     {
         try {
+            \Illuminate\Support\Facades\Log::info("Intentando cancelar pedido ID: {$pedido->id}, Estado: {$pedido->estado}");
+
             if ($pedido->estado !== 'A') {
                 return response()->json([
                     'error' => 'Solo se pueden cancelar pedidos abiertos'
                 ], 422);
             }
 
-            $pedido->cancelar();
+            \Illuminate\Support\Facades\DB::transaction(function () use ($pedido) {
+                $pedido->cancelar();
+            });
 
             return response()->json([
                 'message' => 'Pedido cancelado exitosamente',
@@ -362,10 +366,13 @@ class MesaController extends Controller
                     'estado' => $pedido->estado,
                     'fecha_cierre' => $pedido->fecha_cierre
                 ],
-                'mesa' => $pedido->mesa->fresh()
+                'mesa' => $pedido->mesa?->fresh()
             ]);
 
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Error al cancelar pedido ID {$pedido->id}: " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error($e->getTraceAsString());
+            
             return response()->json([
                 'error' => 'Error al cancelar el pedido',
                 'message' => $e->getMessage()
