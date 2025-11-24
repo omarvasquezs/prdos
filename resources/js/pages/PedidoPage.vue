@@ -169,6 +169,10 @@
                   <span>Items:</span>
                   <span class="fw-bold">{{ totalItems }}</span>
                 </div>
+                <div v-if="pedido.costo_delivery > 0" class="d-flex justify-content-between mb-3 text-info">
+                  <span>Costo Delivery:</span>
+                  <span class="fw-bold">S/ {{ parseFloat(pedido.costo_delivery).toFixed(2) }}</span>
+                </div>
                 <hr>
                 <div class="d-flex justify-content-between mb-4">
                   <span class="fs-5 fw-bold">Total:</span>

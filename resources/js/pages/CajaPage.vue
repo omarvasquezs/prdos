@@ -523,6 +523,15 @@
                   placeholder="Ej: Av. Principal 123, Ref: Frente al parque" rows="3" required></textarea>
               </div>
 
+              <div class="mb-3" v-if="nuevoPedidoForm.tipo === 'D'">
+                <label class="form-label fw-bold">Costo Delivery (S/)</label>
+                <div class="input-group">
+                  <span class="input-group-text">S/</span>
+                  <input type="number" class="form-control" v-model.number="nuevoPedidoForm.costo_delivery"
+                    min="0" step="0.50" placeholder="0.00">
+                </div>
+              </div>
+
               <div class="mb-3">
                 <label class="form-label fw-bold">Notas (Opcional)</label>
                 <textarea class="form-control" v-model="nuevoPedidoForm.notas"
@@ -621,7 +630,8 @@ export default {
         cliente_nombre: '',
         cliente_telefono: '',
         direccion_entrega: '',
-        notas: ''
+        notas: '',
+        costo_delivery: 0
       },
       nuevoPedidoError: '',
 
@@ -763,7 +773,8 @@ export default {
         cliente_nombre: '',
         cliente_telefono: '',
         direccion_entrega: '',
-        notas: ''
+        notas: '',
+        costo_delivery: 0
       }
       this.nuevoPedidoError = ''
     },
@@ -778,7 +789,8 @@ export default {
           cliente_nombre: this.nuevoPedidoForm.cliente_nombre,
           cliente_telefono: this.nuevoPedidoForm.cliente_telefono,
           direccion_entrega: this.nuevoPedidoForm.direccion_entrega || null,
-          notas: this.nuevoPedidoForm.notas || null
+          notas: this.nuevoPedidoForm.notas || null,
+          costo_delivery: this.nuevoPedidoForm.costo_delivery || 0
         })
 
         const pedido = response.data.pedido
