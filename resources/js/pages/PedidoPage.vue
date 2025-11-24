@@ -170,22 +170,22 @@
                   <span class="fw-bold">{{ totalItems }}</span>
                 </div>
                 <div v-if="pedido.tipo_atencion === 'D'" class="d-flex justify-content-between mb-3 text-info align-items-center">
-                  <span>Costo Delivery:</span>
+                  <span class="fs-5">Costo Delivery:</span>
                   <div v-if="isEditingDeliveryCost" class="d-flex align-items-center gap-2">
-                    <div class="input-group input-group-sm" style="width: 120px;">
+                    <div class="input-group input-group-lg" style="width: 160px;">
                       <span class="input-group-text">S/</span>
                       <input type="number" class="form-control" v-model.number="newDeliveryCost" min="0" step="0.50">
                     </div>
-                    <button class="btn btn-sm btn-success" @click="updateDeliveryCost" :disabled="isUpdatingCost">
+                    <button class="btn btn-lg btn-success" @click="updateDeliveryCost" :disabled="isUpdatingCost">
                       <i class="fas fa-check"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-secondary" @click="toggleEditDeliveryCost">
+                    <button class="btn btn-lg btn-outline-secondary" @click="toggleEditDeliveryCost">
                       <i class="fas fa-times"></i>
                     </button>
                   </div>
-                  <div v-else class="d-flex align-items-center gap-2">
-                    <span class="fw-bold">S/ {{ parseFloat(pedido.costo_delivery || 0).toFixed(2) }}</span>
-                    <button class="btn btn-sm btn-link p-0 text-muted" @click="toggleEditDeliveryCost" v-if="!pedido.pagado">
+                  <div v-else class="d-flex align-items-center gap-3">
+                    <span class="fw-bold fs-5">S/ {{ parseFloat(pedido.costo_delivery || 0).toFixed(2) }}</span>
+                    <button class="btn btn-outline-secondary btn-lg" @click="toggleEditDeliveryCost" v-if="!pedido.pagado">
                       <i class="fas fa-pencil-alt"></i>
                     </button>
                   </div>
