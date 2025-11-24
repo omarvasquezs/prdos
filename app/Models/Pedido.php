@@ -25,7 +25,8 @@ class Pedido extends Model
         'metodo_pago_id',
         'fecha_apertura',
         'fecha_cierre',
-        'total'
+        'total',
+        'costo_delivery'
     ];
 
     /**
@@ -38,7 +39,8 @@ class Pedido extends Model
         'pagado' => 'boolean',
         'fecha_apertura' => 'datetime',
         'fecha_cierre' => 'datetime',
-        'total' => 'decimal:2'
+        'total' => 'decimal:2',
+        'costo_delivery' => 'decimal:2'
     ];
 
     // No necesitamos timestamps automáticos, usamos fecha_apertura y fecha_cierre
@@ -162,9 +164,11 @@ class Pedido extends Model
      */
     public function calcularTotal(): float
     {
-        return $this->items->sum(function ($item) {
+        $subtotal = $this->items->sum(function ($item) {
             return $item->cantidad * $item->precio_unitario;
         });
+
+        return $subtotal + ($this->costo_delivery ?? 0);
     }
 
     /**
