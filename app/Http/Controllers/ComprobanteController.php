@@ -99,6 +99,11 @@ class ComprobanteController extends Controller
                     $clientInfoExtra = 20; // name + phone
                 }
                 $dynamicHeight = max(420, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight + $clientInfoExtra);
+                
+                // Add extra height for delivery cost line
+                if (($pedido->costo_delivery ?? 0) > 0) {
+                    $dynamicHeight += 15;
+                }
             if ($pedido->tipo_atencion === 'D') {
                 $clientInfoExtra = 45;
             } elseif ($pedido->tipo_atencion === 'R') {
@@ -153,6 +158,11 @@ class ComprobanteController extends Controller
             $perItem = 22;
             $qrHeight = 95;    // extra space for QR code + bottom margin
             $dynamicHeight = max(360, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight);
+
+            // Add extra height for delivery cost line
+            if (($pedido->costo_delivery ?? 0) > 0) {
+                $dynamicHeight += 15;
+            }
 
             $pdf = Pdf::loadView('pdf.comprobante', [
                 'comprobante' => $comprobante,

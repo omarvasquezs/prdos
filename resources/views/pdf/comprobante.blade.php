@@ -261,6 +261,16 @@
                     <td colspan="3" style="text-align:center">Sin items</td>
                 </tr>
             @endforelse
+            
+            @if(($pedido->costo_delivery ?? 0) > 0)
+                <tr>
+                    <td class="col-desc">
+                        <span class="item-name">Costo por Delivery</span>
+                    </td>
+                    <td class="col-cant">1</td>
+                    <td class="col-total">S/ {{ number_format($pedido->costo_delivery, 2) }}</td>
+                </tr>
+            @endif
             </tbody>
         </table>
 
