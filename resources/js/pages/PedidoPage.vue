@@ -651,6 +651,17 @@ export default {
     async abrirModalCobro() {
       try {
         await this.cargarMetodosPago()
+        
+        // Pre-llenar datos del cliente si existen en el pedido
+        if (this.pedido.cliente_nombre) {
+          this.formCobro.nombre_cliente = this.pedido.cliente_nombre
+        }
+        
+        // Pre-seleccionar método de pago si ya existe en el pedido
+        if (this.pedido.metodo_pago_id) {
+          this.formCobro.metodo_pago_id = this.pedido.metodo_pago_id
+        }
+        
         this.mostrarModalCobro = true
       } catch (error) {
         console.error('Error al abrir modal de cobro:', error)
@@ -675,7 +686,9 @@ export default {
       try {
         const response = await axios.get('/api/metodos-pago')
         this.metodosPago = response.data
-        if (this.metodosPago.length > 0) {
+        
+        // Solo seleccionar el primero por defecto si no hay uno ya seleccionado del pedido
+        if (this.metodosPago.length > 0 && !this.formCobro.metodo_pago_id) {
           this.formCobro.metodo_pago_id = this.metodosPago[0].id
         }
       } catch (error) {

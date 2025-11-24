@@ -209,17 +209,24 @@
             @endif
         @endif
         
-        <!-- Información de cliente para Delivery y Recojo -->
-        @if($pedido->tipo_atencion === 'D')
-            <div class="info-line">
-                <strong>Cliente:</strong> {{ $pedido->cliente_nombre }}
-            </div>
+        <!-- Información de cliente para Delivery y Recojo (Solo si no es Boleta, para evitar duplicados) -->
+        @if($comprobante->tipo_comprobante !== 'B')
+            @if($pedido->tipo_atencion === 'D')
+                <div class="info-line">
+                    <strong>Cliente:</strong> {{ $pedido->cliente_nombre }}
+                </div>
+                <div class="info-line">
+                    <strong>Dirección:</strong> {{ substr($pedido->direccion_entrega ?? '', 0, 50) }}
+                </div>
+            @elseif($pedido->tipo_atencion === 'R')
+                <div class="info-line">
+                    <strong>Cliente:</strong> {{ $pedido->cliente_nombre }}
+                </div>
+            @endif
+        @elseif($pedido->tipo_atencion === 'D' && $comprobante->tipo_comprobante === 'B')
+             <!-- Para boletas de delivery, mostrar dirección si existe -->
             <div class="info-line">
                 <strong>Dirección:</strong> {{ substr($pedido->direccion_entrega ?? '', 0, 50) }}
-            </div>
-        @elseif($pedido->tipo_atencion === 'R')
-            <div class="info-line">
-                <strong>Cliente:</strong> {{ $pedido->cliente_nombre }}
             </div>
         @endif
         
