@@ -348,6 +348,59 @@ class PedidoController extends Controller
     }
 
     /**
+     * Actualizar costo de delivery
+     */
+    public function updateDeliveryCost(Request $request, $pedidoId): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'costo_delivery' => 'required|numeric|min:0',
+            ]);
+
+            $pedido = Pedido::findOrFail($pedidoId);
+
+            if (!$pedido->isAbierto()) {
+                return response()->json([
+                    'error' => 'No se puede modificar un pedido cerrado',
+                ], 422);
+            }
+
+            if ($pedido->tipo_atencion !== 'D') {
+                return response()->json([
+                    'error' => 'Solo los pedidos de delivery pueden tener costo de envío',
+                ], 422);
+            }
+
+            DB::beginTransaction();
+
+            $pedido->update([
+                'costo_delivery' => $validated['costo_delivery']
+            ]);
+
+            // Recalcular total
+            $pedido->update(['total' => $pedido->calcularTotal()]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Costo de delivery actualizado',
+                'pedido' => $this->transformPedido($pedido),
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'error' => 'Datos inválidos',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'No se pudo actualizar el costo',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Transform Pedido model to array
      */
     private function transformPedido(Pedido $pedido): array

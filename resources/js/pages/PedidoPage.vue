@@ -169,9 +169,26 @@
                   <span>Items:</span>
                   <span class="fw-bold">{{ totalItems }}</span>
                 </div>
-                <div v-if="pedido.costo_delivery > 0" class="d-flex justify-content-between mb-3 text-info">
+                <div v-if="pedido.tipo_atencion === 'D'" class="d-flex justify-content-between mb-3 text-info align-items-center">
                   <span>Costo Delivery:</span>
-                  <span class="fw-bold">S/ {{ parseFloat(pedido.costo_delivery).toFixed(2) }}</span>
+                  <div v-if="isEditingDeliveryCost" class="d-flex align-items-center gap-2">
+                    <div class="input-group input-group-sm" style="width: 120px;">
+                      <span class="input-group-text">S/</span>
+                      <input type="number" class="form-control" v-model.number="newDeliveryCost" min="0" step="0.50">
+                    </div>
+                    <button class="btn btn-sm btn-success" @click="updateDeliveryCost" :disabled="isUpdatingCost">
+                      <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" @click="toggleEditDeliveryCost">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                  <div v-else class="d-flex align-items-center gap-2">
+                    <span class="fw-bold">S/ {{ parseFloat(pedido.costo_delivery || 0).toFixed(2) }}</span>
+                    <button class="btn btn-sm btn-link p-0 text-muted" @click="toggleEditDeliveryCost" v-if="!pedido.pagado">
+                      <i class="fas fa-pencil-alt"></i>
+                    </button>
+                  </div>
                 </div>
                 <hr>
                 <div class="d-flex justify-content-between mb-4">
@@ -523,7 +540,10 @@ export default {
       },
       formMarcarPagado: {
         metodo_pago_id: ''
-      }
+      },
+      isEditingDeliveryCost: false,
+      newDeliveryCost: 0,
+      isUpdatingCost: false
     }
   },
 
@@ -801,20 +821,44 @@ export default {
         return
       }
 
+      this.isSubmitting = true
       try {
-        this.isSubmitting = true
-        const response = await axios.post(`/api/pedidos-cola/${this.pedido.id}/marcar-pagado`, {
-          metodo_pago_id: this.formMarcarPagado.metodo_pago_id
-        })
+        const response = await axios.post(`/api/pedidos-cola/${this.pedido.id}/marcar-pagado`, this.formMarcarPagado)
 
         this.pedido = response.data.pedido
         this.cerrarModalMarcarPagado()
-        alert('Pedido marcado como pagado correctamente')
+        alert('Pedido marcado como pagado')
       } catch (error) {
         console.error('Error al marcar como pagado:', error)
-        alert('Error al marcar como pagado. Intenta nuevamente.')
+        alert('Error al procesar el pago. Intenta nuevamente.')
       } finally {
         this.isSubmitting = false
+      }
+    },
+
+    toggleEditDeliveryCost() {
+      if (this.isEditingDeliveryCost) {
+        this.isEditingDeliveryCost = false
+      } else {
+        this.newDeliveryCost = parseFloat(this.pedido.costo_delivery || 0)
+        this.isEditingDeliveryCost = true
+      }
+    },
+
+    async updateDeliveryCost() {
+      try {
+        this.isUpdatingCost = true
+        const response = await axios.post(`/api/pedidos-cola/${this.pedido.id}/costo-delivery`, {
+          costo_delivery: this.newDeliveryCost
+        })
+        
+        this.pedido = response.data.pedido
+        this.isEditingDeliveryCost = false
+      } catch (error) {
+        console.error('Error updating delivery cost:', error)
+        alert('Error al actualizar el costo de delivery')
+      } finally {
+        this.isUpdatingCost = false
       }
     },
 
