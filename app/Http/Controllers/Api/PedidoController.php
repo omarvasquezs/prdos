@@ -58,9 +58,12 @@ class PedidoController extends Controller
                 'cliente_telefono' => 'required_if:tipo_atencion,D|nullable|string|max:20',
                 'direccion_entrega' => 'required_if:tipo_atencion,D|nullable|string',
                 'notas' => 'nullable|string',
+                'costo_delivery' => 'nullable|numeric|min:0',
             ]);
 
             DB::beginTransaction();
+
+            $costoDelivery = ($validated['tipo_atencion'] === 'D') ? ($validated['costo_delivery'] ?? 0) : 0;
 
             $pedido = Pedido::create([
                 'tipo_atencion' => $validated['tipo_atencion'],
@@ -73,7 +76,8 @@ class PedidoController extends Controller
                 'estado_entrega' => 'P', // Inicia en preparación
                 'pagado' => false,
                 'fecha_apertura' => now(),
-                'total' => 0,
+                'total' => $costoDelivery, // Initial total is just delivery cost
+                'costo_delivery' => $costoDelivery,
             ]);
 
             DB::commit();
@@ -367,6 +371,7 @@ class PedidoController extends Controller
             'fecha_apertura' => $pedido->fecha_apertura,
             'fecha_cierre' => $pedido->fecha_cierre,
             'total' => (float) $pedido->total,
+            'costo_delivery' => (float) ($pedido->costo_delivery ?? 0),
             'items' => $pedido->items->map(function ($item) {
                 return [
                     'id' => $item->id,

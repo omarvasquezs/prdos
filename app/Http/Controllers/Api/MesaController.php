@@ -209,6 +209,7 @@ class MesaController extends Controller
                 
                 if ($pedido->tipo_atencion === 'D') {
                     $response['direccion_entrega'] = $pedido->direccion_entrega;
+                    $response['costo_delivery'] = (float) ($pedido->costo_delivery ?? 0);
                 }
             }
 
