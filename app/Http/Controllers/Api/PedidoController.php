@@ -306,13 +306,14 @@ class PedidoController extends Controller
 
             $pedido = Pedido::findOrFail($pedidoId);
 
-            if ($pedido->isPagado()) {
-                return response()->json([
-                    'error' => 'Este pedido ya está marcado como pagado',
-                ], 422);
-            }
+        // Permitir actualizar el método de pago incluso si ya está pagado
+        // if ($pedido->isPagado()) {
+        //     return response()->json([
+        //         'error' => 'Este pedido ya está marcado como pagado',
+        //     ], 422);
+        // }
 
-            if ($pedido->total <= 0) {
+        if ($pedido->total <= 0) {
                 return response()->json([
                     'error' => 'El pedido debe tener items antes de marcar como pagado',
                 ], 422);
