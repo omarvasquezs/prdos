@@ -26,7 +26,9 @@ class Pedido extends Model
         'fecha_apertura',
         'fecha_cierre',
         'total',
-        'costo_delivery'
+        'costo_delivery',
+        'monto_pagado',
+        'vuelto'
     ];
 
     /**
