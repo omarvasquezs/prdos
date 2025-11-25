@@ -309,6 +309,14 @@
         <div class="info-line">
             <strong>Método Pago:</strong> {{ substr($comprobante->metodoPago->nom_metodo_pago ?? 'N/A', 0, 25) }}
         </div>
+        @if(stripos($comprobante->metodoPago->nom_metodo_pago ?? '', 'efectivo') !== false && ($pedido->monto_pagado ?? 0) > 0)
+            <div class="info-line">
+                <strong>Paga con:</strong> S/ {{ number_format($pedido->monto_pagado, 2) }}
+            </div>
+            <div class="info-line">
+                <strong>Vuelto:</strong> S/ {{ number_format($pedido->vuelto, 2) }}
+            </div>
+        @endif
         <div style="margin: 2mm 0;"></div>
 
         <!-- Footer -->

@@ -327,6 +327,28 @@
                 </select>
               </div>
 
+              <!-- Monto Pagado y Vuelto (Solo Efectivo) -->
+              <div v-if="esEfectivo()" class="mb-3 p-3 bg-light rounded border">
+                <div class="mb-3">
+                  <label for="monto_pagado" class="form-label fw-bold">Monto Pagado</label>
+                  <div class="input-group">
+                    <span class="input-group-text">S/</span>
+                    <input type="number" id="monto_pagado" v-model.number="formCobro.monto_pagado" 
+                      class="form-control form-control-lg" step="0.10" min="0" placeholder="0.00">
+                  </div>
+                </div>
+                <div v-if="vuelto() !== null" class="d-flex justify-content-between align-items-center">
+                  <span class="fw-bold">Vuelto:</span>
+                  <span class="fs-4 fw-bold" :class="vuelto() >= 0 ? 'text-success' : 'text-danger'">
+                    S/ {{ parseFloat(vuelto()).toFixed(2) }}
+                  </span>
+                </div>
+                <div v-if="vuelto() < 0" class="text-danger small mt-1">
+                  <i class="fas fa-exclamation-circle me-1"></i>
+                  El monto es insuficiente
+                </div>
+              </div>
+
               <!-- Observaciones -->
               <div class="mb-3">
                 <label for="observaciones" class="form-label">Observaciones</label>
@@ -447,6 +469,28 @@
               </select>
             </div>
 
+            <!-- Monto Pagado y Vuelto (Solo Efectivo) -->
+            <div v-if="esEfectivoMarcarPagado" class="mb-3 p-3 bg-light rounded border">
+              <div class="mb-3">
+                <label for="monto_pagado_mp" class="form-label fw-bold">Monto Pagado</label>
+                <div class="input-group">
+                  <span class="input-group-text">S/</span>
+                  <input type="number" id="monto_pagado_mp" v-model.number="formMarcarPagado.monto_pagado" 
+                    class="form-control form-control-lg" step="0.10" min="0" placeholder="0.00">
+                </div>
+              </div>
+              <div v-if="vueltoMarcarPagado !== null" class="d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Vuelto:</span>
+                <span class="fs-4 fw-bold" :class="vueltoMarcarPagado >= 0 ? 'text-success' : 'text-danger'">
+                  S/ {{ parseFloat(vueltoMarcarPagado).toFixed(2) }}
+                </span>
+              </div>
+              <div v-if="vueltoMarcarPagado < 0" class="text-danger small mt-1">
+                <i class="fas fa-exclamation-circle me-1"></i>
+                El monto es insuficiente
+              </div>
+            </div>
+
             <!-- Resumen -->
             <div class="alert alert-info mb-0">
               <strong>Total pagado:</strong> S/ {{ parseFloat(pedido?.total || 0).toFixed(2) }}
@@ -539,7 +583,8 @@ export default {
         observaciones: ''
       },
       formMarcarPagado: {
-        metodo_pago_id: ''
+        metodo_pago_id: '',
+        monto_pagado: null
       },
       isEditingDeliveryCost: false,
       newDeliveryCost: 0,
@@ -548,6 +593,20 @@ export default {
   },
 
   computed: {
+    vueltoMarcarPagado() {
+      if (!this.formMarcarPagado.monto_pagado || !this.pedido) return null
+      const monto = parseFloat(this.formMarcarPagado.monto_pagado)
+      const total = parseFloat(this.pedido.total)
+      if (isNaN(monto) || isNaN(total)) return null
+      return monto - total
+    },
+
+    esEfectivoMarcarPagado() {
+      if (!this.formMarcarPagado.metodo_pago_id) return false
+      const metodo = this.metodosPago.find(m => m.id === this.formMarcarPagado.metodo_pago_id)
+      return metodo && metodo.nom_metodo_pago.toLowerCase().includes('efectivo')
+    },
+
     totalItems() {
       if (!this.pedido?.items) return 0
       return this.pedido.items.reduce((total, item) => total + parseInt(item.cantidad || 0), 0)
@@ -678,8 +737,23 @@ export default {
         razon_social: '',
         nombre_cliente: '',
         dni_ce_cliente: '',
-        observaciones: ''
+        observaciones: '',
+        monto_pagado: null
       }
+    },
+
+    vuelto() {
+      if (!this.formCobro.monto_pagado || !this.pedido) return null
+      const monto = parseFloat(this.formCobro.monto_pagado)
+      const total = parseFloat(this.pedido.total)
+      if (isNaN(monto) || isNaN(total)) return null
+      return monto - total
+    },
+
+    esEfectivo() {
+      if (!this.formCobro.metodo_pago_id) return false
+      const metodo = this.metodosPago.find(m => m.id === this.formCobro.metodo_pago_id)
+      return metodo && metodo.nom_metodo_pago.toLowerCase().includes('efectivo')
     },
 
     async cargarMetodosPago() {
