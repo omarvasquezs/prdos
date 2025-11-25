@@ -12,14 +12,26 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 
+use App\Services\NubefactService;
+use App\Rules\RucValidation;
+
 class ComprobanteController extends Controller
 {
+    protected $nubefactService;
+
+    public function __construct(NubefactService $nubefactService)
+    {
+        $this->nubefactService = $nubefactService;
+    }
+
+
+
     public function create(Request $request, $pedidoId)
     {
         $request->validate([
             'tipo_comprobante' => 'required|string|in:B,F,N',
             'metodo_pago_id' => 'required|integer|exists:metodo_pago,id',
-            'num_ruc' => 'nullable|required_if:tipo_comprobante,F|digits:11',
+            'num_ruc' => ['nullable', 'required_if:tipo_comprobante,F', 'digits:11', new RucValidation],
             'razon_social' => 'nullable|required_if:tipo_comprobante,F|string|max:255',
             'nombre_cliente' => 'nullable|required_if:tipo_comprobante,B|string|max:255',
             'dni_ce_cliente' => 'nullable|required_if:tipo_comprobante,B|digits_between:8,9',
@@ -74,7 +86,17 @@ class ComprobanteController extends Controller
 
             DB::commit();
 
-            // 5. Generate PDF (after successful transaction)
+            // 6. Emitir a Nubefact (Solo si es Boleta o Factura)
+            if (in_array($comprobante->tipo_comprobante, ['B', 'F'])) {
+                try {
+                    $this->nubefactService->emitirComprobante($comprobante);
+                } catch (\Exception $e) {
+                    Log::error('Error enviando a Nubefact: ' . $e->getMessage());
+                    // No fallamos la request, solo logueamos el error. El comprobante ya existe localmente.
+                }
+            }
+
+            // 7. Generate PDF (after successful transaction)
             try {
                 // Calculate a dynamic paper height to avoid large empty space
                 $itemsCount = $pedido->items->count();
