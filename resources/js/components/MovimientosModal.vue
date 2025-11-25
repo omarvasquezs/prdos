@@ -162,6 +162,7 @@
                                                 <th>Método</th>
                                                 <th class="text-end">Monto</th>
                                                 <th>Usuario</th>
+                                                <th class="text-center">SUNAT</th>
                                                 <th class="text-center pe-4">Acciones</th>
                                             </tr>
                                         </thead>
@@ -185,6 +186,23 @@
                                                 <td>{{ mov.metodo_pago }}</td>
                                                 <td class="text-end fw-bold">{{ formatCurrency(mov.monto) }}</td>
                                                 <td class="small text-muted">{{ mov.usuario || '—' }}</td>
+                                                
+                                                <!-- SUNAT Status -->
+                                                <td class="text-center">
+                                                    <div v-if="['B', 'F'].includes(mov.tipo_comprobante)">
+                                                        <i v-if="mov.sunat_success" 
+                                                           class="fas fa-check-circle text-success fs-5" 
+                                                           title="Enviado a SUNAT correctamente"></i>
+                                                        <i v-else-if="mov.sunat_error" 
+                                                           class="fas fa-exclamation-circle text-danger fs-5" 
+                                                           :title="mov.sunat_error"></i>
+                                                        <i v-else 
+                                                           class="fas fa-clock text-secondary fs-5" 
+                                                           title="Pendiente o no enviado"></i>
+                                                    </div>
+                                                    <span v-else class="text-muted small">—</span>
+                                                </td>
+
                                                 <td class="text-center pe-4">
                                                     <button class="btn btn-sm btn-outline-primary"
                                                         @click="verComprobante(mov.cod_comprobante)"

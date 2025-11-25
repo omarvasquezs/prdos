@@ -236,6 +236,9 @@ class CajaController extends Controller
             'tipo_comprobante_nombre' => $comprobante?->tipo_comprobante_name,
             'usuario' => $usuario->name ?? null,
             'tipo_atencion' => $pedido?->tipo_atencion ?? 'P', // P por defecto (Mesa)
+            'sunat_success' => $comprobante?->sunat_success,
+            'sunat_error' => $comprobante?->sunat_error,
+            'sunat_description' => $comprobante?->sunat_description,
         ];
     }
 }
