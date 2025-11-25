@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'nubefact' => [
+        'url' => env('NUBEFACT_URL'),
+        'token' => env('NUBEFACT_TOKEN'),
+    ],
+
 ];

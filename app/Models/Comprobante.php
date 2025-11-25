@@ -26,7 +26,13 @@ class Comprobante extends Model
         'observaciones',
         'last_updated_by',
         'cod_comprobante',
-        'costo_total'
+        'costo_total',
+        'sunat_success',
+        'sunat_error',
+        'enlace_pdf',
+        'enlace_xml',
+        'enlace_cdr',
+        'sunat_description'
     ];
     
     protected $casts = [
