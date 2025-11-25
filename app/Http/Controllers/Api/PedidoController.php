@@ -302,21 +302,35 @@ class PedidoController extends Controller
         try {
             $validated = $request->validate([
                 'metodo_pago_id' => 'required|integer|exists:metodo_pago,id',
+                'monto_pagado' => 'nullable|numeric|min:0',
             ]);
 
             $pedido = Pedido::findOrFail($pedidoId);
 
-        // Permitir actualizar el método de pago incluso si ya está pagado
-        // if ($pedido->isPagado()) {
-        //     return response()->json([
-        //         'error' => 'Este pedido ya está marcado como pagado',
-        //     ], 422);
-        // }
+            // Permitir actualizar el método de pago incluso si ya está pagado
+            // if ($pedido->isPagado()) {
+            //     return response()->json([
+            //         'error' => 'Este pedido ya está marcado como pagado',
+            //     ], 422);
+            // }
 
-        if ($pedido->total <= 0) {
+            if ($pedido->total <= 0) {
                 return response()->json([
                     'error' => 'El pedido debe tener items antes de marcar como pagado',
                 ], 422);
+            }
+
+            $vuelto = null;
+            $montoPagado = null;
+
+            if (isset($validated['monto_pagado']) && $validated['monto_pagado'] > 0) {
+                $montoPagado = $validated['monto_pagado'];
+                if ($montoPagado < $pedido->total) {
+                    return response()->json([
+                        'error' => 'El monto pagado es insuficiente',
+                    ], 422);
+                }
+                $vuelto = $montoPagado - $pedido->total;
             }
 
             DB::beginTransaction();
@@ -324,6 +338,8 @@ class PedidoController extends Controller
             $pedido->update([
                 'pagado' => true,
                 'metodo_pago_id' => $validated['metodo_pago_id'],
+                'monto_pagado' => $montoPagado,
+                'vuelto' => $vuelto,
             ]);
 
             DB::commit();

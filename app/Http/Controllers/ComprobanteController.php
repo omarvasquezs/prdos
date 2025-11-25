@@ -36,12 +36,27 @@ class ComprobanteController extends Controller
             'nombre_cliente' => 'nullable|required_if:tipo_comprobante,B|string|max:255',
             'dni_ce_cliente' => 'nullable|required_if:tipo_comprobante,B|digits_between:8,9',
             'observaciones' => 'nullable|string',
+            'monto_pagado' => 'nullable|numeric|min:0',
         ]);
 
         try {
             DB::beginTransaction();
 
             $pedido = Pedido::with('items.producto', 'mesa')->findOrFail($pedidoId);
+
+            // Calculate vuelto if monto_pagado is present
+            $vuelto = null;
+            $montoPagado = null;
+
+            if ($request->filled('monto_pagado') && $request->monto_pagado > 0) {
+                $montoPagado = $request->monto_pagado;
+                if ($montoPagado < $pedido->total) {
+                    return response()->json([
+                        'error' => 'El monto pagado es insuficiente',
+                    ], 422);
+                }
+                $vuelto = $montoPagado - $pedido->total;
+            }
 
             // 1. Create Comprobante
             $comprobante = new Comprobante();
@@ -73,9 +88,11 @@ class ComprobanteController extends Controller
                 'costo_total' => $comprobante->costo_total
             ]);
 
-            // 4. Mark pedido as cerrado (paid)
+            // 4. Mark pedido as cerrado (paid) and save payment details
             $pedido->estado = 'C'; // Cerrado
             $pedido->fecha_cierre = now();
+            $pedido->monto_pagado = $montoPagado;
+            $pedido->vuelto = $vuelto;
             $pedido->save();
 
             // 5. Mark mesa as disponible (empty) - only for presencial orders
