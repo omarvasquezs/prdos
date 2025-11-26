@@ -44,7 +44,11 @@
               Abrir Caja
             </span>
           </button>
-          <div class="mt-3">
+          <div class="mt-3 d-flex gap-2 justify-content-center">
+            <button class="btn btn-info" @click="abrirModalHistorial">
+              <i class="fas fa-history me-2"></i>
+              Historial
+            </button>
             <button class="btn btn-danger" @click="logout" :disabled="isLoggingOut">
               <i class="fas fa-sign-out-alt me-2"></i>
               Cerrar Sesión
@@ -82,6 +86,10 @@
               :disabled="isProcessingCierre">
               <i class="fas" :class="isProcessingCierre ? 'fa-spinner fa-spin' : 'fa-cash-register'"></i>
               <span class="atencion-label">Cerrar Caja</span>
+            </button>
+            <button class="atencion-sidebar-item sidebar-action" @click="abrirModalHistorial">
+              <i class="fas fa-history"></i>
+              <span class="atencion-label">Historial</span>
             </button>
             <button v-if="hasMultipleRoles" class="atencion-sidebar-item sidebar-action" @click="goSelectRole">
               <i class="fas fa-users-cog"></i>
@@ -333,11 +341,31 @@
               Ingresa el monto inicial disponible en la caja para comenzar las operaciones del día.
             </p>
             <div class="mb-3">
-              <label class="form-label">Monto de apertura</label>
-              <div class="input-group input-group-lg">
-                <span class="input-group-text">S/</span>
-                <input type="number" class="form-control" min="0" step="0.01" v-model="openForm.monto"
-                  :disabled="isProcessingApertura" placeholder="0.00">
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Billetes</label>
+                  <div class="input-group">
+                    <span class="input-group-text">S/</span>
+                    <input type="number" class="form-control" min="0" step="0.01" v-model="openForm.billetes"
+                      :disabled="isProcessingApertura" placeholder="0.00">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Monedas</label>
+                  <div class="input-group">
+                    <span class="input-group-text">S/</span>
+                    <input type="number" class="form-control" min="0" step="0.01" v-model="openForm.monedas"
+                      :disabled="isProcessingApertura" placeholder="0.00">
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold">Monto Total de Apertura</label>
+                <div class="input-group input-group-lg">
+                  <span class="input-group-text bg-success text-white">S/</span>
+                  <input type="number" class="form-control fw-bold text-success" min="0" step="0.01" v-model="openForm.monto"
+                    :disabled="true" placeholder="0.00">
+                </div>
               </div>
               <div v-if="openFormError" class="text-danger small mt-2">
                 {{ openFormError }}
@@ -384,11 +412,31 @@
               Registra el monto final en caja al momento del cierre.
             </p>
             <div class="mb-3">
-              <label class="form-label">Monto de cierre</label>
-              <div class="input-group input-group-lg">
-                <span class="input-group-text">S/</span>
-                <input type="number" class="form-control" min="0" step="0.01" v-model="closeForm.monto"
-                  :disabled="isProcessingCierre" placeholder="0.00">
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Billetes</label>
+                  <div class="input-group">
+                    <span class="input-group-text">S/</span>
+                    <input type="number" class="form-control" min="0" step="0.01" v-model="closeForm.billetes"
+                      :disabled="isProcessingCierre" placeholder="0.00">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Monedas</label>
+                  <div class="input-group">
+                    <span class="input-group-text">S/</span>
+                    <input type="number" class="form-control" min="0" step="0.01" v-model="closeForm.monedas"
+                      :disabled="isProcessingCierre" placeholder="0.00">
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold">Monto Total de Cierre</label>
+                <div class="input-group input-group-lg">
+                  <span class="input-group-text bg-danger text-white">S/</span>
+                  <input type="number" class="form-control fw-bold text-danger" min="0" step="0.01" v-model="closeForm.monto"
+                    :disabled="true" placeholder="0.00">
+                </div>
               </div>
               <div v-if="closeFormError" class="text-danger small mt-2">
                 {{ closeFormError }}
@@ -419,6 +467,9 @@
 
     <!-- Modal de Movimientos -->
     <MovimientosModal :show="showMovimientosModal" :caja-status="cajaStatus" @close="cerrarModalMovimientos" />
+
+    <!-- Modal de Historial -->
+    <HistorialCajaModal :show="showHistorialModal" @close="cerrarModalHistorial" />
 
     <!-- Modal de Comensales -->
     <div v-if="showComensalesModal" class="modal fade show d-block" tabindex="-1"
@@ -570,12 +621,14 @@
 <script>
 import axios from 'axios'
 import MovimientosModal from '@/components/MovimientosModal.vue'
+import HistorialCajaModal from '@/components/HistorialCajaModal.vue'
 import { useAuthStore } from '@/stores/auth'
 
 export default {
   name: 'CajaPage',
   components: {
-    MovimientosModal
+    MovimientosModal,
+    HistorialCajaModal
   },
   setup() {
     const authStore = useAuthStore()
@@ -603,16 +656,21 @@ export default {
       isProcessingApertura: false,
       isProcessingCierre: false,
       openForm: {
-        monto: ''
+        monto: '',
+        billetes: '',
+        monedas: ''
       },
       closeForm: {
-        monto: ''
+        monto: '',
+        billetes: '',
+        monedas: ''
       },
       openFormError: '',
       closeFormError: '',
 
       // Movimientos
       showMovimientosModal: false,
+      showHistorialModal: false,
 
       // Tipo de atención
       tipoAtencionActivo: 'P', // P=Presencial, D=Delivery, R=Recojo
@@ -701,6 +759,21 @@ export default {
         return 'Caja cerrada';
       }
       return 'Caja pendiente de apertura';
+    }
+  },
+
+  watch: {
+    'openForm.billetes'() {
+      this.calcularTotalApertura()
+    },
+    'openForm.monedas'() {
+      this.calcularTotalApertura()
+    },
+    'closeForm.billetes'() {
+      this.calcularTotalCierre()
+    },
+    'closeForm.monedas'() {
+      this.calcularTotalCierre()
     }
   },
 
@@ -870,6 +943,12 @@ export default {
       this.openFormError = ''
     },
 
+    calcularTotalApertura() {
+      const billetes = parseFloat(this.openForm.billetes) || 0
+      const monedas = parseFloat(this.openForm.monedas) || 0
+      this.openForm.monto = (billetes + monedas).toFixed(2)
+    },
+
     async confirmarApertura() {
       if (this.isProcessingApertura) {
         return
@@ -934,67 +1013,64 @@ export default {
         return
       }
 
-      this.closeForm = { monto: '' }
+      this.closeForm = { monto: '', billetes: '', monedas: '' }
       this.closeFormError = ''
       this.showCierreModal = true
     },
 
     cerrarModalCierre() {
       this.showCierreModal = false
-      this.closeFormError = ''
+    },
+
+    calcularTotalCierre() {
+      const billetes = parseFloat(this.closeForm.billetes) || 0
+      const monedas = parseFloat(this.closeForm.monedas) || 0
+      this.closeForm.monto = (billetes + monedas).toFixed(2)
     },
 
     async confirmarCierre() {
-      if (this.isProcessingCierre) {
-        return
-      }
-
-      const monto = Number(this.closeForm.monto)
-      if (Number.isNaN(monto)) {
-        this.closeFormError = 'Ingresa un monto válido.'
-        return
-      }
-
-      if (monto < 0) {
-        this.closeFormError = 'El monto no puede ser negativo.'
-        return
-      }
-
-      const shouldToggleLoading = !this.isLoading
-
       try {
         this.isProcessingCierre = true
-        if (shouldToggleLoading) {
-          this.isLoading = true
-        }
+        this.closeFormError = ''
 
         const response = await axios.post('/api/caja/cerrar', {
-          monto_cierre: monto
+          monto_cierre: this.closeForm.monto,
+          monto_cierre_billetes: this.closeForm.billetes || 0,
+          monto_cierre_monedas: this.closeForm.monedas || 0
         })
-
-        const caja = response.data?.caja || null
 
         this.cajaStatus = {
           isOpen: false,
-          hasRecordToday: Boolean(caja),
-          record: caja
+          hasRecordToday: true,
+          record: response.data.caja
         }
 
-        await this.fetchCajaStatus()
-        this.showAlert('Caja cerrada correctamente.', 'success')
-        this.showCierreModal = false
-        this.closeForm = { monto: '' }
+        this.showAlert('Caja cerrada correctamente', 'success')
+        this.cerrarModalCierre()
+        await this.initializePage()
       } catch (error) {
-        const validationError = error.response?.data?.errors?.monto_cierre?.[0]
-        const message = validationError || error.response?.data?.error || 'Error al cerrar la caja.'
-        this.closeFormError = validationError || message
-        this.showAlert(message, 'error')
+        console.error('Error al cerrar caja:', error)
+        const message = error.response?.data?.error || 'Error al cerrar la caja'
+        this.closeFormError = message
       } finally {
         this.isProcessingCierre = false
-        if (shouldToggleLoading) {
-          this.isLoading = false
-        }
       }
+    },
+
+    abrirModalMovimientos() {
+      this.showMovimientosModal = true
+    },
+
+    cerrarModalMovimientos() {
+      this.showMovimientosModal = false
+    },
+
+    abrirModalHistorial() {
+      this.showHistorialModal = true
+    },
+
+    cerrarModalHistorial() {
+      this.showHistorialModal = false
     },
 
     formatCurrency(value) {
