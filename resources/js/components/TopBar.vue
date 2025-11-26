@@ -176,8 +176,8 @@ export default {
         const userId = this.authStore.user.id;
         await axios.post(`/api/admin/usuarios/${userId}/change-password`, {
           action: 'new',
-          password: this.nuevaPassword,
-          password_confirmation: this.confirmarPassword
+          new_password: this.nuevaPassword,
+          new_password_confirmation: this.confirmarPassword
         });
 
         alert('Contraseña cambiada exitosamente');
