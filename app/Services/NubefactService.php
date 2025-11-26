@@ -105,7 +105,7 @@ class NubefactService
         // Items
         $items = [];
         foreach ($pedido->items as $item) {
-            $valor_unitario = $item->precio_unitario / 1.18; // Asumiendo IGV 18% incluido
+            $valor_unitario = $item->precio_unitario / 1.10; // Asumiendo IGV 10% incluido
             $igv = $item->precio_unitario - $valor_unitario;
             
             $items[] = [
@@ -128,7 +128,7 @@ class NubefactService
         
         // Agregar delivery si existe
         if ($pedido->costo_delivery > 0) {
-             $valor_unitario = $pedido->costo_delivery / 1.18;
+             $valor_unitario = $pedido->costo_delivery / 1.10;
              $igv = $pedido->costo_delivery - $valor_unitario;
              
              $items[] = [
@@ -174,7 +174,7 @@ class NubefactService
             "fecha_de_vencimiento" => "",
             "moneda" => 1, // SOLES
             "tipo_de_cambio" => "",
-            "porcentaje_de_igv" => 18.00,
+            "porcentaje_de_igv" => 10.00,
             "descuento_global" => "",
             "total_descuento" => "",
             "total_anticipo" => "",
