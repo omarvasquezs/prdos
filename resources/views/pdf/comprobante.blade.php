@@ -294,8 +294,8 @@
         <!-- Totales -->
         @php
             $total = $pedido->total ?? 0;
-            $igvRate = 0.18; // 18%
-            $igv = $total * $igvRate;
+            $igvRate = 0.10; // 10%
+            $igv = $total - ($total / (1 + $igvRate));
             $subtotal = $total - $igv;
         @endphp
         <div class="totales-section">
@@ -304,7 +304,7 @@
                 <span>S/ {{ number_format($subtotal, 2) }}</span>
             </div>
             <div class="totales-row">
-                <span>IGV (18%)</span>
+                <span>IGV (10%)</span>
                 <span>S/ {{ number_format($igv, 2) }}</span>
             </div>
             <div class="total-final">
