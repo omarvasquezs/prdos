@@ -215,6 +215,11 @@
                 <div class="info-line">
                     <strong>Cliente:</strong> {{ $pedido->cliente_nombre }}
                 </div>
+                @if($pedido->cliente_telefono)
+                    <div class="info-line">
+                        <strong>Teléfono:</strong> {{ $pedido->cliente_telefono }}
+                    </div>
+                @endif
                 <div class="info-line">
                     <strong>Dirección:</strong> {{ substr($pedido->direccion_entrega ?? '', 0, 50) }}
                 </div>
@@ -224,7 +229,12 @@
                 </div>
             @endif
         @elseif($pedido->tipo_atencion === 'D' && $comprobante->tipo_comprobante === 'B')
-             <!-- Para boletas de delivery, mostrar dirección si existe -->
+             <!-- Para boletas de delivery, mostrar dirección y teléfono si existen -->
+            @if($pedido->cliente_telefono)
+                <div class="info-line">
+                    <strong>Teléfono:</strong> {{ $pedido->cliente_telefono }}
+                </div>
+            @endif
             <div class="info-line">
                 <strong>Dirección:</strong> {{ substr($pedido->direccion_entrega ?? '', 0, 50) }}
             </div>
