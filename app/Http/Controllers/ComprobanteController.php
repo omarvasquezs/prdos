@@ -130,25 +130,28 @@ class ComprobanteController extends Controller
                 $baseHeight = 360; // base points
                 $perItem = 25;     // per item points
                 $qrHeight = 100;   // QR code + margins
-                $clientInfoExtra = 0;
-                // Add extra space for delivery/pickup client info
-                if ($pedido->tipo_atencion === 'D') {
-                    $clientInfoExtra = 35; // name + phone + address
-                } elseif ($pedido->tipo_atencion === 'R') {
-                    $clientInfoExtra = 20; // name + phone
-                }
-                $dynamicHeight = max(420, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight + $clientInfoExtra);
                 
-                // Add extra height for delivery cost line
-                if (($pedido->costo_delivery ?? 0) > 0) {
-                    $dynamicHeight += 15;
+                // Extra space for delivery/pickup client info
+                $clientInfoExtra = 0;
+                if ($pedido->tipo_atencion === 'D') {
+                    $clientInfoExtra = 50; // name + phone + address (increased for safety)
+                } elseif ($pedido->tipo_atencion === 'R') {
+                    $clientInfoExtra = 30; // name + phone
                 }
-            if ($pedido->tipo_atencion === 'D') {
-                $clientInfoExtra = 45;
-            } elseif ($pedido->tipo_atencion === 'R') {
-                $clientInfoExtra = 25;
-            }
-            $dynamicHeight = max(450, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight + $clientInfoExtra);                $pdf = Pdf::loadView('pdf.comprobante', [
+
+                // Extra height for delivery cost line
+                $deliveryCostExtra = 0;
+                if (($pedido->costo_delivery ?? 0) > 0) {
+                    $deliveryCostExtra = 15;
+                }
+
+                // Extra height for payment details (cash)
+                $paymentDetailsExtra = 0;
+                if (stripos($comprobante->metodoPago->nom_metodo_pago ?? '', 'efectivo') !== false && ($pedido->monto_pagado ?? 0) > 0) {
+                    $paymentDetailsExtra = 25;
+                }
+
+                $dynamicHeight = max(450, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight + $clientInfoExtra + $deliveryCostExtra + $paymentDetailsExtra);                $pdf = Pdf::loadView('pdf.comprobante', [
                     'comprobante' => $comprobante,
                     'pedido' => $pedido
                 ])->setPaper([0, 0, 164.4, $dynamicHeight], 'portrait'); // 58mm width, dynamic height
@@ -196,12 +199,28 @@ class ComprobanteController extends Controller
             $baseHeight = 320; // increased for logo
             $perItem = 22;
             $qrHeight = 95;    // extra space for QR code + bottom margin
-            $dynamicHeight = max(360, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight);
 
-            // Add extra height for delivery cost line
-            if (($pedido->costo_delivery ?? 0) > 0) {
-                $dynamicHeight += 15;
+            // Extra space for delivery/pickup client info
+            $clientInfoExtra = 0;
+            if ($pedido->tipo_atencion === 'D') {
+                $clientInfoExtra = 50; // name + phone + address
+            } elseif ($pedido->tipo_atencion === 'R') {
+                $clientInfoExtra = 30; // name + phone
             }
+
+            // Extra height for delivery cost line
+            $deliveryCostExtra = 0;
+            if (($pedido->costo_delivery ?? 0) > 0) {
+                $deliveryCostExtra = 15;
+            }
+
+            // Extra height for payment details (cash)
+            $paymentDetailsExtra = 0;
+            if (stripos($comprobante->metodoPago->nom_metodo_pago ?? '', 'efectivo') !== false && ($pedido->monto_pagado ?? 0) > 0) {
+                $paymentDetailsExtra = 25;
+            }
+
+            $dynamicHeight = max(360, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight + $clientInfoExtra + $deliveryCostExtra + $paymentDetailsExtra);
 
             $pdf = Pdf::loadView('pdf.comprobante', [
                 'comprobante' => $comprobante,
