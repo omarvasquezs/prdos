@@ -94,6 +94,7 @@ Route::middleware(['web', 'auth'])->withoutMiddleware([\Illuminate\Foundation\Ht
     Route::post('/api/caja/abrir', [CajaController::class, 'abrir']);
     Route::post('/api/caja/cerrar', [CajaController::class, 'cerrar']);
     Route::get('/api/caja/movimientos', [CajaController::class, 'movimientos']);
+    Route::get('/api/caja/history', [CajaController::class, 'history']);
     Route::get('/api/export', [ExportController::class, 'export']);
 
     // API routes for delivery/recojo pedidos

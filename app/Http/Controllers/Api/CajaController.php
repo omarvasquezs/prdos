@@ -49,6 +49,8 @@ class CajaController extends Controller
         try {
             $validated = $request->validate([
                 'monto_apertura' => 'required|numeric|min:0',
+                'monto_apertura_billetes' => 'nullable|numeric|min:0',
+                'monto_apertura_monedas' => 'nullable|numeric|min:0',
             ]);
 
             $today = now()->toDateString();
@@ -67,6 +69,8 @@ class CajaController extends Controller
             $caja = CajaAperturaCierre::create([
                 'datetime_apertura' => now(),
                 'monto_apertura' => round($validated['monto_apertura'], 2),
+                'monto_apertura_billetes' => isset($validated['monto_apertura_billetes']) ? round($validated['monto_apertura_billetes'], 2) : 0,
+                'monto_apertura_monedas' => isset($validated['monto_apertura_monedas']) ? round($validated['monto_apertura_monedas'], 2) : 0,
                 'id_usuario_apertura' => $request->user()->id,
             ]);
 
@@ -97,6 +101,8 @@ class CajaController extends Controller
         try {
             $validated = $request->validate([
                 'monto_cierre' => 'required|numeric|min:0',
+                'monto_cierre_billetes' => 'nullable|numeric|min:0',
+                'monto_cierre_monedas' => 'nullable|numeric|min:0',
             ]);
 
             $today = now()->toDateString();
@@ -115,6 +121,8 @@ class CajaController extends Controller
             $caja->update([
                 'datetime_cierre' => now(),
                 'monto_cierre' => round($validated['monto_cierre'], 2),
+                'monto_cierre_billetes' => isset($validated['monto_cierre_billetes']) ? round($validated['monto_cierre_billetes'], 2) : 0,
+                'monto_cierre_monedas' => isset($validated['monto_cierre_monedas']) ? round($validated['monto_cierre_monedas'], 2) : 0,
                 'id_usuario_cierre' => $request->user()->id,
             ]);
 
@@ -192,6 +200,34 @@ class CajaController extends Controller
     }
 
     /**
+     * Obtener el historial de aperturas y cierres de caja.
+     */
+    public function history(Request $request): JsonResponse
+    {
+        try {
+            $limit = $request->query('limit', 10);
+            
+            $history = CajaAperturaCierre::with(['usuarioApertura', 'usuarioCierre'])
+                ->orderByDesc('datetime_apertura')
+                ->paginate($limit);
+
+            $data = $history->getCollection()->map(fn ($caja) => $this->transformCaja($caja));
+
+            return response()->json([
+                'data' => $data,
+                'current_page' => $history->currentPage(),
+                'last_page' => $history->lastPage(),
+                'total' => $history->total(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'No se pudo obtener el historial de caja',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Transform CajaAperturaCierre model to array.
      *
      * @param CajaAperturaCierre $caja
@@ -203,10 +239,14 @@ class CajaController extends Controller
             'id' => $caja->id,
             'datetime_apertura' => $caja->datetime_apertura,
             'monto_apertura' => (float) $caja->monto_apertura,
+            'monto_apertura_billetes' => (float) $caja->monto_apertura_billetes,
+            'monto_apertura_monedas' => (float) $caja->monto_apertura_monedas,
             'id_usuario_apertura' => $caja->id_usuario_apertura,
             'usuario_apertura' => optional($caja->usuarioApertura)->name,
             'datetime_cierre' => $caja->datetime_cierre,
             'monto_cierre' => $caja->monto_cierre !== null ? (float) $caja->monto_cierre : null,
+            'monto_cierre_billetes' => $caja->monto_cierre_billetes !== null ? (float) $caja->monto_cierre_billetes : null,
+            'monto_cierre_monedas' => $caja->monto_cierre_monedas !== null ? (float) $caja->monto_cierre_monedas : null,
             'id_usuario_cierre' => $caja->id_usuario_cierre,
             'usuario_cierre' => optional($caja->usuarioCierre)->name,
         ];
