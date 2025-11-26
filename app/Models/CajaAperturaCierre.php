@@ -14,9 +14,13 @@ class CajaAperturaCierre extends Model
     protected $fillable = [
         'datetime_apertura',
         'monto_apertura',
+        'monto_apertura_billetes',
+        'monto_apertura_monedas',
         'id_usuario_apertura',
         'datetime_cierre',
         'monto_cierre',
+        'monto_cierre_billetes',
+        'monto_cierre_monedas',
         'id_usuario_cierre'
     ];
     
@@ -24,7 +28,11 @@ class CajaAperturaCierre extends Model
         'datetime_apertura' => 'datetime',
         'datetime_cierre' => 'datetime',
         'monto_apertura' => 'decimal:2',
-        'monto_cierre' => 'decimal:2'
+        'monto_apertura_billetes' => 'decimal:2',
+        'monto_apertura_monedas' => 'decimal:2',
+        'monto_cierre' => 'decimal:2',
+        'monto_cierre_billetes' => 'decimal:2',
+        'monto_cierre_monedas' => 'decimal:2'
     ];
     
     public function usuarioApertura(): BelongsTo
