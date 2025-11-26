@@ -2,50 +2,67 @@
     <div>
         <!-- Modal de Movimientos -->
         <div v-if="show" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-            <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+            <div class="modal-dialog modal-fullscreen">
                 <div class="modal-content shadow-lg">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">
+                    <div class="modal-header bg-primary text-white py-2">
+                        <h5 class="modal-title fs-6">
                             <i class="fas fa-list-alt me-2"></i>
                             Movimientos del día
                         </h5>
-                        <button type="button" class="btn-close" @click="cerrarModal"
+                        <button type="button" class="btn-close btn-close-white" @click="cerrarModal"
                             :disabled="isLoadingMovimientos"></button>
                     </div>
 
-                    <div class="modal-body p-0 d-flex flex-column" style="height: 80vh;">
+                    <div class="modal-body p-0 d-flex flex-column bg-light">
                         <!-- Top Toolbar: Status + Date Filter -->
-                        <div class="bg-light border-bottom p-3">
-                            <div class="row g-3 align-items-center">
-                                <!-- Caja Status (Compact) -->
-                                <div class="col-lg-5">
-                                    <div class="d-flex align-items-center"
-                                        :class="cajaEstaAbierta ? 'text-success' : 'text-warning'">
-                                        <i :class="cajaEstaAbierta ? 'fas fa-cash-register' : 'fas fa-lock'"
-                                            class="fs-4 me-2"></i>
-                                        <div>
-                                            <div class="fw-bold">{{ cajaStatusText }}</div>
-                                            <small class="text-muted" v-if="cajaRegistro">
+                        <div class="bg-white border-bottom px-3 py-2">
+                            <div class="row g-2 align-items-center">
+                                <!-- Caja Status & Info -->
+                                <div class="col-lg-8">
+                                    <div class="d-flex align-items-center flex-wrap gap-3">
+                                        <!-- Status Badge -->
+                                        <div class="d-flex align-items-center"
+                                            :class="cajaEstaAbierta ? 'text-success' : 'text-warning'">
+                                            <i :class="cajaEstaAbierta ? 'fas fa-cash-register' : 'fas fa-lock'"
+                                                class="fs-5 me-2"></i>
+                                            <span class="fw-bold">{{ cajaStatusText }}</span>
+                                        </div>
+
+                                        <div class="vr mx-1 d-none d-md-block"></div>
+
+                                        <!-- Opening Info -->
+                                        <div v-if="cajaRegistro"
+                                            class="d-flex align-items-center gap-3 text-muted small">
+                                            <div>
+                                                <i class="far fa-clock me-1"></i>
                                                 {{ cajaEstaAbierta ? 'Apertura:' : 'Cierre:' }}
-                                                {{ formatDateTime(cajaEstaAbierta ? cajaRegistro.datetime_apertura :
-                                                    cajaRegistro.datetime_cierre ||
-                                                cajaRegistro.datetime_apertura) }}
-                                            </small>
+                                                <strong>{{ formatDateTime(cajaEstaAbierta ?
+                                                    cajaRegistro.datetime_apertura :
+                                                    cajaRegistro.datetime_cierre || cajaRegistro.datetime_apertura)
+                                                }}</strong>
+                                            </div>
+
+                                            <div v-if="cajaRegistro.monto_apertura !== undefined">
+                                                <i class="fas fa-coins me-1"></i>
+                                                Monto Inicial:
+                                                <strong class="text-dark">{{ formatCurrency(cajaRegistro.monto_apertura)
+                                                }}</strong>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Date Filter (Compact) -->
-                                <div class="col-lg-7">
+                                <!-- Date Filter -->
+                                <div class="col-lg-4">
                                     <div class="d-flex gap-2 justify-content-end">
-                                        <div class="input-group" style="max-width: 300px;">
+                                        <div class="input-group input-group-sm" style="max-width: 250px;">
                                             <span class="input-group-text bg-white border-end-0">
                                                 <i class="fas fa-calendar-alt text-muted"></i>
                                             </span>
                                             <input type="date" class="form-control border-start-0 ps-0"
                                                 v-model="fechaMovimientos" :disabled="isLoadingMovimientos" :max="hoy">
                                         </div>
-                                        <button class="btn btn-primary" @click="fetchMovimientos"
+                                        <button class="btn btn-sm btn-primary" @click="fetchMovimientos"
                                             :disabled="isLoadingMovimientos">
                                             <i class="fas"
                                                 :class="isLoadingMovimientos ? 'fa-spinner fa-spin' : 'fa-search'"></i>
@@ -57,7 +74,7 @@
                         </div>
 
                         <!-- Content Area -->
-                        <div class="flex-grow-1 overflow-hidden d-flex flex-column bg-white">
+                        <div class="flex-grow-1 overflow-hidden d-flex flex-column">
                             <div v-if="isLoadingMovimientos"
                                 class="d-flex flex-column align-items-center justify-content-center h-100">
                                 <div class="spinner-border text-primary mb-3" role="status"></div>
@@ -73,74 +90,71 @@
 
                             <template v-else>
                                 <!-- Compact Summary Stats -->
-                                <div class="p-3 border-bottom bg-white">
+                                <div class="px-3 py-2 bg-white border-bottom">
                                     <div class="row g-2">
-                                        <!-- General Stats -->
-                                        <div class="col-6 col-md-3 col-lg-2">
-                                            <div class="p-2 border rounded bg-light h-100">
-                                                <div class="small text-muted text-uppercase fw-bold mb-1">Total Cobrado
+                                        <!-- Key Metrics -->
+                                        <div class="col-md-3 col-xl-2">
+                                            <div class="d-flex gap-2 h-100">
+                                                <div
+                                                    class="p-2 border rounded bg-light flex-fill d-flex flex-column justify-content-center">
+                                                    <div class="small text-muted text-uppercase fw-bold"
+                                                        style="font-size: 0.7rem;">Total Cobrado</div>
+                                                    <div class="h5 mb-0 text-success fw-bold">{{
+                                                        formatCurrency(movimientosResumen.montoTotal) }}</div>
                                                 </div>
-                                                <div class="h5 mb-0 text-success">{{
-                                                    formatCurrency(movimientosResumen.montoTotal) }}</div>
-                                            </div>
-                                        </div>
-                                        <div class="col-6 col-md-3 col-lg-2">
-                                            <div class="p-2 border rounded bg-light h-100">
-                                                <div class="small text-muted text-uppercase fw-bold mb-1">Operaciones
-                                                </div>
-                                                <div class="h5 mb-0 text-dark">{{ movimientosResumen.totalRegistros }}
+                                                <div
+                                                    class="p-2 border rounded bg-light flex-fill d-flex flex-column justify-content-center">
+                                                    <div class="small text-muted text-uppercase fw-bold"
+                                                        style="font-size: 0.7rem;">Ops</div>
+                                                    <div class="h5 mb-0 text-dark fw-bold">{{
+                                                        movimientosResumen.totalRegistros }}</div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <!-- Document Types Breakdown -->
-                                        <div class="col-12">
-                                            <h6 class="small text-muted fw-bold mb-2">Comprobantes</h6>
-                                            <div class="row g-2">
-                                                <div class="col-md-4" v-for="(data, tipo) in resumenComprobantes"
-                                                    :key="tipo">
-                                                    <div class="p-2 border rounded h-100 d-flex align-items-center"
-                                                        :class="`bg-${data.color}-subtle border-${data.color}-subtle`">
-                                                        <div class="me-2 rounded-circle p-2 d-flex align-items-center justify-content-center"
+                                        <!-- Breakdown Section -->
+                                        <div class="col-md-9 col-xl-10">
+                                            <div class="d-flex flex-wrap gap-2 h-100">
+                                                <!-- Comprobantes Group -->
+                                                <div class="d-flex gap-2 flex-wrap border-end pe-2 me-1">
+                                                    <div v-for="(data, tipo) in resumenComprobantes" :key="tipo"
+                                                        class="d-flex align-items-center p-1 border rounded bg-white"
+                                                        style="min-width: 140px;">
+                                                        <div class="rounded-circle p-1 d-flex align-items-center justify-content-center me-2"
                                                             :class="`bg-${data.color} text-white`"
-                                                            style="width: 32px; height: 32px;">
-                                                            <i :class="data.icon" class="small"></i>
+                                                            style="width: 24px; height: 24px;">
+                                                            <i :class="data.icon" style="font-size: 0.7rem;"></i>
                                                         </div>
-                                                        <div class="overflow-hidden">
-                                                            <div class="small fw-bold text-truncate"
-                                                                :class="`text-${data.color}`">{{ tipo }}s</div>
-                                                            <div class="d-flex align-items-baseline gap-1">
+                                                        <div class="lh-1">
+                                                            <div class="fw-bold" style="font-size: 0.75rem;">{{ tipo }}s
+                                                            </div>
+                                                            <div class="d-flex gap-1" style="font-size: 0.7rem;">
                                                                 <span class="fw-bold">{{ data.cantidad }}</span>
-                                                                <span class="small text-muted">({{
-                                                                    formatCurrency(data.total) }})</span>
+                                                                <span class="text-muted">({{ formatCurrency(data.total)
+                                                                }})</span>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </div>
 
-                                        <!-- Payment Methods Breakdown -->
-                                        <div class="col-12 mt-2">
-                                            <h6 class="small text-muted fw-bold mb-2">Métodos de Pago</h6>
-                                            <div class="row g-2">
-                                                <div class="col-md-4" v-for="(data, metodo) in resumenMetodosPago"
-                                                    :key="metodo">
-                                                    <div
-                                                        class="p-2 border rounded h-100 d-flex align-items-center bg-white">
-                                                        <div class="me-2 rounded-circle p-2 d-flex align-items-center justify-content-center"
+                                                <!-- Metodos Pago Group -->
+                                                <div class="d-flex gap-2 flex-wrap">
+                                                    <div v-for="(data, metodo) in resumenMetodosPago" :key="metodo"
+                                                        class="d-flex align-items-center p-1 border rounded bg-white"
+                                                        style="min-width: 130px;">
+                                                        <div class="rounded-circle p-1 d-flex align-items-center justify-content-center me-2"
                                                             :class="`bg-${data.color} text-white`"
-                                                            style="width: 32px; height: 32px;">
-                                                            <i :class="data.icon" class="small"></i>
+                                                            style="width: 24px; height: 24px;">
+                                                            <i :class="data.icon" style="font-size: 0.7rem;"></i>
                                                         </div>
-                                                        <div class="overflow-hidden">
-                                                            <div class="small fw-bold text-truncate text-dark">{{ metodo
+                                                        <div class="lh-1">
+                                                            <div class="fw-bold text-truncate"
+                                                                style="font-size: 0.75rem; max-width: 80px;">{{ metodo
                                                                 }}</div>
-                                                            <div class="d-flex align-items-baseline gap-1">
-                                                                <span class="fw-bold">{{ data.cantidad }} ops</span>
-                                                                <span class="small text-muted fw-bold text-primary">{{
-                                                                    formatCurrency(data.total)
-                                                                    }}</span>
+                                                            <div class="d-flex gap-1" style="font-size: 0.7rem;">
+                                                                <span class="fw-bold">{{ data.cantidad }}</span>
+                                                                <span class="text-primary fw-bold">{{
+                                                                    formatCurrency(data.total) }}</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -151,19 +165,20 @@
                                 </div>
 
                                 <!-- Table (Scrollable) -->
-                                <div class="flex-grow-1 overflow-auto p-0">
-                                    <table class="table table-striped table-hover mb-0 align-middle sticky-header">
+                                <div class="flex-grow-1 overflow-auto bg-white">
+                                    <table
+                                        class="table table-sm table-striped table-hover mb-0 align-middle sticky-header">
                                         <thead class="table-light">
                                             <tr>
-                                                <th class="ps-4">Hora</th>
-                                                <th>Comprobante</th>
-                                                <th>Tipo</th>
-                                                <th>Atención</th>
-                                                <th>Método</th>
-                                                <th class="text-end">Monto</th>
-                                                <th>Usuario</th>
-                                                <th class="text-center">SUNAT</th>
-                                                <th class="text-center pe-4">Acciones</th>
+                                                <th class="ps-4 py-2">Hora</th>
+                                                <th class="py-2">Comprobante</th>
+                                                <th class="py-2">Tipo</th>
+                                                <th class="py-2">Atención</th>
+                                                <th class="py-2">Método</th>
+                                                <th class="text-end py-2">Monto</th>
+                                                <th class="py-2">Usuario</th>
+                                                <th class="text-center py-2">SUNAT</th>
+                                                <th class="text-center pe-4 py-2">Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -186,25 +201,24 @@
                                                 <td>{{ mov.metodo_pago }}</td>
                                                 <td class="text-end fw-bold">{{ formatCurrency(mov.monto) }}</td>
                                                 <td class="small text-muted">{{ mov.usuario || '—' }}</td>
-                                                
+
                                                 <!-- SUNAT Status -->
                                                 <td class="text-center">
                                                     <div v-if="['B', 'F'].includes(mov.tipo_comprobante)">
-                                                        <i v-if="mov.sunat_success" 
-                                                           class="fas fa-check-circle text-success fs-5" 
-                                                           title="Enviado a SUNAT correctamente"></i>
-                                                        <i v-else-if="mov.sunat_error" 
-                                                           class="fas fa-exclamation-circle text-danger fs-5" 
-                                                           :title="mov.sunat_error"></i>
-                                                        <i v-else 
-                                                           class="fas fa-clock text-secondary fs-5" 
-                                                           title="Pendiente o no enviado"></i>
+                                                        <i v-if="mov.sunat_success"
+                                                            class="fas fa-check-circle text-success"
+                                                            title="Enviado a SUNAT correctamente"></i>
+                                                        <i v-else-if="mov.sunat_error"
+                                                            class="fas fa-exclamation-circle text-danger"
+                                                            :title="mov.sunat_error"></i>
+                                                        <i v-else class="fas fa-clock text-secondary"
+                                                            title="Pendiente o no enviado"></i>
                                                     </div>
                                                     <span v-else class="text-muted small">—</span>
                                                 </td>
 
                                                 <td class="text-center pe-4">
-                                                    <button class="btn btn-sm btn-outline-primary"
+                                                    <button class="btn btn-sm btn-outline-primary py-0"
                                                         @click="verComprobante(mov.cod_comprobante)"
                                                         :disabled="!mov.cod_comprobante" title="Ver Comprobante">
                                                         <i class="fas fa-eye"></i>
@@ -212,7 +226,7 @@
                                                 </td>
                                             </tr>
                                             <tr v-if="movimientos.length === 0">
-                                                <td colspan="8" class="text-center py-5 text-muted">
+                                                <td colspan="9" class="text-center py-5 text-muted">
                                                     <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
                                                     <p class="mb-0">No se encontraron movimientos para esta fecha.</p>
                                                 </td>
@@ -224,8 +238,8 @@
                         </div>
                     </div>
 
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" @click="cerrarModal"
+                    <div class="modal-footer py-1 bg-light">
+                        <button type="button" class="btn btn-sm btn-secondary" @click="cerrarModal"
                             :disabled="isLoadingMovimientos">
                             Cerrar
                         </button>
@@ -239,21 +253,21 @@
             style="background-color: rgba(0,0,0,0.5);">
             <div class="modal-dialog modal-dialog-centered modal-fullscreen">
                 <div class="modal-content shadow-lg">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">
+                    <div class="modal-header bg-primary text-white py-2">
+                        <h5 class="modal-title fs-6">
                             <i class="fas fa-file-invoice me-2"></i>
                             Comprobante: {{ comprobanteSeleccionado }}
                         </h5>
                         <button type="button" class="btn-close btn-close-white" @click="cerrarComprobante"></button>
                     </div>
 
-                    <div class="modal-body p-0">
+                    <div class="modal-body p-0 bg-light">
                         <iframe v-if="comprobanteUrl" :src="comprobanteUrl"
-                            style="width: 100%; height: calc(100vh - 120px); border: none;" frameborder="0"></iframe>
+                            style="width: 100%; height: 100%; border: none;" frameborder="0"></iframe>
                     </div>
 
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @click="cerrarComprobante">
+                    <div class="modal-footer py-1">
+                        <button type="button" class="btn btn-sm btn-secondary" @click="cerrarComprobante">
                             <i class="fas fa-arrow-left me-2"></i>
                             Regresar
                         </button>
@@ -499,5 +513,24 @@ export default {
     z-index: 10;
     background-color: #f8f9fa;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Custom scrollbar for table container */
+.overflow-auto::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.overflow-auto::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 </style>
