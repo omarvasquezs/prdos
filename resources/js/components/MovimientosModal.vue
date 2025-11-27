@@ -182,9 +182,10 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr v-for="mov in movimientos" :key="mov.id">
+                                            <tr v-for="(mov, index) in movimientos" :key="index"
+                                                :class="{ 'text-decoration-line-through text-danger': mov.anulado }">
                                                 <td class="ps-4 text-nowrap">{{ formatHour(mov.fecha) }}</td>
-                                                <td class="fw-bold">{{ mov.cod_comprobante || '—' }}</td>
+                                                <td class="fw-bold">{{ mov.cod_comprobante || '-' }}</td>
                                                 <td>
                                                     <span class="badge bg-light text-dark border">
                                                         {{ mov.tipo_comprobante_nombre || 'Nota de Venta' }}
@@ -218,11 +219,19 @@
                                                 </td>
 
                                                 <td class="text-center pe-4">
-                                                    <button class="btn btn-sm btn-outline-primary py-0"
-                                                        @click="verComprobante(mov.cod_comprobante)"
-                                                        :disabled="!mov.cod_comprobante" title="Ver Comprobante">
-                                                        <i class="fas fa-eye"></i>
-                                                    </button>
+                                                    <div class="d-flex justify-content-center gap-1">
+                                                        <button class="btn btn-sm btn-outline-primary py-0"
+                                                            @click="verComprobante(mov.cod_comprobante)"
+                                                            :disabled="!mov.cod_comprobante" title="Ver Comprobante">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+
+                                                        <button v-if="canAnular(mov)"
+                                                            class="btn btn-sm btn-outline-danger py-0"
+                                                            @click="confirmarAnulacion(mov)" title="Anular Comprobante">
+                                                            <i class="fas fa-ban"></i>
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             <tr v-if="movimientos.length === 0">
@@ -280,6 +289,7 @@
 
 <script>
 import axios from 'axios'
+import Swal from 'sweetalert2'
 
 export default {
     name: 'MovimientosModal',
@@ -343,6 +353,8 @@ export default {
             };
 
             this.movimientos.forEach(mov => {
+                if (mov.anulado) return; // Skip annulled items from summary
+
                 const tipo = mov.tipo_comprobante_nombre || 'Nota de Venta';
                 if (resumen[tipo]) {
                     resumen[tipo].cantidad++;
@@ -356,6 +368,8 @@ export default {
             const resumen = {};
 
             this.movimientos.forEach(mov => {
+                if (mov.anulado) return; // Skip annulled items from summary
+
                 const metodo = mov.metodo_pago || 'Desconocido';
                 if (!resumen[metodo]) {
                     let icon = 'fas fa-money-bill-wave';
@@ -443,6 +457,47 @@ export default {
             this.showComprobanteModal = false;
             this.comprobanteSeleccionado = null;
             this.comprobanteUrl = null;
+        },
+
+        canAnular(mov) {
+            // Solo permitir anular Notas de Venta que no estén ya anuladas
+            return mov.tipo_comprobante === 'N' && !mov.anulado;
+        },
+
+        async confirmarAnulacion(mov) {
+            const result = await Swal.fire({
+                title: '¿Anular Nota de Venta?',
+                text: `Vas a anular el comprobante ${mov.cod_comprobante}. Esta acción no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, anular',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    await axios.post(`/api/comprobantes/${mov.cod_comprobante}/anular`);
+
+                    Swal.fire(
+                        'Anulado',
+                        'El comprobante ha sido anulado.',
+                        'success'
+                    );
+
+                    // Recargar movimientos
+                    this.fetchMovimientos();
+
+                } catch (error) {
+                    console.error('Error al anular:', error);
+                    Swal.fire(
+                        'Error',
+                        error.response?.data?.error || 'No se pudo anular el comprobante.',
+                        'error'
+                    );
+                }
+            }
         },
 
         formatCurrency(value) {
