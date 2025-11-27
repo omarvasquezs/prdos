@@ -157,6 +157,9 @@ class NubefactService
             $total_igv += $it['igv'];
         }
 
+        // Mapeo de medio de pago
+        $medio_de_pago = "";
+
         return [
             "operacion" => "generar_comprobante",
             "tipo_de_comprobante" => $tipo_de_comprobante,
@@ -199,8 +202,8 @@ class NubefactService
             "enviar_automaticamente_a_la_sunat" => "true",
             "enviar_automaticamente_al_cliente" => "false",
             "codigo_unico" => "",
-            "condiciones_de_pago" => "",
-            "medio_de_pago" => "",
+            "condicion_de_pago" => "CONTADO",
+            "medio_de_pago" => $medio_de_pago,
             "placa_vehiculo" => "",
             "orden_compra_servicio" => "",
             "tabla_personalizada_codigo" => "",
