@@ -172,9 +172,9 @@ class CajaController extends Controller
             $records = $movimientos->map(fn ($movimiento) => $this->transformMovimiento($movimiento));
 
             $summary = [
-                'total_registros' => $movimientos->count(),
-                'monto_total' => round($movimientos->sum('costo_total'), 2),
-                'por_metodo' => $movimientos->groupBy('metodo_pago_id')->map(function ($items) {
+                'total_registros' => $movimientos->where('comprobante.anulado', false)->count(),
+                'monto_total' => round($movimientos->where('comprobante.anulado', false)->sum('costo_total'), 2),
+                'por_metodo' => $movimientos->where('comprobante.anulado', false)->groupBy('metodo_pago_id')->map(function ($items) {
                     $metodo = $items->first()->metodoPago;
 
                     return [
@@ -279,6 +279,7 @@ class CajaController extends Controller
             'sunat_success' => $comprobante?->sunat_success,
             'sunat_error' => $comprobante?->sunat_error,
             'sunat_description' => $comprobante?->sunat_description,
+            'anulado' => (bool) $comprobante?->anulado,
         ];
     }
 }

@@ -233,4 +233,44 @@ class ComprobanteController extends Controller
             return response()->json(['error' => 'Comprobante no encontrado'], 404);
         }
     }
+
+    /**
+     * Anular un comprobante (Solo Nota de Venta por ahora).
+     */
+    public function anular($codComprobante)
+    {
+        try {
+            DB::beginTransaction();
+
+            $comprobante = Comprobante::where('cod_comprobante', $codComprobante)->firstOrFail();
+
+            if ($comprobante->anulado) {
+                return response()->json(['error' => 'El comprobante ya está anulado'], 422);
+            }
+
+            // Por ahora solo permitimos anular Notas de Venta
+            if ($comprobante->tipo_comprobante !== 'N') {
+                return response()->json(['error' => 'Solo se pueden anular Notas de Venta'], 422);
+            }
+
+            $comprobante->anulado = true;
+            $comprobante->save();
+
+            // También debemos actualizar el pedido relacionado si es necesario,
+            // pero por ahora solo marcamos el comprobante como anulado.
+            // Si quisiéramos revertir el stock o el estado del pedido, lo haríamos aquí.
+            // En este caso, el pedido ya fue "Cerrado" y pagado.
+            // Al anular la nota de venta, asumimos que es una corrección administrativa
+            // y no necesariamente reabre el pedido.
+
+            DB::commit();
+
+            return response()->json(['message' => 'Comprobante anulado exitosamente']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error anulando comprobante: ' . $e->getMessage());
+            return response()->json(['error' => 'Error al anular el comprobante'], 500);
+        }
+    }
 }

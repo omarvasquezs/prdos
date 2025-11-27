@@ -32,13 +32,15 @@ class Comprobante extends Model
         'enlace_pdf',
         'enlace_xml',
         'enlace_cdr',
-        'sunat_description'
+        'sunat_description',
+        'anulado'
     ];
     
     protected $casts = [
         'fecha' => 'datetime',
         'fecha_actualizacion' => 'datetime',
-        'costo_total' => 'float'
+        'costo_total' => 'float',
+        'anulado' => 'boolean'
     ];
     
     public function user(): BelongsTo
