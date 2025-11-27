@@ -15,7 +15,7 @@
 
                     <div class="modal-body p-0 d-flex flex-column">
                         <!-- Top Toolbar: Status + Date Filter -->
-                        <div class="bg-white border-bottom px-3 py-2">
+                        <div class="bg-white border-bottom px-3 py-2 flex-shrink-0">
                             <div class="row g-2 align-items-center">
                                 <!-- Caja Status & Info -->
                                 <div class="col-lg-8">
@@ -91,7 +91,7 @@
                             <template v-else>
                                 <!-- Compact Summary Toolbar -->
                                 <div
-                                    class="d-flex align-items-center p-3 bg-white border-bottom overflow-auto text-nowrap">
+                                    class="d-flex align-items-center p-3 bg-white border-bottom overflow-auto text-nowrap flex-shrink-0">
                                     <!-- Left Column: Totals -->
                                     <div class="d-flex gap-4 px-3 border-end me-3">
                                         <div class="d-flex flex-column justify-content-center">
