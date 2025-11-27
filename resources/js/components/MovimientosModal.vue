@@ -13,7 +13,7 @@
                             :disabled="isLoadingMovimientos"></button>
                     </div>
 
-                    <div class="modal-body p-0 d-flex flex-column bg-light">
+                    <div class="modal-body p-0 d-flex flex-column">
                         <!-- Top Toolbar: Status + Date Filter -->
                         <div class="bg-white border-bottom px-3 py-2">
                             <div class="row g-2 align-items-center">
@@ -89,73 +89,79 @@
                             </div>
 
                             <template v-else>
-                                <!-- Compact Summary Stats -->
-                                <div class="px-3 py-2 bg-white border-bottom">
-                                    <div class="row g-2">
-                                        <!-- Key Metrics -->
-                                        <div class="col-md-3 col-xl-2">
-                                            <div class="d-flex gap-2 h-100">
+                                <!-- Compact Summary Toolbar -->
+                                <div
+                                    class="d-flex align-items-center p-3 bg-white border-bottom overflow-auto text-nowrap">
+                                    <!-- Left Column: Totals -->
+                                    <div class="d-flex gap-4 px-3 border-end me-3">
+                                        <div class="d-flex flex-column justify-content-center">
+                                            <div class="small text-muted text-uppercase fw-bold"
+                                                style="font-size: 0.75rem;">Total Cobrado</div>
+                                            <div class="h3 mb-0 text-success fw-bold">{{
+                                                formatCurrency(movimientosResumen.montoTotal) }}</div>
+                                        </div>
+                                        <div class="d-flex flex-column justify-content-center border-start ps-4">
+                                            <div class="small text-muted text-uppercase fw-bold"
+                                                style="font-size: 0.75rem;">Ops</div>
+                                            <div class="h3 mb-0 text-dark fw-bold">{{ movimientosResumen.totalRegistros
+                                            }}</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Right Column: Breakdowns (Stacked) -->
+                                    <div class="d-flex flex-column gap-2 flex-grow-1">
+                                        <!-- Row 1: Comprobantes -->
+                                        <div class="row g-2">
+                                            <div v-for="(data, tipo) in resumenComprobantes" :key="tipo" class="col-4">
                                                 <div
-                                                    class="p-2 border rounded bg-light flex-fill d-flex flex-column justify-content-center">
-                                                    <div class="small text-muted text-uppercase fw-bold"
-                                                        style="font-size: 0.7rem;">Total Cobrado</div>
-                                                    <div class="h5 mb-0 text-success fw-bold">{{
-                                                        formatCurrency(movimientosResumen.montoTotal) }}</div>
-                                                </div>
-                                                <div
-                                                    class="p-2 border rounded bg-light flex-fill d-flex flex-column justify-content-center">
-                                                    <div class="small text-muted text-uppercase fw-bold"
-                                                        style="font-size: 0.7rem;">Ops</div>
-                                                    <div class="h5 mb-0 text-dark fw-bold">{{
-                                                        movimientosResumen.totalRegistros }}</div>
+                                                    class="d-flex align-items-center px-3 py-1 border rounded bg-light h-100">
+                                                    <div class="rounded-circle p-1 d-flex align-items-center justify-content-center me-2"
+                                                        :class="`bg-${data.color} text-white`"
+                                                        style="width: 24px; height: 24px;">
+                                                        <i :class="data.icon" style="font-size: 0.75rem;"></i>
+                                                    </div>
+                                                    <div class="lh-1 flex-grow-1">
+                                                        <div
+                                                            class="d-flex justify-content-between align-items-center mb-1">
+                                                            <span class="fw-bold" style="font-size: 0.85rem;">{{ tipo
+                                                                }}s</span>
+                                                            <span class="badge bg-secondary rounded-pill">{{
+                                                                data.cantidad
+                                                            }}</span>
+                                                        </div>
+                                                        <div class="text-end text-muted small fw-bold"
+                                                            style="font-size: 0.8rem;">
+                                                            {{ formatCurrency(data.total) }}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <!-- Breakdown Section -->
-                                        <div class="col-md-9 col-xl-10">
-                                            <div class="d-flex flex-wrap gap-2 h-100">
-                                                <!-- Comprobantes Group -->
-                                                <div class="d-flex gap-2 flex-wrap border-end pe-2 me-1">
-                                                    <div v-for="(data, tipo) in resumenComprobantes" :key="tipo"
-                                                        class="d-flex align-items-center p-1 border rounded bg-white"
-                                                        style="min-width: 140px;">
-                                                        <div class="rounded-circle p-1 d-flex align-items-center justify-content-center me-2"
-                                                            :class="`bg-${data.color} text-white`"
-                                                            style="width: 24px; height: 24px;">
-                                                            <i :class="data.icon" style="font-size: 0.7rem;"></i>
-                                                        </div>
-                                                        <div class="lh-1">
-                                                            <div class="fw-bold" style="font-size: 0.75rem;">{{ tipo }}s
-                                                            </div>
-                                                            <div class="d-flex gap-1" style="font-size: 0.7rem;">
-                                                                <span class="fw-bold">{{ data.cantidad }}</span>
-                                                                <span class="text-muted">({{ formatCurrency(data.total)
-                                                                }})</span>
-                                                            </div>
-                                                        </div>
+                                        <!-- Row 2: Payment Methods -->
+                                        <div class="row g-2">
+                                            <div v-for="(data, metodo) in resumenMetodosPago" :key="metodo"
+                                                class="col-4">
+                                                <div
+                                                    class="d-flex align-items-center px-3 py-1 border rounded bg-light h-100">
+                                                    <div class="rounded-circle p-1 d-flex align-items-center justify-content-center me-2"
+                                                        :class="`bg-${data.color} text-white`"
+                                                        style="width: 24px; height: 24px;">
+                                                        <i :class="data.icon" style="font-size: 0.75rem;"></i>
                                                     </div>
-                                                </div>
-
-                                                <!-- Metodos Pago Group -->
-                                                <div class="d-flex gap-2 flex-wrap">
-                                                    <div v-for="(data, metodo) in resumenMetodosPago" :key="metodo"
-                                                        class="d-flex align-items-center p-1 border rounded bg-white"
-                                                        style="min-width: 130px;">
-                                                        <div class="rounded-circle p-1 d-flex align-items-center justify-content-center me-2"
-                                                            :class="`bg-${data.color} text-white`"
-                                                            style="width: 24px; height: 24px;">
-                                                            <i :class="data.icon" style="font-size: 0.7rem;"></i>
+                                                    <div class="lh-1 flex-grow-1">
+                                                        <div
+                                                            class="d-flex justify-content-between align-items-center mb-1">
+                                                            <span class="fw-bold text-truncate"
+                                                                style="font-size: 0.85rem; max-width: 120px;">{{ metodo
+                                                                }}</span>
+                                                            <span class="badge bg-secondary rounded-pill">{{
+                                                                data.cantidad
+                                                            }}</span>
                                                         </div>
-                                                        <div class="lh-1">
-                                                            <div class="fw-bold text-truncate"
-                                                                style="font-size: 0.75rem; max-width: 80px;">{{ metodo
-                                                                }}</div>
-                                                            <div class="d-flex gap-1" style="font-size: 0.7rem;">
-                                                                <span class="fw-bold">{{ data.cantidad }}</span>
-                                                                <span class="text-primary fw-bold">{{
-                                                                    formatCurrency(data.total) }}</span>
-                                                            </div>
+                                                        <div class="text-end text-primary small fw-bold"
+                                                            style="font-size: 0.8rem;">
+                                                            {{ formatCurrency(data.total) }}
                                                         </div>
                                                     </div>
                                                 </div>
