@@ -19,6 +19,28 @@ class NubefactService
 
     public function emitirComprobante(Comprobante $comprobante)
     {
+        // Bypass for local environment to prevent syncing with SUNAT
+        if (app()->environment('local')) {
+            Log::info('Simulando envío a SUNAT (Entorno Local) para comprobante: ' . $comprobante->cod_comprobante);
+            
+            $comprobante->update([
+                'sunat_success' => true,
+                'sunat_error' => null,
+                'sunat_description' => 'Simulación Local - No enviado a SUNAT',
+                // We leave links null or set them to a placeholder if needed
+                'enlace_pdf' => null,
+                'enlace_xml' => null,
+                'enlace_cdr' => null,
+            ]);
+
+            return [
+                'success' => true,
+                'data' => [
+                    'sunat_description' => 'Simulación Local - No enviado a SUNAT',
+                    'enlace_del_pdf' => null,
+                ]
+            ];
+        }
         if (!$this->url || !$this->token) {
             Log::warning('Nubefact credentials not configured');
             return [
