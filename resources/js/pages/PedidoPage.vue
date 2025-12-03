@@ -413,14 +413,24 @@
             <!-- Lista de productos -->
             <div class="row">
               <div v-for="producto in filtrarProductos()" :key="producto.id" class="col-lg-4 col-md-6 mb-3">
-                <div class="card h-100 producto-card" @click="confirmarAgregarItem(producto)">
-                  <div class="card-body d-flex flex-column">
+                <div class="card h-100 producto-card" 
+                  :class="{ 'opacity-50 pe-none': producto.track_stock && producto.stock <= 0 }"
+                  @click="confirmarAgregarItem(producto)">
+                  <div class="card-body d-flex flex-column position-relative">
                     <span class="badge bg-secondary mb-2 align-self-start">{{ producto.categoria?.nombre }}</span>
                     <h6 class="card-title">{{ producto.nombre }}</h6>
-                    <p class="card-text text-muted small flex-grow-1 mb-3">{{ producto.descripcion || 'Sin descripción'
-                    }}
-                    </p>
-                    <div class="d-flex justify-content-end align-items-center mt-auto">
+                    <p class="card-text text-muted small flex-grow-1 mb-3">{{ producto.descripcion || 'Sin descripción' }}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-end mt-auto w-100">
+                      <!-- Stock Indicator -->
+                      <div v-if="producto.track_stock" class="stock-indicator">
+                        <span class="badge" :class="producto.stock > 0 ? 'bg-info text-dark' : 'bg-danger'">
+                          <i class="fas fa-box me-1"></i>
+                          Stock: {{ producto.stock }}
+                        </span>
+                      </div>
+                      <div v-else></div> <!-- Spacer -->
+
                       <strong class="text-success">S/ {{ parseFloat(producto.precio).toFixed(2) }}</strong>
                     </div>
                   </div>
@@ -1025,6 +1035,12 @@ export default {
     async confirmarAgregarItem(producto) {
       const cantidad = parseInt(this.cantidadItem) || 1
 
+      // Validar stock
+      if (producto.track_stock && cantidad > producto.stock) {
+        alert(`No es posible agregar ${cantidad} items. El stock disponible es: ${producto.stock}`)
+        return
+      }
+
       try {
         const response = await axios.post(`/api/pedidos/${this.pedido.id}/items`, {
           producto_id: producto.id,
@@ -1032,6 +1048,15 @@ export default {
         })
 
         // Si llegamos aquí, la respuesta fue exitosa (código 200)
+        
+        // Actualizar stock localmente
+        if (producto.track_stock) {
+          const productInList = this.productos.find(p => p.id === producto.id)
+          if (productInList) {
+            productInList.stock -= cantidad
+          }
+        }
+
         // Recargar el pedido para mostrar los cambios
         await this.cargarPedido()
         this.cerrarModalProductos()
@@ -1050,10 +1075,22 @@ export default {
         return
       }
 
+      // Obtener datos del item antes de eliminar para restaurar stock visualmente
+      const itemToDelete = this.pedido.items.find(i => i.id === itemId)
+
       try {
         const response = await axios.delete(`/api/pedidos/${this.pedido.id}/items/${itemId}`)
 
         // Si llegamos aquí, la respuesta fue exitosa (código 200)
+        
+        // Restaurar stock localmente
+        if (itemToDelete && itemToDelete.producto_id) {
+          const productInList = this.productos.find(p => p.id === itemToDelete.producto_id)
+          if (productInList && productInList.track_stock) {
+            productInList.stock += parseInt(itemToDelete.cantidad)
+          }
+        }
+
         // Recargar el pedido para mostrar los cambios
         await this.cargarPedido()
 
