@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth';
 const routes = [
   {
     path: '/',
-    redirect: '/dashboard'
+    redirect: '/select-role'
   },
   {
     path: '/dashboard',
