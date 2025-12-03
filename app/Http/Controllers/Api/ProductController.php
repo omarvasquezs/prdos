@@ -38,7 +38,9 @@ class ProductController extends Controller
                             'id' => $product->category->id,
                             'nombre' => $product->category->name
                         ],
-                        'disponible' => $product->is_available
+                        'disponible' => $product->is_available,
+                        'track_stock' => $product->track_stock,
+                        'stock' => $product->stock
                     ];
                 })
             );
@@ -77,7 +79,9 @@ class ProductController extends Controller
                                 'descripcion' => $product->description,
                                 'precio' => $product->price,
                                 'precio_formateado' => $product->formatted_price,
-                                'disponible' => $product->is_available
+                                'disponible' => $product->is_available,
+                                'track_stock' => $product->track_stock,
+                                'stock' => $product->stock
                             ];
                         })
                     ];
@@ -160,6 +164,8 @@ class ProductController extends Controller
                 'price' => 'required|numeric|min:0',
                 'category_id' => 'required|exists:categories,id',
                 'is_available' => 'boolean',
+                'track_stock' => 'boolean',
+                'stock' => 'nullable|integer|min:0',
             ]);
 
             $validated['created_by'] = $request->user()->id;
@@ -198,6 +204,8 @@ class ProductController extends Controller
                 'price' => 'sometimes|required|numeric|min:0',
                 'category_id' => 'sometimes|required|exists:categories,id',
                 'is_available' => 'boolean',
+                'track_stock' => 'boolean',
+                'stock' => 'nullable|integer|min:0',
             ]);
 
             $validated['updated_by'] = $request->user()->id;
@@ -253,13 +261,15 @@ class ProductController extends Controller
             'name' => $product->name,
             'description' => $product->description,
             'price' => (float) $product->price,
-            'price_formatted' => 'S/ ' . number_format($product->price, 2),
+            'price_formatted' => 'S/ ' . number_format((float) $product->price, 2),
             'category_id' => $product->category_id,
             'category' => [
                 'id' => $product->category->id,
                 'name' => $product->category->name
             ],
             'is_available' => $product->is_available,
+            'track_stock' => $product->track_stock,
+            'stock' => $product->stock,
             'created_by' => $product->creator?->name,
             'updated_by' => $product->updater?->name,
             'created_at' => $product->created_at?->format('Y-m-d H:i:s'),

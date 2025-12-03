@@ -184,6 +184,7 @@ class MesaController extends Controller
                 'items' => $pedido->items->map(function ($item) {
                     return [
                         'id' => $item->id,
+                        'producto_id' => $item->producto_id,
                         'producto' => $item->producto->name,
                         'cantidad' => $item->cantidad,
                         'precio_unitario' => $item->precio_unitario,
@@ -255,6 +256,9 @@ class MesaController extends Controller
                 ]);
             }
 
+            // Decrementar stock
+            $producto->decrementStock($validated['cantidad']);
+
             // Actualizar el total del pedido
             $pedido->update(['total' => $pedido->calcularTotal()]);
 
@@ -290,6 +294,9 @@ class MesaController extends Controller
                     'error' => 'El item no pertenece a este pedido'
                 ], 422);
             }
+
+            // Restaurar stock
+            $item->producto->incrementStock($item->cantidad);
 
             $item->delete();
 

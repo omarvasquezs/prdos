@@ -150,6 +150,11 @@ class Pedido extends Model
      */
     public function cancelar(): void
     {
+        // Restaurar stock de todos los items
+        foreach ($this->items as $item) {
+            $item->producto->incrementStock($item->cantidad);
+        }
+
         $this->update([
             'estado' => 'X',
             'fecha_cierre' => now()

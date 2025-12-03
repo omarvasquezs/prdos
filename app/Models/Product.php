@@ -17,6 +17,8 @@ class Product extends Model
         'category_id',
         'image_url',
         'is_available',
+        'track_stock',
+        'stock',
         'created_by',
         'updated_by'
     ];
@@ -24,6 +26,8 @@ class Product extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'is_available' => 'boolean',
+        'track_stock' => 'boolean',
+        'stock' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -81,6 +85,26 @@ class Product extends Model
      */
     public function getFormattedPriceAttribute()
     {
-        return 'S/ ' . number_format($this->price, 2);
+        return 'S/ ' . number_format((float) $this->price, 2);
+    }
+
+    /**
+     * Decrementar stock si el tracking está habilitado
+     */
+    public function decrementStock(int $quantity): void
+    {
+        if ($this->track_stock) {
+            $this->decrement('stock', $quantity);
+        }
+    }
+
+    /**
+     * Incrementar stock si el tracking está habilitado
+     */
+    public function incrementStock(int $quantity): void
+    {
+        if ($this->track_stock) {
+            $this->increment('stock', $quantity);
+        }
     }
 }

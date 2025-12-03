@@ -150,6 +150,9 @@ class PedidoController extends Controller
                 'subtotal' => $producto->price * $validated['cantidad'],
             ]);
 
+            // Decrementar stock
+            $producto->decrementStock($validated['cantidad']);
+
             // Actualizar total del pedido
             $pedido->update(['total' => $pedido->calcularTotal()]);
 
@@ -193,6 +196,10 @@ class PedidoController extends Controller
             DB::beginTransaction();
 
             $item = $pedido->items()->findOrFail($itemId);
+            
+            // Restaurar stock
+            $item->producto->incrementStock($item->cantidad);
+            
             $item->delete();
 
             // Actualizar total del pedido
