@@ -51,6 +51,7 @@
                   <th>Nombre</th>
                   <th>Categoría</th>
                   <th>Precio</th>
+                  <th>Stock</th>
                   <th>Estado</th>
                   <th class="text-end">Acciones</th>
                 </tr>
@@ -83,6 +84,10 @@
                   </td>
                   <td>
                     <strong>{{ producto.price_formatted }}</strong>
+                  </td>
+                  <td>
+                    <span v-if="producto.track_stock" class="badge bg-secondary">{{ producto.stock }}</span>
+                    <span v-else class="text-muted small">-</span>
                   </td>
                   <td>
                     <span class="badge" :class="producto.is_available ? 'bg-success' : 'bg-secondary'">
@@ -212,16 +217,39 @@
               </div>
               <div class="row">
                 <div class="col-md-12 mb-3">
-                  <div class="form-check">
-                    <input 
-                      class="form-check-input" 
-                      type="checkbox" 
-                      id="productoDisponible"
-                      v-model="formProducto.is_available"
-                    >
-                    <label class="form-check-label" for="productoDisponible">
-                      Producto disponible
-                    </label>
+                  <div class="d-flex gap-4 align-items-end">
+                    <div class="form-check mb-2">
+                      <input 
+                        class="form-check-input" 
+                        type="checkbox" 
+                        id="productoDisponible"
+                        v-model="formProducto.is_available"
+                      >
+                      <label class="form-check-label" for="productoDisponible">
+                        Producto disponible
+                      </label>
+                    </div>
+                    <div class="form-check mb-2">
+                      <input 
+                        class="form-check-input" 
+                        type="checkbox" 
+                        id="productoStock"
+                        v-model="formProducto.track_stock"
+                      >
+                      <label class="form-check-label" for="productoStock">
+                        Contabilizar stock
+                      </label>
+                    </div>
+                    <div v-if="formProducto.track_stock" class="ms-3" style="width: 150px;">
+                      <label for="productoStockQty" class="form-label small mb-1">Stock Actual</label>
+                      <input 
+                        type="number" 
+                        class="form-control form-control-sm" 
+                        id="productoStockQty"
+                        v-model.number="formProducto.stock"
+                        min="0"
+                      >
+                    </div>
                   </div>
                 </div>
               </div>
@@ -274,7 +302,9 @@ export default {
         description: '',
         price: 0,
         category_id: '',
-        is_available: true
+        is_available: true,
+        track_stock: false,
+        stock: 0
       },
       searchTimeout: null
     }
@@ -377,7 +407,9 @@ export default {
           description: producto.description || '',
           price: producto.price,
           category_id: producto.category_id,
-          is_available: producto.is_available
+          is_available: producto.is_available,
+          track_stock: producto.track_stock,
+          stock: producto.stock || 0
         };
       } else {
         this.formProducto = {
@@ -385,7 +417,9 @@ export default {
           description: '',
           price: 0,
           category_id: '',
-          is_available: true
+          is_available: true,
+          track_stock: false,
+          stock: 0
         };
       }
       this.mostrarModalProducto = true;
@@ -492,7 +526,7 @@ export default {
 
 .table-wrapper th:nth-child(1),
 .table-body-wrapper td:nth-child(1) {
-  width: 35%;
+  width: 30%;
 }
 
 .table-wrapper th:nth-child(2),
@@ -507,11 +541,16 @@ export default {
 
 .table-wrapper th:nth-child(4),
 .table-body-wrapper td:nth-child(4) {
-  width: 20%;
+  width: 10%;
 }
 
 .table-wrapper th:nth-child(5),
 .table-body-wrapper td:nth-child(5) {
+  width: 15%;
+}
+
+.table-wrapper th:nth-child(6),
+.table-body-wrapper td:nth-child(6) {
   width: 15%;
 }
 
