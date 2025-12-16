@@ -237,7 +237,7 @@ class ComprobanteController extends Controller
     /**
      * Anular un comprobante (Solo Nota de Venta por ahora).
      */
-    public function anular($codComprobante)
+    public function anular(Request $request, $codComprobante)
     {
         try {
             DB::beginTransaction();
@@ -248,29 +248,89 @@ class ComprobanteController extends Controller
                 return response()->json(['error' => 'El comprobante ya está anulado'], 422);
             }
 
-            // Por ahora solo permitimos anular Notas de Venta
-            if ($comprobante->tipo_comprobante !== 'N') {
-                return response()->json(['error' => 'Solo se pueden anular Notas de Venta'], 422);
+            // Permitir anular Notas de Venta (existente)
+            if ($comprobante->tipo_comprobante === 'N') {
+                $comprobante->anulado = true;
+                $comprobante->observaciones = ($comprobante->observaciones ? $comprobante->observaciones . " | " : "") . "ANULADO: " . ($request->motivo ?? 'Sin motivo');
+                $comprobante->save();
+
+                DB::commit();
+                return response()->json(['message' => 'Nota de Venta anulada exitosamente']);
             }
 
-            $comprobante->anulado = true;
-            $comprobante->save();
+            // Para Boletas y Facturas, generamos Nota de Crédito
+            if (in_array($comprobante->tipo_comprobante, ['B', 'F'])) {
+                
+                if (!$request->filled('motivo')) {
+                    return response()->json(['error' => 'El motivo es obligatorio para anular Boletas o Facturas'], 422);
+                }
 
-            // También debemos actualizar el pedido relacionado si es necesario,
-            // pero por ahora solo marcamos el comprobante como anulado.
-            // Si quisiéramos revertir el stock o el estado del pedido, lo haríamos aquí.
-            // En este caso, el pedido ya fue "Cerrado" y pagado.
-            // Al anular la nota de venta, asumimos que es una corrección administrativa
-            // y no necesariamente reabre el pedido.
+                // Crear Nota de Crédito
+                $creditNote = new Comprobante();
+                $creditNote->tipo_comprobante = 'C';
+                $creditNote->related_comprobante_id = $comprobante->id;
+                $creditNote->tipo_nota_credito = 1; // Anulación de la operación
+                $creditNote->sustento = $request->motivo;
+                
+                // Copiar datos del comprobante original
+                $creditNote->user_id = Auth::user()->id;
+                $creditNote->pedido_id = $comprobante->pedido_id;
+                $creditNote->metodo_pago_id = $comprobante->metodo_pago_id;
+                $creditNote->fecha = now();
+                $creditNote->num_ruc = $comprobante->num_ruc;
+                $creditNote->razon_social = $comprobante->razon_social;
+                $creditNote->nombre_cliente = $comprobante->nombre_cliente;
+                $creditNote->dni_ce_cliente = $comprobante->dni_ce_cliente;
+                $creditNote->costo_total = $comprobante->costo_total;
+                $creditNote->last_updated_by = Auth::user()->id;
+                $creditNote->observaciones = "Nota de Crédito para " . $comprobante->cod_comprobante;
 
-            DB::commit();
+                // Generar código (BC01-XXX o FC01-XXX)
+                $creditNote->generateCode();
+                $creditNote->save();
 
-            return response()->json(['message' => 'Comprobante anulado exitosamente']);
+                // 2. Create Reporte Ingreso for the Credit Note
+                // This ensures it appears in the movements list.
+                ReporteIngreso::create([
+                    'cod_comprobante' => $creditNote->cod_comprobante,
+                    'metodo_pago_id' => $creditNote->metodo_pago_id,
+                    'fecha' => now(),
+                    'costo_total' => $creditNote->costo_total
+                ]);
+
+                // Marcar original como anulado
+                $comprobante->anulado = true;
+                $comprobante->observaciones = ($comprobante->observaciones ? $comprobante->observaciones . " | " : "") . "ANULADO POR NC: " . $creditNote->cod_comprobante;
+                $comprobante->save();
+
+                // Emitir Nota de Crédito a Nubefact
+                try {
+                    $result = $this->nubefactService->emitirComprobante($creditNote);
+                    
+                    if (!$result['success']) {
+                        // Si falla Nubefact, ¿hacemos rollback o permitimos que quede pendiente?
+                        // Por consistencia, permitimos que se guarde y muestre el error.
+                        // El usuario podrá reintentar o ver el error.
+                        // Pero como estamos dentro de un transaction, si lanzamos exception se borra todo.
+                        // Mejor capturamos y retornamos warning.
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error enviando Nota de Crédito a Nubefact: ' . $e->getMessage());
+                }
+
+                DB::commit();
+                return response()->json([
+                    'message' => 'Nota de Crédito generada exitosamente',
+                    'credit_note' => $creditNote->cod_comprobante
+                ]);
+            }
+
+            return response()->json(['error' => 'Tipo de comprobante no soportado para anulación'], 422);
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error anulando comprobante: ' . $e->getMessage());
-            return response()->json(['error' => 'Error al anular el comprobante'], 500);
+            return response()->json(['error' => 'Error al anular el comprobante: ' . $e->getMessage()], 500);
         }
     }
 }

@@ -92,6 +92,7 @@ class NubefactService
         $tipo_de_comprobante = match($comprobante->tipo_comprobante) {
             'B' => 2, // BOLETA DE VENTA
             'F' => 1, // FACTURA
+            'C' => 3, // NOTA DE CRÉDITO
             default => 2
         };
 
@@ -103,6 +104,36 @@ class NubefactService
         // Mapeo para pruebas (Nubefact Demo usa BBB1/FFF1)
         if ($serie === 'B001') $serie = 'BBB1';
         if ($serie === 'F001') $serie = 'FFF1';
+        // Para Notas de Crédito en Demo
+        if ($serie === 'BC01') $serie = 'BBB1'; // En demo suelen usar la misma serie o specíficas, ajustaremos si falla
+        if ($serie === 'FC01') $serie = 'FFF1';
+
+        // Additional fields for Credit Note
+        $documento_modifica_tipo = "";
+        $documento_modifica_serie = "";
+        $documento_modifica_numero = "";
+        $tipo_nota_credito = "";
+        $sustento = "";
+
+        if ($comprobante->tipo_comprobante === 'C' && $comprobante->relatedComprobante) {
+            $related = $comprobante->relatedComprobante;
+            $partsRelated = explode('-', $related->cod_comprobante);
+            
+            $documento_modifica_tipo = match($related->tipo_comprobante) {
+                'B' => 2,
+                'F' => 1,
+                default => 2
+            };
+            $documento_modifica_serie = $partsRelated[0] ?? '';
+            $documento_modifica_numero = $partsRelated[1] ?? '';
+            
+            // Adjust series for Demo if needed
+            if ($documento_modifica_serie === 'B001') $documento_modifica_serie = 'BBB1';
+            if ($documento_modifica_serie === 'F001') $documento_modifica_serie = 'FFF1';
+
+            $tipo_nota_credito = $comprobante->tipo_nota_credito ?? 1; // 1 = Anulación de la operación
+            $sustento = $comprobante->sustento;
+        }
 
         // Items
         $items = [];
@@ -196,10 +227,10 @@ class NubefactService
             "total_incluido_percepcion" => "",
             "detraccion" => "false",
             "observaciones" => $comprobante->observaciones ?? '',
-            "documento_que_se_modifica_tipo" => "",
-            "documento_que_se_modifica_serie" => "",
-            "documento_que_se_modifica_numero" => "",
-            "tipo_de_nota_de_credito" => "",
+            "documento_que_se_modifica_tipo" => $documento_modifica_tipo,
+            "documento_que_se_modifica_serie" => $documento_modifica_serie,
+            "documento_que_se_modifica_numero" => (int)$documento_modifica_numero,
+            "tipo_de_nota_de_credito" => $tipo_nota_credito, // 1 = ANULACION DE LA OPERACION
             "tipo_de_nota_de_debito" => "",
             "enviar_automaticamente_a_la_sunat" => "true",
             "enviar_automaticamente_al_cliente" => "false",
