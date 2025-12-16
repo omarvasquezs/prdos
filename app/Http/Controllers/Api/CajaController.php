@@ -172,9 +172,9 @@ class CajaController extends Controller
             $records = $movimientos->map(fn ($movimiento) => $this->transformMovimiento($movimiento));
 
             $summary = [
-                'total_registros' => $movimientos->where('comprobante.anulado', false)->count(),
-                'monto_total' => round($movimientos->where('comprobante.anulado', false)->sum('costo_total'), 2),
-                'por_metodo' => $movimientos->where('comprobante.anulado', false)->groupBy('metodo_pago_id')->map(function ($items) {
+                'total_registros' => $movimientos->where('comprobante.anulado', false)->where('comprobante.tipo_comprobante', '!=', 'C')->count(),
+                'monto_total' => round($movimientos->where('comprobante.anulado', false)->where('comprobante.tipo_comprobante', '!=', 'C')->sum('costo_total'), 2),
+                'por_metodo' => $movimientos->where('comprobante.anulado', false)->where('comprobante.tipo_comprobante', '!=', 'C')->groupBy('metodo_pago_id')->map(function ($items) {
                     $metodo = $items->first()->metodoPago;
 
                     return [

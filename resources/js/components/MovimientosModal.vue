@@ -355,13 +355,17 @@ export default {
             const resumen = {
                 'Boleta': { cantidad: 0, total: 0, icon: 'fas fa-file-invoice', color: 'info' },
                 'Factura': { cantidad: 0, total: 0, icon: 'fas fa-file-invoice-dollar', color: 'primary' },
-                'Nota de Venta': { cantidad: 0, total: 0, icon: 'fas fa-sticky-note', color: 'warning' }
+                'Nota de Venta': { cantidad: 0, total: 0, icon: 'fas fa-sticky-note', color: 'warning' },
+                'Nota de Crédito': { cantidad: 0, total: 0, icon: 'fas fa-undo', color: 'danger' }
             };
 
             this.movimientos.forEach(mov => {
                 if (mov.anulado) return; // Skip annulled items from summary
 
-                const tipo = mov.tipo_comprobante_nombre || 'Nota de Venta';
+                let tipo = mov.tipo_comprobante_nombre || 'Nota de Venta';
+                if (mov.tipo_comprobante === 'C') tipo = 'Nota de Crédito'; // Ensure correct mapping
+                
+                // If the type is not in our predefined list, maybe add it or ignore
                 if (resumen[tipo]) {
                     resumen[tipo].cantidad++;
                     resumen[tipo].total += Number(mov.monto);
@@ -466,43 +470,95 @@ export default {
         },
 
         canAnular(mov) {
-            // Solo permitir anular Notas de Venta que no estén ya anuladas
-            return mov.tipo_comprobante === 'N' && !mov.anulado;
+            // Permitir anular Notas de Venta (N), Boletas (B) y Facturas (F) que no estén ya anuladas
+            return ['N', 'B', 'F'].includes(mov.tipo_comprobante) && !mov.anulado;
         },
 
         async confirmarAnulacion(mov) {
-            const result = await Swal.fire({
-                title: '¿Anular Nota de Venta?',
-                text: `Vas a anular el comprobante ${mov.cod_comprobante}. Esta acción no se puede deshacer.`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Sí, anular',
-                cancelButtonText: 'Cancelar'
-            });
+            const isNotaVenta = mov.tipo_comprobante === 'N';
+            const tipoNombre = isNotaVenta ? 'Nota de Venta' : (mov.tipo_comprobante === 'B' ? 'Boleta' : 'Factura');
+            
+            let motivo = null;
 
-            if (result.isConfirmed) {
-                try {
-                    await axios.post(`/api/comprobantes/${mov.cod_comprobante}/anular`);
+            if (!isNotaVenta) {
+                // Para Boletas y Facturas, pedir motivo
+                const { value: text, isDismissed } = await Swal.fire({
+                    title: `Anular ${tipoNombre}`,
+                    input: 'textarea',
+                    inputLabel: 'Motivo de anulación',
+                    inputPlaceholder: 'Ingrese el motivo de la anulación...',
+                    inputAttributes: {
+                        'aria-label': 'Motivo de anulación'
+                    },
+                    text: `Vas a generar una Nota de Crédito para ${mov.cod_comprobante}. Esta acción es irreversible.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, anular y generar NC',
+                    cancelButtonText: 'Cancelar',
+                    inputValidator: (value) => {
+                        if (!value) {
+                            return '¡Necesitas escribir un motivo!'
+                        }
+                    }
+                });
 
-                    Swal.fire(
-                        'Anulado',
-                        'El comprobante ha sido anulado.',
-                        'success'
-                    );
+                if (isDismissed) return;
+                motivo = text;
+            } else {
+                // Para Nota de Venta, confirmación simple
+                const result = await Swal.fire({
+                    title: '¿Anular Nota de Venta?',
+                    text: `Vas a anular el comprobante ${mov.cod_comprobante}. Esta acción no se puede deshacer.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, anular',
+                    cancelButtonText: 'Cancelar'
+                });
 
-                    // Recargar movimientos
-                    this.fetchMovimientos();
+                if (!result.isConfirmed) return;
+            }
 
-                } catch (error) {
-                    console.error('Error al anular:', error);
-                    Swal.fire(
-                        'Error',
-                        error.response?.data?.error || 'No se pudo anular el comprobante.',
-                        'error'
-                    );
+            // Proceder con la anulación
+            try {
+                // Mostrar loading
+                Swal.fire({
+                    title: 'Procesando...',
+                    text: 'Por favor espere',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const response = await axios.post(`/api/comprobantes/${mov.cod_comprobante}/anular`, {
+                    motivo: motivo
+                });
+
+                // Success
+                let title = 'Anulado';
+                let msg = 'El comprobante ha sido anulado.';
+                
+                if (response.data.credit_note) {
+                    title = 'Nota de Crédito Generada';
+                    msg = `Se generó la Nota de Crédito ${response.data.credit_note} correctamente.`;
                 }
+
+                Swal.fire(title, msg, 'success');
+
+                // Recargar movimientos
+                this.fetchMovimientos();
+
+            } catch (error) {
+                console.error('Error al anular:', error);
+                Swal.fire(
+                    'Error',
+                    error.response?.data?.error || 'No se pudo anular el comprobante.',
+                    'error'
+                );
             }
         },
 
