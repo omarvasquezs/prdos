@@ -304,14 +304,14 @@
 
               <!-- Campos para Boleta -->
               <div v-if="formCobro.tipo_comprobante === 'B'" class="mb-3">
-                <label for="nombre_cliente" class="form-label fw-bold">Nombre Completo *</label>
+                <label for="nombre_cliente" class="form-label fw-bold">Nombre Completo</label>
                 <input type="text" id="nombre_cliente" v-model="formCobro.nombre_cliente" class="form-control" 
-                  placeholder="Nombres y apellidos del cliente" required>
+                  placeholder="Nombres y apellidos del cliente">
               </div>
               <div v-if="formCobro.tipo_comprobante === 'B'" class="mb-3">
-                <label for="dni_ce_cliente" class="form-label fw-bold">DNI / CE *</label>
+                <label for="dni_ce_cliente" class="form-label fw-bold">DNI / CE</label>
                 <input type="text" id="dni_ce_cliente" v-model="formCobro.dni_ce_cliente" class="form-control" 
-                  placeholder="Documento de identidad" maxlength="9" pattern="[0-9]{8,9}" required
+                  placeholder="Documento de identidad" maxlength="9" pattern="[0-9]{8,9}"
                   @input="validarDniCe">
                 <small class="text-muted">Máximo 9 dígitos numéricos</small>
               </div>

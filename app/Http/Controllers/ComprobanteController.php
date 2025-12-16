@@ -33,8 +33,8 @@ class ComprobanteController extends Controller
             'metodo_pago_id' => 'required|integer|exists:metodo_pago,id',
             'num_ruc' => ['nullable', 'required_if:tipo_comprobante,F', 'digits:11', new RucValidation],
             'razon_social' => 'nullable|required_if:tipo_comprobante,F|string|max:255',
-            'nombre_cliente' => 'nullable|required_if:tipo_comprobante,B|string|max:255',
-            'dni_ce_cliente' => 'nullable|required_if:tipo_comprobante,B|digits_between:8,9',
+            'nombre_cliente' => 'nullable|string|max:255',
+            'dni_ce_cliente' => 'nullable|digits_between:8,9',
             'observaciones' => 'nullable|string',
             'monto_pagado' => 'nullable|numeric|min:0',
         ]);
