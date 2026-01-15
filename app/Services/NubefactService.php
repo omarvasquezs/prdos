@@ -137,9 +137,22 @@ class NubefactService
 
         // Items
         $items = [];
+        $isFactura = $comprobante->tipo_comprobante === 'F';
+
         foreach ($pedido->items as $item) {
-            $valor_unitario = $item->precio_unitario / 1.10; // Asumiendo IGV 10% incluido
-            $igv = $item->precio_unitario - $valor_unitario;
+            if ($isFactura) {
+                // Para Factura: el precio del item se toma como valor unitario (base)
+                // Se agrega IGV encima
+                $valor_unitario = $item->precio_unitario;
+                $igv = $valor_unitario * 0.10;
+                $precio_unitario_con_igv = $valor_unitario + $igv;
+            } else {
+                // Para Boleta/Otros: el precio del item incluye IGV
+                // Se desglosa hacia abajo
+                $precio_unitario_con_igv = $item->precio_unitario;
+                $valor_unitario = $precio_unitario_con_igv / 1.10;
+                $igv = $precio_unitario_con_igv - $valor_unitario;
+            }
             
             $items[] = [
                 "unidad_de_medida" => "NIU",
@@ -147,12 +160,12 @@ class NubefactService
                 "descripcion" => $item->producto->name,
                 "cantidad" => $item->cantidad,
                 "valor_unitario" => round($valor_unitario, 10),
-                "precio_unitario" => $item->precio_unitario,
+                "precio_unitario" => round($precio_unitario_con_igv, 10),
                 "descuento" => "",
                 "subtotal" => round($valor_unitario * $item->cantidad, 10),
                 "tipo_de_igv" => 1, // Gravado - Operación Onerosa
                 "igv" => round($igv * $item->cantidad, 10),
-                "total" => round($item->precio_unitario * $item->cantidad, 10),
+                "total" => round($precio_unitario_con_igv * $item->cantidad, 10),
                 "anticipo_regularizacion" => "false",
                 "anticipo_documento_serie" => "",
                 "anticipo_documento_numero" => ""
@@ -161,8 +174,17 @@ class NubefactService
         
         // Agregar delivery si existe
         if ($pedido->costo_delivery > 0) {
-             $valor_unitario = $pedido->costo_delivery / 1.10;
-             $igv = $pedido->costo_delivery - $valor_unitario;
+             if ($isFactura) {
+                // Factura: Delivery is base, add IGV
+                $valor_unitario = $pedido->costo_delivery;
+                $igv = $valor_unitario * 0.10;
+                $precio_unitario_con_igv = $valor_unitario + $igv;
+             } else {
+                // Other: Delivery includes IGV
+                $precio_unitario_con_igv = $pedido->costo_delivery;
+                $valor_unitario = $precio_unitario_con_igv / 1.10;
+                $igv = $precio_unitario_con_igv - $valor_unitario;
+             }
              
              $items[] = [
                 "unidad_de_medida" => "ZZ",
@@ -170,12 +192,12 @@ class NubefactService
                 "descripcion" => "SERVICIO DE DELIVERY",
                 "cantidad" => 1,
                 "valor_unitario" => round($valor_unitario, 10),
-                "precio_unitario" => $pedido->costo_delivery,
+                "precio_unitario" => round($precio_unitario_con_igv, 10),
                 "descuento" => "",
                 "subtotal" => round($valor_unitario, 10),
                 "tipo_de_igv" => 1,
                 "igv" => round($igv, 10),
-                "total" => $pedido->costo_delivery,
+                "total" => round($precio_unitario_con_igv, 10),
                 "anticipo_regularizacion" => "false",
                 "anticipo_documento_serie" => "",
                 "anticipo_documento_numero" => ""

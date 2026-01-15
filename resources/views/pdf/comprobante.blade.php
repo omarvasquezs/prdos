@@ -293,10 +293,20 @@
 
         <!-- Totales -->
         @php
-            $total = $pedido->total ?? 0;
+            $baseTotal = $pedido->total ?? 0;
             $igvRate = 0.10; // 10%
-            $igv = $total - ($total / (1 + $igvRate));
-            $subtotal = $total - $igv;
+            
+            if ($comprobante->tipo_comprobante === 'F') {
+                // For Factura: item prices are treated as subtotal
+                $subtotal = $baseTotal;
+                $igv = $subtotal * $igvRate;
+                $total = $subtotal + $igv;
+            } else {
+                // For Boleta/Others: item prices are treated as including IGV
+                $total = $baseTotal;
+                $igv = $total - ($total / (1 + $igvRate));
+                $subtotal = $total - $igv;
+            }
         @endphp
         <div class="totales-section">
             <div class="totales-row">

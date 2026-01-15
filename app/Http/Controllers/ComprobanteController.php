@@ -44,18 +44,33 @@ class ComprobanteController extends Controller
 
             $pedido = Pedido::with('items.producto', 'mesa')->findOrFail($pedidoId);
 
+            // 1. Calculate Comprobante Total
+            // For Factura (F), we treat the order items price as Subtotal and add 10% IGV on top.
+            // For others (B, N), the order items price includes IGV.
+            $comprobanteTotal = $pedido->total;
+            if ($request->tipo_comprobante === 'F') {
+                $comprobanteTotal = $pedido->total * 1.10; // Add 10% IGV
+            }
+
             // Calculate vuelto if monto_pagado is present
             $vuelto = null;
             $montoPagado = null;
 
             if ($request->filled('monto_pagado') && $request->monto_pagado > 0) {
                 $montoPagado = $request->monto_pagado;
-                if ($montoPagado < $pedido->total) {
+                
+                // Allow a small margin of error for float comparison or accept that customer pays the calculated total
+                if ($montoPagado < $comprobanteTotal) {
+                     // Note: Ideally the frontend should know this new total before sending.
+                     // But if the user entered the exact amount from the "Order" screen (which is B logic),
+                     // and now we are charging more, this might fail.
+                     // However, the prompt implies "Mi cliente quiere...", so the cashier likely knows or simply enters the amount given.
+                     // We will enforce the check against the NEW total.
                     return response()->json([
-                        'error' => 'El monto pagado es insuficiente',
+                        'error' => 'El monto pagado es insuficiente. Total Factura: ' . number_format($comprobanteTotal, 2),
                     ], 422);
                 }
-                $vuelto = $montoPagado - $pedido->total;
+                $vuelto = $montoPagado - $comprobanteTotal;
             }
 
             // 1. Create Comprobante
@@ -70,7 +85,7 @@ class ComprobanteController extends Controller
             $comprobante->user_id = Auth::user()->id;
             $comprobante->pedido_id = $pedido->id;
             $comprobante->fecha = now();
-            $comprobante->costo_total = $pedido->total;
+            $comprobante->costo_total = $comprobanteTotal;
             $comprobante->last_updated_by = Auth::user()->id;
             
             // 2. Generate code
@@ -80,7 +95,7 @@ class ComprobanteController extends Controller
             // Reload comprobante to ensure all relationships are loaded
             $comprobante->load('metodoPago');
 
-            // 3. Create Reporte Ingreso
+            // 3. Create ReporteIngreso
             ReporteIngreso::create([
                 'cod_comprobante' => $comprobante->cod_comprobante,
                 'metodo_pago_id' => $comprobante->metodo_pago_id,
