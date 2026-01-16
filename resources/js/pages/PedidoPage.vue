@@ -169,7 +169,8 @@
                   <span>Items:</span>
                   <span class="fw-bold">{{ totalItems }}</span>
                 </div>
-                <div v-if="pedido.tipo_atencion === 'D'" class="d-flex justify-content-between mb-3 text-info align-items-center">
+                <div v-if="pedido.tipo_atencion === 'D'"
+                  class="d-flex justify-content-between mb-3 text-info align-items-center">
                   <span class="fs-5">Costo Delivery:</span>
                   <div v-if="isEditingDeliveryCost" class="d-flex align-items-center gap-2">
                     <div class="input-group input-group-lg" style="width: 160px;">
@@ -185,7 +186,8 @@
                   </div>
                   <div v-else class="d-flex align-items-center gap-3">
                     <span class="fw-bold fs-5">S/ {{ parseFloat(pedido.costo_delivery || 0).toFixed(2) }}</span>
-                    <button class="btn btn-outline-secondary btn-lg" @click="toggleEditDeliveryCost" v-if="!pedido.pagado">
+                    <button class="btn btn-outline-secondary btn-lg" @click="toggleEditDeliveryCost"
+                      v-if="!pedido.pagado">
                       <i class="fas fa-pencil-alt"></i>
                     </button>
                   </div>
@@ -305,14 +307,13 @@
               <!-- Campos para Boleta -->
               <div v-if="formCobro.tipo_comprobante === 'B'" class="mb-3">
                 <label for="nombre_cliente" class="form-label fw-bold">Nombre Completo</label>
-                <input type="text" id="nombre_cliente" v-model="formCobro.nombre_cliente" class="form-control" 
+                <input type="text" id="nombre_cliente" v-model="formCobro.nombre_cliente" class="form-control"
                   placeholder="Nombres y apellidos del cliente">
               </div>
               <div v-if="formCobro.tipo_comprobante === 'B'" class="mb-3">
                 <label for="dni_ce_cliente" class="form-label fw-bold">DNI / CE</label>
-                <input type="text" id="dni_ce_cliente" v-model="formCobro.dni_ce_cliente" class="form-control" 
-                  placeholder="Documento de identidad" maxlength="9" pattern="[0-9]{8,9}"
-                  @input="validarDniCe">
+                <input type="text" id="dni_ce_cliente" v-model="formCobro.dni_ce_cliente" class="form-control"
+                  placeholder="Documento de identidad" maxlength="9" pattern="[0-9]{8,9}" @input="validarDniCe">
                 <small class="text-muted">Máximo 9 dígitos numéricos</small>
               </div>
 
@@ -333,7 +334,7 @@
                   <label for="monto_pagado" class="form-label fw-bold">Monto Pagado</label>
                   <div class="input-group">
                     <span class="input-group-text">S/</span>
-                    <input type="number" id="monto_pagado" v-model.number="formCobro.monto_pagado" 
+                    <input type="number" id="monto_pagado" v-model.number="formCobro.monto_pagado"
                       class="form-control form-control-lg" step="0.10" min="0" placeholder="0.00">
                   </div>
                 </div>
@@ -358,7 +359,14 @@
 
               <!-- Resumen -->
               <div class="alert alert-info">
-                <strong>Total a cobrar:</strong> S/ {{ parseFloat(pedido?.total || 0).toFixed(2) }}
+                <template v-if="formCobro.tipo_comprobante === 'F'">
+                  <strong>Total a cobrar:</strong>
+                  S/ {{ parseFloat(pedido?.total || 0).toFixed(2) }} + IGV (10%) =
+                  <strong class="fs-5">S/ {{ parseFloat(totalCobrar).toFixed(2) }}</strong>
+                </template>
+                <template v-else>
+                  <strong>Total a cobrar:</strong> S/ {{ parseFloat(totalCobrar).toFixed(2) }}
+                </template>
               </div>
 
               <div class="d-grid gap-2">
@@ -413,14 +421,16 @@
             <!-- Lista de productos -->
             <div class="row">
               <div v-for="producto in filtrarProductos()" :key="producto.id" class="col-lg-4 col-md-6 mb-3">
-                <div class="card h-100 producto-card" 
+                <div class="card h-100 producto-card"
                   :class="{ 'opacity-50 pe-none': producto.track_stock && producto.stock <= 0 }"
                   @click="confirmarAgregarItem(producto)">
                   <div class="card-body d-flex flex-column position-relative">
                     <span class="badge bg-secondary mb-2 align-self-start">{{ producto.categoria?.nombre }}</span>
                     <h6 class="card-title">{{ producto.nombre }}</h6>
-                    <p class="card-text text-muted small flex-grow-1 mb-3">{{ producto.descripcion || 'Sin descripción' }}</p>
-                    
+                    <p class="card-text text-muted small flex-grow-1 mb-3">{{ producto.descripcion || 'Sin descripción'
+                    }}
+                    </p>
+
                     <div class="d-flex justify-content-between align-items-end mt-auto w-100">
                       <!-- Stock Indicator -->
                       <div v-if="producto.track_stock" class="stock-indicator">
@@ -485,7 +495,7 @@
                 <label for="monto_pagado_mp" class="form-label fw-bold">Monto Pagado</label>
                 <div class="input-group">
                   <span class="input-group-text">S/</span>
-                  <input type="number" id="monto_pagado_mp" v-model.number="formMarcarPagado.monto_pagado" 
+                  <input type="number" id="monto_pagado_mp" v-model.number="formMarcarPagado.monto_pagado"
                     class="form-control form-control-lg" step="0.10" min="0" placeholder="0.00">
                 </div>
               </div>
@@ -683,6 +693,14 @@ export default {
       if (this.pedido.estado_entrega === 'L') return 'fas fa-check'
       if (this.pedido.estado_entrega === 'E') return 'fas fa-check-double'
       return 'fas fa-question'
+    },
+
+    totalCobrar() {
+      const base = parseFloat(this.pedido?.total || 0)
+      if (this.formCobro.tipo_comprobante === 'F') {
+        return base * 1.10
+      }
+      return base
     }
   },
 
@@ -720,17 +738,17 @@ export default {
     async abrirModalCobro() {
       try {
         await this.cargarMetodosPago()
-        
+
         // Pre-llenar datos del cliente si existen en el pedido
         if (this.pedido.cliente_nombre) {
           this.formCobro.nombre_cliente = this.pedido.cliente_nombre
         }
-        
+
         // Pre-seleccionar método de pago si ya existe en el pedido
         if (this.pedido.metodo_pago_id) {
           this.formCobro.metodo_pago_id = this.pedido.metodo_pago_id
         }
-        
+
         this.mostrarModalCobro = true
       } catch (error) {
         console.error('Error al abrir modal de cobro:', error)
@@ -752,10 +770,12 @@ export default {
       }
     },
 
+
+
     vuelto() {
       if (!this.formCobro.monto_pagado || !this.pedido) return null
       const monto = parseFloat(this.formCobro.monto_pagado)
-      const total = parseFloat(this.pedido.total)
+      const total = this.totalCobrar
       if (isNaN(monto) || isNaN(total)) return null
       return monto - total
     },
@@ -770,7 +790,7 @@ export default {
       try {
         const response = await axios.get('/api/metodos-pago')
         this.metodosPago = response.data
-        
+
         // Solo seleccionar el primero por defecto si no hay uno ya seleccionado del pedido
         if (this.metodosPago.length > 0 && !this.formCobro.metodo_pago_id) {
           this.formCobro.metodo_pago_id = this.metodosPago[0].id
@@ -948,7 +968,7 @@ export default {
         const response = await axios.post(`/api/pedidos-cola/${this.pedido.id}/costo-delivery`, {
           costo_delivery: this.newDeliveryCost
         })
-        
+
         this.pedido = response.data.pedido
         this.isEditingDeliveryCost = false
       } catch (error) {
@@ -1048,7 +1068,7 @@ export default {
         })
 
         // Si llegamos aquí, la respuesta fue exitosa (código 200)
-        
+
         // Actualizar stock localmente
         if (producto.track_stock) {
           const productInList = this.productos.find(p => p.id === producto.id)
@@ -1082,7 +1102,7 @@ export default {
         const response = await axios.delete(`/api/pedidos/${this.pedido.id}/items/${itemId}`)
 
         // Si llegamos aquí, la respuesta fue exitosa (código 200)
-        
+
         // Restaurar stock localmente
         if (itemToDelete && itemToDelete.producto_id) {
           const productInList = this.productos.find(p => p.id === itemToDelete.producto_id)
