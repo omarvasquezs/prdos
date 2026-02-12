@@ -361,7 +361,7 @@
               <div class="alert alert-info">
                 <template v-if="formCobro.tipo_comprobante === 'F'">
                   <strong>Total a cobrar:</strong>
-                  S/ {{ parseFloat(pedido?.total || 0).toFixed(2) }} + IGV (10%) =
+                  S/ {{ parseFloat(pedido?.total || 0).toFixed(2) }} + IGV (10.5%) =
                   <strong class="fs-5">S/ {{ parseFloat(totalCobrar).toFixed(2) }}</strong>
                 </template>
                 <template v-else>
@@ -428,7 +428,7 @@
                     <span class="badge bg-secondary mb-2 align-self-start">{{ producto.categoria?.nombre }}</span>
                     <h6 class="card-title">{{ producto.nombre }}</h6>
                     <p class="card-text text-muted small flex-grow-1 mb-3">{{ producto.descripcion || 'Sin descripción'
-                    }}
+                      }}
                     </p>
 
                     <div class="d-flex justify-content-between align-items-end mt-auto w-100">
@@ -698,7 +698,7 @@ export default {
     totalCobrar() {
       const base = parseFloat(this.pedido?.total || 0)
       if (this.formCobro.tipo_comprobante === 'F') {
-        return base * 1.10
+        return base * 1.105
       }
       return base
     }

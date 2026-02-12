@@ -39,7 +39,7 @@ class NubefactService
 
             if ($response->successful()) {
                 $body = $response->json();
-                
+
                 // Actualizar comprobante con respuesta de SUNAT
                 $comprobante->update([
                     'sunat_success' => true,
@@ -57,7 +57,7 @@ class NubefactService
             } else {
                 $error = $response->body();
                 Log::error('Nubefact Error: ' . $error);
-                
+
                 $comprobante->update([
                     'sunat_success' => false,
                     'sunat_error' => $error
@@ -70,7 +70,7 @@ class NubefactService
             }
         } catch (\Exception $e) {
             Log::error('Nubefact Exception: ' . $e->getMessage());
-            
+
             $comprobante->update([
                 'sunat_success' => false,
                 'sunat_error' => $e->getMessage()
@@ -87,9 +87,9 @@ class NubefactService
     {
         $pedido = $comprobante->pedido;
         $cliente = $pedido->cliente_nombre ?? 'CLIENTE GENERICO';
-        
+
         // Mapeo de tipo de comprobante
-        $tipo_de_comprobante = match($comprobante->tipo_comprobante) {
+        $tipo_de_comprobante = match ($comprobante->tipo_comprobante) {
             'B' => 2, // BOLETA DE VENTA
             'F' => 1, // FACTURA
             'C' => 3, // NOTA DE CRÉDITO
@@ -102,11 +102,15 @@ class NubefactService
         $numero = $parts[1] ?? 1;
 
         // Mapeo para pruebas (Nubefact Demo usa BBB1/FFF1)
-        if ($serie === 'B001') $serie = 'BBB1';
-        if ($serie === 'F001') $serie = 'FFF1';
+        if ($serie === 'B001')
+            $serie = 'BBB1';
+        if ($serie === 'F001')
+            $serie = 'FFF1';
         // Para Notas de Crédito en Demo
-        if ($serie === 'BC01') $serie = 'BBB1'; // En demo suelen usar la misma serie o specíficas, ajustaremos si falla
-        if ($serie === 'FC01') $serie = 'FFF1';
+        if ($serie === 'BC01')
+            $serie = 'BBB1'; // En demo suelen usar la misma serie o specíficas, ajustaremos si falla
+        if ($serie === 'FC01')
+            $serie = 'FFF1';
 
         // Additional fields for Credit Note
         $documento_modifica_tipo = "";
@@ -118,18 +122,20 @@ class NubefactService
         if ($comprobante->tipo_comprobante === 'C' && $comprobante->relatedComprobante) {
             $related = $comprobante->relatedComprobante;
             $partsRelated = explode('-', $related->cod_comprobante);
-            
-            $documento_modifica_tipo = match($related->tipo_comprobante) {
+
+            $documento_modifica_tipo = match ($related->tipo_comprobante) {
                 'B' => 2,
                 'F' => 1,
                 default => 2
             };
             $documento_modifica_serie = $partsRelated[0] ?? '';
             $documento_modifica_numero = $partsRelated[1] ?? '';
-            
+
             // Adjust series for Demo if needed
-            if ($documento_modifica_serie === 'B001') $documento_modifica_serie = 'BBB1';
-            if ($documento_modifica_serie === 'F001') $documento_modifica_serie = 'FFF1';
+            if ($documento_modifica_serie === 'B001')
+                $documento_modifica_serie = 'BBB1';
+            if ($documento_modifica_serie === 'F001')
+                $documento_modifica_serie = 'FFF1';
 
             $tipo_nota_credito = $comprobante->tipo_nota_credito ?? 1; // 1 = Anulación de la operación
             $sustento = $comprobante->sustento;
@@ -144,19 +150,19 @@ class NubefactService
                 // Para Factura: el precio del item se toma como valor unitario (base)
                 // Se agrega IGV encima
                 $valor_unitario = $item->precio_unitario;
-                $igv = $valor_unitario * 0.10;
+                $igv = $valor_unitario * 0.105;
                 $precio_unitario_con_igv = $valor_unitario + $igv;
             } else {
                 // Para Boleta/Otros: el precio del item incluye IGV
                 // Se desglosa hacia abajo
                 $precio_unitario_con_igv = $item->precio_unitario;
-                $valor_unitario = $precio_unitario_con_igv / 1.10;
+                $valor_unitario = $precio_unitario_con_igv / 1.105;
                 $igv = $precio_unitario_con_igv - $valor_unitario;
             }
-            
+
             $items[] = [
                 "unidad_de_medida" => "NIU",
-                "codigo" => (string)$item->producto_id,
+                "codigo" => (string) $item->producto_id,
                 "descripcion" => $item->producto->name,
                 "cantidad" => $item->cantidad,
                 "valor_unitario" => round($valor_unitario, 10),
@@ -171,22 +177,22 @@ class NubefactService
                 "anticipo_documento_numero" => ""
             ];
         }
-        
+
         // Agregar delivery si existe
         if ($pedido->costo_delivery > 0) {
-             if ($isFactura) {
+            if ($isFactura) {
                 // Factura: Delivery is base, add IGV
                 $valor_unitario = $pedido->costo_delivery;
-                $igv = $valor_unitario * 0.10;
+                $igv = $valor_unitario * 0.105;
                 $precio_unitario_con_igv = $valor_unitario + $igv;
-             } else {
+            } else {
                 // Other: Delivery includes IGV
                 $precio_unitario_con_igv = $pedido->costo_delivery;
-                $valor_unitario = $precio_unitario_con_igv / 1.10;
+                $valor_unitario = $precio_unitario_con_igv / 1.105;
                 $igv = $precio_unitario_con_igv - $valor_unitario;
-             }
-             
-             $items[] = [
+            }
+
+            $items[] = [
                 "unidad_de_medida" => "ZZ",
                 "codigo" => "DELIVERY",
                 "descripcion" => "SERVICIO DE DELIVERY",
@@ -206,7 +212,7 @@ class NubefactService
 
         $total_gravada = 0;
         $total_igv = 0;
-        
+
         foreach ($items as $it) {
             $total_gravada += $it['subtotal'];
             $total_igv += $it['igv'];
@@ -219,7 +225,7 @@ class NubefactService
             "operacion" => "generar_comprobante",
             "tipo_de_comprobante" => $tipo_de_comprobante,
             "serie" => $serie,
-            "numero" => (int)$numero,
+            "numero" => (int) $numero,
             "sunat_transaction" => 1,
             "cliente_tipo_de_documento" => strlen($comprobante->num_ruc) == 11 ? 6 : 1, // 6: RUC, 1: DNI
             "cliente_numero_de_documento" => $comprobante->num_ruc ?: $comprobante->dni_ce_cliente ?: '00000000',
@@ -232,7 +238,7 @@ class NubefactService
             "fecha_de_vencimiento" => "",
             "moneda" => 1, // SOLES
             "tipo_de_cambio" => "",
-            "porcentaje_de_igv" => 10.00,
+            "porcentaje_de_igv" => 10.50,
             "descuento_global" => "",
             "total_descuento" => "",
             "total_anticipo" => "",
@@ -251,7 +257,7 @@ class NubefactService
             "observaciones" => $comprobante->observaciones ?? '',
             "documento_que_se_modifica_tipo" => $documento_modifica_tipo,
             "documento_que_se_modifica_serie" => $documento_modifica_serie,
-            "documento_que_se_modifica_numero" => (int)$documento_modifica_numero,
+            "documento_que_se_modifica_numero" => (int) $documento_modifica_numero,
             "tipo_de_nota_de_credito" => $tipo_nota_credito, // 1 = ANULACION DE LA OPERACION
             "tipo_de_nota_de_debito" => "",
             "enviar_automaticamente_a_la_sunat" => "true",

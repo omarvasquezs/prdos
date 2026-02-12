@@ -45,11 +45,11 @@ class ComprobanteController extends Controller
             $pedido = Pedido::with('items.producto', 'mesa')->findOrFail($pedidoId);
 
             // 1. Calculate Comprobante Total
-            // For Factura (F), we treat the order items price as Subtotal and add 10% IGV on top.
+            // For Factura (F), we treat the order items price as Subtotal and add 10.5% IGV on top.
             // For others (B, N), the order items price includes IGV.
             $comprobanteTotal = $pedido->total;
             if ($request->tipo_comprobante === 'F') {
-                $comprobanteTotal = $pedido->total * 1.10; // Add 10% IGV
+                $comprobanteTotal = $pedido->total * 1.105; // Add 10.5% IGV
             }
 
             // Calculate vuelto if monto_pagado is present
@@ -58,14 +58,14 @@ class ComprobanteController extends Controller
 
             if ($request->filled('monto_pagado') && $request->monto_pagado > 0) {
                 $montoPagado = $request->monto_pagado;
-                
+
                 // Allow a small margin of error for float comparison or accept that customer pays the calculated total
                 if ($montoPagado < $comprobanteTotal) {
-                     // Note: Ideally the frontend should know this new total before sending.
-                     // But if the user entered the exact amount from the "Order" screen (which is B logic),
-                     // and now we are charging more, this might fail.
-                     // However, the prompt implies "Mi cliente quiere...", so the cashier likely knows or simply enters the amount given.
-                     // We will enforce the check against the NEW total.
+                    // Note: Ideally the frontend should know this new total before sending.
+                    // But if the user entered the exact amount from the "Order" screen (which is B logic),
+                    // and now we are charging more, this might fail.
+                    // However, the prompt implies "Mi cliente quiere...", so the cashier likely knows or simply enters the amount given.
+                    // We will enforce the check against the NEW total.
                     return response()->json([
                         'error' => 'El monto pagado es insuficiente. Total Factura: ' . number_format($comprobanteTotal, 2),
                     ], 422);
@@ -87,7 +87,7 @@ class ComprobanteController extends Controller
             $comprobante->fecha = now();
             $comprobante->costo_total = $comprobanteTotal;
             $comprobante->last_updated_by = Auth::user()->id;
-            
+
             // 2. Generate code
             $comprobante->generateCode();
             $comprobante->save();
@@ -145,7 +145,7 @@ class ComprobanteController extends Controller
                 $baseHeight = 360; // base points
                 $perItem = 25;     // per item points
                 $qrHeight = 100;   // QR code + margins
-                
+
                 // Extra space for delivery/pickup client info
                 $clientInfoExtra = 0;
                 if ($pedido->tipo_atencion === 'D') {
@@ -166,7 +166,8 @@ class ComprobanteController extends Controller
                     $paymentDetailsExtra = 25;
                 }
 
-                $dynamicHeight = max(450, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight + $clientInfoExtra + $deliveryCostExtra + $paymentDetailsExtra);                $pdf = Pdf::loadView('pdf.comprobante', [
+                $dynamicHeight = max(450, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight + $clientInfoExtra + $deliveryCostExtra + $paymentDetailsExtra);
+                $pdf = Pdf::loadView('pdf.comprobante', [
                     'comprobante' => $comprobante,
                     'pedido' => $pedido
                 ])->setPaper([0, 0, 164.4, $dynamicHeight], 'portrait'); // 58mm width, dynamic height
@@ -275,7 +276,7 @@ class ComprobanteController extends Controller
 
             // Para Boletas y Facturas, generamos Nota de Crédito
             if (in_array($comprobante->tipo_comprobante, ['B', 'F'])) {
-                
+
                 if (!$request->filled('motivo')) {
                     return response()->json(['error' => 'El motivo es obligatorio para anular Boletas o Facturas'], 422);
                 }
@@ -286,7 +287,7 @@ class ComprobanteController extends Controller
                 $creditNote->related_comprobante_id = $comprobante->id;
                 $creditNote->tipo_nota_credito = 1; // Anulación de la operación
                 $creditNote->sustento = $request->motivo;
-                
+
                 // Copiar datos del comprobante original
                 $creditNote->user_id = Auth::user()->id;
                 $creditNote->pedido_id = $comprobante->pedido_id;
@@ -321,7 +322,7 @@ class ComprobanteController extends Controller
                 // Emitir Nota de Crédito a Nubefact
                 try {
                     $result = $this->nubefactService->emitirComprobante($creditNote);
-                    
+
                     if (!$result['success']) {
                         // Si falla Nubefact, ¿hacemos rollback o permitimos que quede pendiente?
                         // Por consistencia, permitimos que se guarde y muestre el error.

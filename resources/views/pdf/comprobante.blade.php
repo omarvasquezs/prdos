@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,12 +11,13 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         @page {
             margin: 6mm 3mm 3mm 3mm;
         }
 
-        html, body {
+        html,
+        body {
             width: 58mm;
             height: auto;
             margin: 0;
@@ -37,21 +39,21 @@
             padding: 0;
             background: white;
         }
-        
+
         .header {
             text-align: center;
             border-bottom: 1px dashed #000;
             padding-bottom: 1.5mm;
             margin-bottom: 1.5mm;
         }
-        
+
         .header .logo {
             width: 35mm;
             height: auto;
             margin: 0 auto 1mm auto;
             display: block;
         }
-        
+
         .header h2 {
             font-size: 10px;
             margin: 0;
@@ -59,7 +61,7 @@
             line-height: 1.2;
             font-weight: bold;
         }
-        
+
         .header h3 {
             font-size: 8.5px;
             margin: 0.8mm 0 0 0;
@@ -67,25 +69,25 @@
             font-weight: bold;
             line-height: 1.2;
         }
-        
+
         .header p {
             font-size: 7.5px;
             margin: 0;
             padding: 0;
             line-height: 1.3;
         }
-        
+
         .divider {
             border-bottom: 1px dashed #000;
             margin: 1mm 0;
         }
-        
+
         .info-line {
             font-size: 7px;
             margin: 0.3mm 0;
             line-height: 1.3;
         }
-        
+
         .detalle-title {
             font-weight: bold;
             font-size: 8.5px;
@@ -93,7 +95,7 @@
             padding: 0 0 0.3mm;
             text-transform: uppercase;
         }
-        
+
         /* Compact table for items */
         table.items {
             width: 100%;
@@ -102,6 +104,7 @@
             font-size: 7.5px;
             margin: 0.5mm 0 1mm 0;
         }
+
         table.items thead th {
             font-weight: bold;
             padding: 0.4mm 0.2mm;
@@ -109,16 +112,41 @@
             background-color: #f5f5f5;
             text-transform: uppercase;
         }
+
         table.items td {
             padding: 0.35mm 0.2mm;
             vertical-align: top;
         }
-        .col-desc { width: 60%; word-wrap: break-word; overflow-wrap: break-word; }
-        .col-cant { width: 15%; text-align: center; white-space: nowrap; }
-        .col-total { width: 25%; text-align: right; white-space: nowrap; }
-        .item-desc-line { font-size:7px; line-height:1.2; }
-        .item-name { font-weight: bold; display:block; margin-bottom:0.3mm; }
-        
+
+        .col-desc {
+            width: 60%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .col-cant {
+            width: 15%;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .col-total {
+            width: 25%;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .item-desc-line {
+            font-size: 7px;
+            line-height: 1.2;
+        }
+
+        .item-name {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 0.3mm;
+        }
+
         .totales-section {
             border-top: 2px solid #000;
             margin: 1mm 0 0.5mm;
@@ -140,7 +168,7 @@
             margin: 0.6mm 0 0;
             padding: 0.3mm 0;
         }
-        
+
         .footer {
             text-align: center;
             margin-top: 1mm;
@@ -153,14 +181,14 @@
             padding: 0;
             line-height: 1.2;
         }
-        
+
         .footer .qr-code {
             width: 23mm;
             height: 23mm;
             margin: 0.5mm auto;
             display: block;
         }
-        
+
         .footer .thank-you {
             font-size: 7.5px;
             font-weight: bold;
@@ -168,6 +196,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="ticket">
         <!-- Header -->
@@ -180,7 +209,8 @@
             <p>Prov. Const. del Callao</p>
             <p>Carmen de la Legua - Reynoso</p>
             <div class="divider"></div>
-            <h3>{{ $comprobante->tipo_comprobante === 'B' ? 'BOLETA' : ($comprobante->tipo_comprobante === 'F' ? 'FACTURA' : 'NOTA DE VENTA') }}</h3>
+            <h3>{{ $comprobante->tipo_comprobante === 'B' ? 'BOLETA' : ($comprobante->tipo_comprobante === 'F' ? 'FACTURA' : 'NOTA DE VENTA') }}
+            </h3>
             <p>{{ $comprobante->cod_comprobante }}</p>
         </div>
 
@@ -208,7 +238,7 @@
                 </div>
             @endif
         @endif
-        
+
         <!-- Información de cliente para Delivery y Recojo (Solo si no es Boleta, para evitar duplicados) -->
         @if($comprobante->tipo_comprobante !== 'B')
             @if($pedido->tipo_atencion === 'D')
@@ -229,7 +259,7 @@
                 </div>
             @endif
         @elseif($pedido->tipo_atencion === 'D' && $comprobante->tipo_comprobante === 'B')
-             <!-- Para boletas de delivery, mostrar dirección y teléfono si existen -->
+            <!-- Para boletas de delivery, mostrar dirección y teléfono si existen -->
             @if($pedido->cliente_telefono)
                 <div class="info-line">
                     <strong>Teléfono:</strong> {{ $pedido->cliente_telefono }}
@@ -239,7 +269,7 @@
                 <strong>Dirección:</strong> {{ substr($pedido->direccion_entrega ?? '', 0, 50) }}
             </div>
         @endif
-        
+
         <div class="divider"></div>
 
         <!-- Detalle -->
@@ -253,49 +283,50 @@
                 </tr>
             </thead>
             <tbody>
-            @forelse(($pedido->items ?? []) as $item)
-                @php
-                    $name = $item->producto->name ?? 'Producto';
-                    $desc = $item->producto->description ?? '';
-                    // Wrap description to ~32 chars per line for proportional font
-                    $wrappedDesc = wordwrap($desc, 32, "\n", true);
-                    $descLines = array_filter(explode("\n", $wrappedDesc));
-                @endphp
-                <tr>
-                    <td class="col-desc">
-                        <span class="item-name">{{ $name }}</span>
-                        @if(!empty($descLines))
-                            @foreach($descLines as $dLine)
-                                <div class="item-desc-line">{{ $dLine }}</div>
-                            @endforeach
-                        @endif
-                    </td>
-                    <td class="col-cant">{{ (int)($item->cantidad ?? 0) }}</td>
-                    <td class="col-total">S/ {{ number_format((($item->precio_unitario ?? 0) * ($item->cantidad ?? 0)), 2) }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="3" style="text-align:center">Sin items</td>
-                </tr>
-            @endforelse
-            
-            @if(($pedido->costo_delivery ?? 0) > 0)
-                <tr>
-                    <td class="col-desc">
-                        <span class="item-name">Costo por Delivery</span>
-                    </td>
-                    <td class="col-cant">1</td>
-                    <td class="col-total">S/ {{ number_format($pedido->costo_delivery, 2) }}</td>
-                </tr>
-            @endif
+                @forelse(($pedido->items ?? []) as $item)
+                    @php
+                        $name = $item->producto->name ?? 'Producto';
+                        $desc = $item->producto->description ?? '';
+                        // Wrap description to ~32 chars per line for proportional font
+                        $wrappedDesc = wordwrap($desc, 32, "\n", true);
+                        $descLines = array_filter(explode("\n", $wrappedDesc));
+                    @endphp
+                    <tr>
+                        <td class="col-desc">
+                            <span class="item-name">{{ $name }}</span>
+                            @if(!empty($descLines))
+                                @foreach($descLines as $dLine)
+                                    <div class="item-desc-line">{{ $dLine }}</div>
+                                @endforeach
+                            @endif
+                        </td>
+                        <td class="col-cant">{{ (int) ($item->cantidad ?? 0) }}</td>
+                        <td class="col-total">S/
+                            {{ number_format((($item->precio_unitario ?? 0) * ($item->cantidad ?? 0)), 2) }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="3" style="text-align:center">Sin items</td>
+                    </tr>
+                @endforelse
+
+                @if(($pedido->costo_delivery ?? 0) > 0)
+                    <tr>
+                        <td class="col-desc">
+                            <span class="item-name">Costo por Delivery</span>
+                        </td>
+                        <td class="col-cant">1</td>
+                        <td class="col-total">S/ {{ number_format($pedido->costo_delivery, 2) }}</td>
+                    </tr>
+                @endif
             </tbody>
         </table>
 
         <!-- Totales -->
         @php
             $baseTotal = $pedido->total ?? 0;
-            $igvRate = 0.10; // 10%
-            
+            $igvRate = 0.105; // 10.5%
+
             if ($comprobante->tipo_comprobante === 'F') {
                 // For Factura: item prices are treated as subtotal
                 $subtotal = $baseTotal;
@@ -314,7 +345,7 @@
                 <span>S/ {{ number_format($subtotal, 2) }}</span>
             </div>
             <div class="totales-row">
-                <span>IGV (10%)</span>
+                <span>IGV (10.5%)</span>
                 <span>S/ {{ number_format($igv, 2) }}</span>
             </div>
             <div class="total-final">
@@ -358,4 +389,5 @@
         </div>
     </div>
 </body>
+
 </html>
