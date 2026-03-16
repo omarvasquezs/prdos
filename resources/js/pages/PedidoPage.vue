@@ -295,25 +295,76 @@
               <!-- Campos para Factura -->
               <div v-if="formCobro.tipo_comprobante === 'F'" class="mb-3">
                 <label for="ruc" class="form-label fw-bold">RUC *</label>
-                <input type="text" id="ruc" v-model="formCobro.num_ruc" class="form-control" placeholder="11 dígitos"
-                  maxlength="11" required>
+                <div class="position-relative">
+                  <input type="text" id="ruc" v-model="formCobro.num_ruc" class="form-control"
+                    placeholder="11 dígitos" maxlength="11" autocomplete="off" required
+                    @input="onRucInput" @blur="cerrarDropdownRuc">
+                  <div v-if="padronLoading" class="position-absolute end-0 top-50 translate-middle-y me-2">
+                    <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+                  </div>
+                  <ul v-if="padronResultados.length" class="list-group position-absolute w-100 shadow" style="z-index:1055;max-height:200px;overflow-y:auto">
+                    <li v-for="r in padronResultados" :key="r.ruc"
+                      class="list-group-item list-group-item-action py-1 px-2"
+                      @mousedown.prevent="seleccionarPadronRuc(r)">
+                      <div class="fw-semibold small">{{ r.ruc }}</div>
+                      <div class="text-muted" style="font-size:0.78rem">{{ r.nombre }}</div>
+                      <span v-if="r.estado" class="badge" :class="r.estado === 'ACTIVO' ? 'bg-success' : 'bg-secondary'" style="font-size:0.65rem">{{ r.estado }}</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
               <div v-if="formCobro.tipo_comprobante === 'F'" class="mb-3">
                 <label for="razon_social" class="form-label fw-bold">Razón Social *</label>
-                <input type="text" id="razon_social" v-model="formCobro.razon_social" class="form-control"
-                  placeholder="Nombre de la empresa" required>
+                <div class="position-relative">
+                  <input type="text" id="razon_social" v-model="formCobro.razon_social" class="form-control"
+                    placeholder="Nombre de la empresa" autocomplete="off" required
+                    @input="onRazonSocialInput" @blur="cerrarDropdownRuc">
+                  <ul v-if="padronResultados.length && !formCobro.num_ruc" class="list-group position-absolute w-100 shadow" style="z-index:1055;max-height:200px;overflow-y:auto">
+                    <li v-for="r in padronResultados" :key="r.ruc"
+                      class="list-group-item list-group-item-action py-1 px-2"
+                      @mousedown.prevent="seleccionarPadronRuc(r)">
+                      <div class="fw-semibold small">{{ r.ruc }}</div>
+                      <div class="text-muted" style="font-size:0.78rem">{{ r.nombre }}</div>
+                    </li>
+                  </ul>
+                </div>
               </div>
 
               <!-- Campos para Boleta -->
               <div v-if="formCobro.tipo_comprobante === 'B'" class="mb-3">
                 <label for="nombre_cliente" class="form-label fw-bold">Nombre Completo</label>
-                <input type="text" id="nombre_cliente" v-model="formCobro.nombre_cliente" class="form-control"
-                  placeholder="Nombres y apellidos del cliente">
+                <div class="position-relative">
+                  <input type="text" id="nombre_cliente" v-model="formCobro.nombre_cliente" class="form-control"
+                    placeholder="Nombres y apellidos del cliente" autocomplete="off"
+                    @input="onNombreClienteInput" @blur="cerrarDropdownBoleta">
+                  <ul v-if="padronBoletaResultados.length" class="list-group position-absolute w-100 shadow" style="z-index:1055;max-height:200px;overflow-y:auto">
+                    <li v-for="r in padronBoletaResultados" :key="r.ruc"
+                      class="list-group-item list-group-item-action py-1 px-2"
+                      @mousedown.prevent="seleccionarPadronBoleta(r)">
+                      <div class="fw-semibold small">{{ r.nombre }}</div>
+                      <div class="text-muted" style="font-size:0.78rem">{{ r.ruc }}</div>
+                    </li>
+                  </ul>
+                </div>
               </div>
               <div v-if="formCobro.tipo_comprobante === 'B'" class="mb-3">
                 <label for="dni_ce_cliente" class="form-label fw-bold">DNI / CE</label>
-                <input type="text" id="dni_ce_cliente" v-model="formCobro.dni_ce_cliente" class="form-control"
-                  placeholder="Documento de identidad" maxlength="9" pattern="[0-9]{8,9}" @input="validarDniCe">
+                <div class="position-relative">
+                  <input type="text" id="dni_ce_cliente" v-model="formCobro.dni_ce_cliente" class="form-control"
+                    placeholder="Documento de identidad" maxlength="9" pattern="[0-9]{8,9}"
+                    autocomplete="off" @input="onDniInput" @blur="cerrarDropdownBoleta">
+                  <div v-if="padronBoletaLoading" class="position-absolute end-0 top-50 translate-middle-y me-2">
+                    <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+                  </div>
+                  <ul v-if="padronBoletaResultados.length" class="list-group position-absolute w-100 shadow" style="z-index:1055;max-height:200px;overflow-y:auto">
+                    <li v-for="r in padronBoletaResultados" :key="r.ruc"
+                      class="list-group-item list-group-item-action py-1 px-2"
+                      @mousedown.prevent="seleccionarPadronBoleta(r)">
+                      <div class="fw-semibold small">{{ r.nombre }}</div>
+                      <div class="text-muted" style="font-size:0.78rem">RUC: {{ r.ruc }}</div>
+                    </li>
+                  </ul>
+                </div>
                 <small class="text-muted">Máximo 9 dígitos numéricos</small>
               </div>
 
@@ -608,7 +659,15 @@ export default {
       },
       isEditingDeliveryCost: false,
       newDeliveryCost: 0,
-      isUpdatingCost: false
+      isUpdatingCost: false,
+      // Padrón RUC autocomplete (Factura)
+      padronResultados: [],
+      padronLoading: false,
+      padronDebounceTimer: null,
+      // Padrón RUC autocomplete (Boleta)
+      padronBoletaResultados: [],
+      padronBoletaLoading: false,
+      padronBoletaDebounceTimer: null
     }
   },
 
@@ -778,6 +837,94 @@ export default {
       const total = this.totalCobrar
       if (isNaN(monto) || isNaN(total)) return null
       return monto - total
+    },
+
+    // ──────────────────────────────────────────────────────────────
+    // Padrón RUC — Factura autocomplete (RUC / Razón Social)
+    // ──────────────────────────────────────────────────────────────
+    onRucInput() {
+      clearTimeout(this.padronDebounceTimer)
+      const q = this.formCobro.num_ruc.trim()
+      if (q.length < 7) { this.padronResultados = []; return }
+      this.padronDebounceTimer = setTimeout(() => this.buscarPadronRuc(q, 'ruc'), 350)
+    },
+
+    onRazonSocialInput() {
+      clearTimeout(this.padronDebounceTimer)
+      const q = this.formCobro.razon_social.trim()
+      if (q.length < 3) { this.padronResultados = []; return }
+      this.padronDebounceTimer = setTimeout(() => this.buscarPadronRuc(q, 'nombre'), 400)
+    },
+
+    async buscarPadronRuc(q, tipo) {
+      try {
+        this.padronLoading = true
+        const { data } = await axios.get('/api/padron/buscar', { params: { q, tipo, limit: 8 } })
+        this.padronResultados = data
+      } catch (_) {
+        this.padronResultados = []
+      } finally {
+        this.padronLoading = false
+      }
+    },
+
+    seleccionarPadronRuc(registro) {
+      this.formCobro.num_ruc     = registro.ruc
+      this.formCobro.razon_social = registro.nombre
+      this.padronResultados = []
+    },
+
+    cerrarDropdownRuc() {
+      setTimeout(() => { this.padronResultados = [] }, 150)
+    },
+
+    // ──────────────────────────────────────────────────────────────
+    // Padrón RUC — Boleta autocomplete (DNI / Nombre)
+    // ──────────────────────────────────────────────────────────────
+    onDniInput() {
+      // Strip non-digits from model directly (no event needed)
+      this.formCobro.dni_ce_cliente = this.formCobro.dni_ce_cliente.replace(/[^0-9]/g, '').slice(0, 9)
+      clearTimeout(this.padronBoletaDebounceTimer)
+      const q = this.formCobro.dni_ce_cliente.trim()
+      if (q.length < 7) { this.padronBoletaResultados = []; return }
+      this.padronBoletaDebounceTimer = setTimeout(() => this.buscarPadronBoleta(q, 'dni'), 350)
+    },
+
+    onNombreClienteInput() {
+      clearTimeout(this.padronBoletaDebounceTimer)
+      const q = this.formCobro.nombre_cliente.trim()
+      if (q.length < 3) { this.padronBoletaResultados = []; return }
+      this.padronBoletaDebounceTimer = setTimeout(() => this.buscarPadronBoleta(q, 'nombre'), 400)
+    },
+
+    async buscarPadronBoleta(q, tipo) {
+      try {
+        this.padronBoletaLoading = true
+        const { data } = await axios.get('/api/padron/buscar', { params: { q, tipo, limit: 8 } })
+        this.padronBoletaResultados = data
+      } catch (_) {
+        this.padronBoletaResultados = []
+      } finally {
+        this.padronBoletaLoading = false
+      }
+    },
+
+    seleccionarPadronBoleta(registro) {
+      // RUC persona natural = '10' + 8 dígitos DNI + 1 dígito verificador
+      // Extraer solo el DNI (8 dígitos), descartando el dígito verificador final
+      let dni = registro.ruc
+      if (dni.startsWith('10') && dni.length === 11) {
+        dni = dni.substring(2, 10) // posiciones 2-9 = 8 dígitos DNI exactos
+      } else if (dni.startsWith('20')) {
+        dni = '' // empresa, no tiene DNI
+      }
+      this.formCobro.nombre_cliente  = registro.nombre
+      this.formCobro.dni_ce_cliente  = dni
+      this.padronBoletaResultados = []
+    },
+
+    cerrarDropdownBoleta() {
+      setTimeout(() => { this.padronBoletaResultados = [] }, 150)
     },
 
     esEfectivo() {
