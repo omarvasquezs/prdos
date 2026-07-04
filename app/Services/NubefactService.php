@@ -98,7 +98,7 @@ class NubefactService
 
         // Serie y número
         $parts = explode('-', $comprobante->cod_comprobante);
-        $serie = $parts[0] ?? 'B001';
+        $serie = $parts[0] ?? 'BBB1';
         $numero = $parts[1] ?? 1;
 
         // Mapeo para pruebas (Nubefact Demo usa BBB1/FFF1)

@@ -79,8 +79,8 @@ class Comprobante extends Model
     public function generateCode()
     {
         $prefixMap = [
-            'B' => 'B001-',
-            'F' => 'F001-',
+            'B' => 'BBB1-',
+            'F' => 'FFF1-',
             'N' => 'NV001-'
         ];
 
