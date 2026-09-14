@@ -397,7 +397,7 @@
                       <div class="input-group">
                         <span class="input-group-text">S/</span>
                         <input type="number" id="monto_pagado" v-model.number="formCobro.monto_pagado"
-                          class="form-control form-control-lg" step="0.10" min="0" placeholder="0.00">
+                          class="form-control form-control-lg" step="any" min="0" placeholder="0.00">
                       </div>
                     </div>
                     <div v-if="vuelto() !== null" class="d-flex justify-content-between align-items-center">
@@ -434,10 +434,10 @@
                           </select>
                         </div>
                         <div class="col-5">
-                          <label class="small text-muted mb-1">Monto (S/)</label>
+                          <label class="small text-muted mb-1">A Pagar (S/)</label>
                           <div class="input-group input-group-sm">
                             <span class="input-group-text">S/</span>
-                            <input type="number" v-model.number="pago.monto" class="form-control" step="0.10" min="0.01" required>
+                            <input type="number" v-model.number="pago.monto" class="form-control" step="any" min="0.01" required>
                           </div>
                         </div>
                         <div class="col-1 text-end pt-3">
@@ -452,10 +452,10 @@
                       <div v-if="esMetodoEfectivo(pago.metodo_pago_id)" class="mt-2 pt-2 border-top">
                         <div class="row g-2 align-items-center">
                           <div class="col-7">
-                            <span class="small fw-semibold">Paga con:</span>
+                            <span class="small fw-semibold">Billete / Entregado:</span>
                             <div class="input-group input-group-sm mt-1">
                               <span class="input-group-text">S/</span>
-                              <input type="number" v-model.number="pago.monto_recibido" class="form-control" step="0.10" min="0" placeholder="0.00">
+                              <input type="number" v-model.number="pago.monto_recibido" class="form-control" step="any" min="0" placeholder="0.00">
                             </div>
                           </div>
                           <div class="col-5 text-end">
@@ -634,7 +634,7 @@
                 <div class="input-group">
                   <span class="input-group-text">S/</span>
                   <input type="number" id="monto_pagado_mp" v-model.number="formMarcarPagado.monto_pagado"
-                    class="form-control form-control-lg" step="0.10" min="0" placeholder="0.00">
+                    class="form-control form-control-lg" step="any" min="0" placeholder="0.00">
                 </div>
               </div>
               <div v-if="vueltoMarcarPagado !== null" class="d-flex justify-content-between align-items-center">
