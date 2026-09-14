@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\CajaAperturaCierre;
+use App\Models\Comprobante;
 use App\Models\ReporteIngreso;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -164,26 +165,44 @@ class CajaController extends Controller
                 ], 422);
             }
 
-            $movimientos = ReporteIngreso::with(['metodoPago', 'comprobante.user', 'comprobante.pedido'])
+            $comprobantes = Comprobante::with(['user', 'pedido', 'metodoPago', 'pagos.metodoPago'])
                 ->whereDate('fecha', $fechaValidada)
                 ->orderByDesc('fecha')
                 ->get();
 
-            $records = $movimientos->map(fn ($movimiento) => $this->transformMovimiento($movimiento));
+            $records = $comprobantes->map(fn ($comprobante) => $this->transformComprobante($comprobante));
+
+            $validComprobantes = $comprobantes->where('anulado', false)->where('tipo_comprobante', '!=', 'C');
+
+            $pagosFlat = $validComprobantes->flatMap(function ($c) {
+                if ($c->pagos->isNotEmpty()) {
+                    return $c->pagos->map(fn ($p) => [
+                        'metodo_pago_id' => $p->metodo_pago_id,
+                        'metodo_pago' => $p->metodoPago?->nom_metodo_pago ?? 'No especificado',
+                        'monto' => (float) $p->monto,
+                    ]);
+                }
+                return collect([[
+                    'metodo_pago_id' => $c->metodo_pago_id,
+                    'metodo_pago' => $c->metodoPago?->nom_metodo_pago ?? 'No especificado',
+                    'monto' => (float) $c->costo_total,
+                ]]);
+            });
+
+            $porMetodo = $pagosFlat->groupBy('metodo_pago_id')->map(function ($items) {
+                $first = $items->first();
+                return [
+                    'metodo_pago_id' => $first['metodo_pago_id'],
+                    'metodo_pago' => $first['metodo_pago'],
+                    'cantidad' => $items->count(),
+                    'monto_total' => round($items->sum('monto'), 2),
+                ];
+            })->values();
 
             $summary = [
-                'total_registros' => $movimientos->where('comprobante.anulado', false)->where('comprobante.tipo_comprobante', '!=', 'C')->count(),
-                'monto_total' => round($movimientos->where('comprobante.anulado', false)->where('comprobante.tipo_comprobante', '!=', 'C')->sum('costo_total'), 2),
-                'por_metodo' => $movimientos->where('comprobante.anulado', false)->where('comprobante.tipo_comprobante', '!=', 'C')->groupBy('metodo_pago_id')->map(function ($items) {
-                    $metodo = $items->first()->metodoPago;
-
-                    return [
-                        'metodo_pago_id' => $items->first()->metodo_pago_id,
-                        'metodo_pago' => $metodo?->nom_metodo_pago ?? 'No especificado',
-                        'cantidad' => $items->count(),
-                        'monto_total' => round($items->sum('costo_total'), 2),
-                    ];
-                })->values()
+                'total_registros' => $validComprobantes->count(),
+                'monto_total' => round((float) $validComprobantes->sum('costo_total'), 2),
+                'por_metodo' => $porMetodo,
             ];
 
             return response()->json([
@@ -253,33 +272,62 @@ class CajaController extends Controller
     }
 
     /**
-     * Transform ReporteIngreso model to array.
+     * Transform Comprobante model to array.
      *
-     * @param ReporteIngreso $movimiento
+     * @param Comprobante $comprobante
      * @return array<string, mixed>
      */
-    private function transformMovimiento(ReporteIngreso $movimiento): array
+    private function transformComprobante(Comprobante $comprobante): array
     {
-        $comprobante = $movimiento->comprobante;
-        $metodo = $movimiento->metodoPago;
-        $usuario = $comprobante?->user;
-        $pedido = $comprobante?->pedido;
+        $usuario = $comprobante->user;
+        $pedido = $comprobante->pedido;
+        $pagos = $comprobante->pagos;
+
+        $pagosArray = [];
+        if ($pagos->isNotEmpty()) {
+            $pagosArray = $pagos->map(function ($p) {
+                return [
+                    'metodo_pago_id' => $p->metodo_pago_id,
+                    'metodo' => $p->metodoPago?->nom_metodo_pago ?? 'No especificado',
+                    'monto' => (float) $p->monto,
+                ];
+            })->values()->toArray();
+        } elseif ($comprobante->metodoPago) {
+            $pagosArray = [
+                [
+                    'metodo_pago_id' => $comprobante->metodo_pago_id,
+                    'metodo' => $comprobante->metodoPago->nom_metodo_pago,
+                    'monto' => (float) $comprobante->costo_total,
+                ]
+            ];
+        }
+
+        $isMultiple = count($pagosArray) > 1;
+        if ($isMultiple) {
+            $metodoPagoTexto = 'MÚLTIPLE';
+        } elseif (count($pagosArray) === 1) {
+            $metodoPagoTexto = $pagosArray[0]['metodo'];
+        } else {
+            $metodoPagoTexto = $comprobante->metodoPago?->nom_metodo_pago ?? 'No especificado';
+        }
 
         return [
-            'id' => $movimiento->id,
-            'fecha' => $movimiento->fecha,
-            'cod_comprobante' => $movimiento->cod_comprobante,
-            'monto' => (float) $movimiento->costo_total,
-            'metodo_pago_id' => $movimiento->metodo_pago_id,
-            'metodo_pago' => $metodo?->nom_metodo_pago ?? 'No especificado',
-            'tipo_comprobante' => $comprobante?->tipo_comprobante,
-            'tipo_comprobante_nombre' => $comprobante?->tipo_comprobante_name,
+            'id' => $comprobante->id,
+            'fecha' => $comprobante->fecha,
+            'cod_comprobante' => $comprobante->cod_comprobante,
+            'monto' => (float) $comprobante->costo_total,
+            'metodo_pago_id' => $isMultiple ? null : ($pagosArray[0]['metodo_pago_id'] ?? $comprobante->metodo_pago_id),
+            'metodo_pago' => $metodoPagoTexto,
+            'is_multiple' => $isMultiple,
+            'pagos' => $pagosArray,
+            'tipo_comprobante' => $comprobante->tipo_comprobante,
+            'tipo_comprobante_nombre' => $comprobante->tipo_comprobante_name,
             'usuario' => $usuario->name ?? null,
             'tipo_atencion' => $pedido?->tipo_atencion ?? 'P', // P por defecto (Mesa)
-            'sunat_success' => $comprobante?->sunat_success,
-            'sunat_error' => $comprobante?->sunat_error,
-            'sunat_description' => $comprobante?->sunat_description,
-            'anulado' => (bool) $comprobante?->anulado,
+            'sunat_success' => $comprobante->sunat_success,
+            'sunat_error' => $comprobante->sunat_error,
+            'sunat_description' => $comprobante->sunat_description,
+            'anulado' => (bool) $comprobante->anulado,
         ];
     }
 }

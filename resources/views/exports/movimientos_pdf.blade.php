@@ -68,12 +68,18 @@
             <tr>
                 <td>{{ \Carbon\Carbon::parse($mov->fecha)->format('d/m/Y H:i') }}</td>
                 <td>{{ $mov->cod_comprobante }}</td>
-                <td>{{ $mov->comprobante?->tipo_comprobante_name ?? 'Nota de Venta' }}</td>
-                <td>{{ $mov->metodoPago?->nom_metodo_pago ?? 'No especificado' }}</td>
-                <td>{{ $mov->comprobante?->user?->name ?? 'Sistema' }}</td>
+                <td>{{ $mov->tipo_comprobante_name ?? 'Nota de Venta' }}</td>
+                <td>
+                    @if($mov->pagos && $mov->pagos->count() > 1)
+                        {{ $mov->pagos->map(fn($p) => ($p->metodoPago?->nom_metodo_pago ?? 'No especificado') . ' (S/ ' . number_format($p->monto, 2) . ')')->implode(', ') }}
+                    @else
+                        {{ $mov->pagos->first()?->metodoPago?->nom_metodo_pago ?? $mov->metodoPago?->nom_metodo_pago ?? 'No especificado' }}
+                    @endif
+                </td>
+                <td>{{ $mov->user?->name ?? 'Sistema' }}</td>
                 <td>
                     @php
-                        $tipo = $mov->comprobante?->pedido?->tipo_atencion ?? 'P';
+                        $tipo = $mov->pedido?->tipo_atencion ?? 'P';
                         $map = ['P' => 'PRESENCIAL', 'D' => 'DELIVERY', 'R' => 'RECOJO'];
                         echo $map[$tipo] ?? 'MESA';
                     @endphp

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\ReporteIngreso;
+use App\Models\Comprobante;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -20,7 +20,8 @@ class ExportController extends Controller
             $endDate = $request->query('endDate');
 
             // 1. Filter Data
-            $query = ReporteIngreso::with(['metodoPago', 'comprobante.user', 'comprobante.pedido'])
+            $query = Comprobante::with(['metodoPago', 'user', 'pedido', 'pagos.metodoPago'])
+                ->where('anulado', false)
                 ->orderByDesc('fecha');
 
             $this->applyDateFilter($query, $dateRangeType, $startDate, $endDate);
@@ -89,6 +90,19 @@ class ExportController extends Controller
         return $map[$letra] ?? 'MESA'; // Default to MESA/PRESENCIAL if unknown, or keep original
     }
 
+    private function getMetodoPagoTexto($comprobante)
+    {
+        if ($comprobante->pagos && $comprobante->pagos->count() > 1) {
+            return $comprobante->pagos->map(function ($p) {
+                return ($p->metodoPago?->nom_metodo_pago ?? 'No especificado') . ' (S/ ' . number_format($p->monto, 2) . ')';
+            })->implode(', ');
+        }
+
+        return $comprobante->pagos->first()?->metodoPago?->nom_metodo_pago
+            ?? $comprobante->metodoPago?->nom_metodo_pago
+            ?? 'No especificado';
+    }
+
     private function exportCsv($data, $filename)
     {
         $headers = [
@@ -109,15 +123,15 @@ class ExportController extends Controller
             fputcsv($file, ['Fecha', 'Comprobante', 'Tipo', 'Metodo Pago', 'Monto', 'Usuario', 'Atencion']);
 
             foreach ($data as $row) {
-                $atencion = $row->comprobante?->pedido?->tipo_atencion ?? 'P';
+                $atencion = $row->pedido?->tipo_atencion ?? 'P';
                 
                 fputcsv($file, [
-                    $row->fecha,
+                    $row->fecha ? Carbon::parse($row->fecha)->format('Y-m-d H:i:s') : '',
                     $row->cod_comprobante,
-                    $row->comprobante?->tipo_comprobante_name ?? 'Nota de Venta',
-                    $row->metodoPago?->nom_metodo_pago ?? 'No especificado',
+                    $row->tipo_comprobante_name ?? 'Nota de Venta',
+                    $this->getMetodoPagoTexto($row),
                     $row->costo_total,
-                    $row->comprobante?->user?->name ?? 'Sistema',
+                    $row->user?->name ?? 'Sistema',
                     $this->getTipoAtencionNombre($atencion)
                 ]);
             }
@@ -146,15 +160,15 @@ class ExportController extends Controller
         // Data
         $rowNum = 2;
         foreach ($data as $row) {
-            $atencion = $row->comprobante?->pedido?->tipo_atencion ?? 'P';
+            $atencion = $row->pedido?->tipo_atencion ?? 'P';
             $atencionNombre = $this->getTipoAtencionNombre($atencion);
 
-            $sheet->setCellValue('A' . $rowNum, $row->fecha);
+            $sheet->setCellValue('A' . $rowNum, $row->fecha ? Carbon::parse($row->fecha)->format('Y-m-d H:i:s') : '');
             $sheet->setCellValue('B' . $rowNum, $row->cod_comprobante);
-            $sheet->setCellValue('C' . $rowNum, $row->comprobante?->tipo_comprobante_name ?? 'Nota de Venta');
-            $sheet->setCellValue('D' . $rowNum, $row->metodoPago?->nom_metodo_pago ?? 'No especificado');
+            $sheet->setCellValue('C' . $rowNum, $row->tipo_comprobante_name ?? 'Nota de Venta');
+            $sheet->setCellValue('D' . $rowNum, $this->getMetodoPagoTexto($row));
             $sheet->setCellValue('E' . $rowNum, $row->costo_total);
-            $sheet->setCellValue('F' . $rowNum, $row->comprobante?->user?->name ?? 'Sistema');
+            $sheet->setCellValue('F' . $rowNum, $row->user?->name ?? 'Sistema');
             $sheet->setCellValue('G' . $rowNum, $atencionNombre);
             
             // Format Currency
@@ -194,3 +208,4 @@ class ExportController extends Controller
         return $pdf->download("$filename.pdf");
     }
 }
+

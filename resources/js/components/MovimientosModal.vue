@@ -205,7 +205,19 @@
                                                         {{ getTipoAtencionTexto(mov.tipo_atencion) }}
                                                     </span>
                                                 </td>
-                                                <td>{{ mov.metodo_pago }}</td>
+                                                <td>
+                                                    <div v-if="mov.is_multiple && mov.pagos && mov.pagos.length > 1">
+                                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle mb-1">
+                                                            <i class="fas fa-layer-group me-1"></i>Múltiple
+                                                        </span>
+                                                        <div class="d-flex flex-wrap gap-1">
+                                                            <span v-for="(pago, pIdx) in mov.pagos" :key="pIdx" class="badge bg-light text-dark border fw-normal" style="font-size: 0.75rem;">
+                                                                {{ pago.metodo }}: <strong>{{ formatCurrency(pago.monto) }}</strong>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <span v-else>{{ mov.metodo_pago }}</span>
+                                                </td>
                                                 <td class="text-end fw-bold">{{ formatCurrency(mov.monto) }}</td>
                                                 <td class="small text-muted">{{ mov.usuario || '—' }}</td>
 
@@ -377,11 +389,9 @@ export default {
         resumenMetodosPago() {
             const resumen = {};
 
-            this.movimientos.forEach(mov => {
-                if (mov.anulado) return; // Skip annulled items from summary
-
-                const metodo = mov.metodo_pago || 'Desconocido';
-                if (!resumen[metodo]) {
+            if (this.movimientosResumen.porMetodo && this.movimientosResumen.porMetodo.length > 0) {
+                this.movimientosResumen.porMetodo.forEach(item => {
+                    const metodo = item.metodo_pago || 'Desconocido';
                     let icon = 'fas fa-money-bill-wave';
                     let color = 'secondary';
 
@@ -397,16 +407,14 @@ export default {
                     }
 
                     resumen[metodo] = {
-                        cantidad: 0,
-                        total: 0,
+                        cantidad: item.cantidad,
+                        total: Number(item.monto_total),
                         icon,
                         color
                     };
-                }
-
-                resumen[metodo].cantidad++;
-                resumen[metodo].total += Number(mov.monto);
-            });
+                });
+                return resumen;
+            }
 
             return resumen;
         }
