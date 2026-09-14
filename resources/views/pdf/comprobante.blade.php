@@ -356,17 +356,44 @@
             </div>
         </div>
 
-        <!-- Método de Pago -->
-        <div class="info-line">
-            <strong>Método Pago:</strong> {{ substr($comprobante->metodoPago->nom_metodo_pago ?? 'N/A', 0, 25) }}
-        </div>
-        @if(stripos($comprobante->metodoPago->nom_metodo_pago ?? '', 'efectivo') !== false && ($pedido->monto_pagado ?? 0) > 0)
-            <div class="info-line">
-                <strong>Paga con:</strong> S/ {{ number_format($pedido->monto_pagado, 2) }}
+        <!-- Métodos de Pago -->
+        @if($comprobante->pagos && $comprobante->pagos->count() > 1)
+            <div class="info-line" style="margin-top: 0.5mm;">
+                <strong>Formas de Pago:</strong>
             </div>
+            @foreach($comprobante->pagos as $pagoItem)
+                <div class="info-line" style="padding-left: 1.5mm;">
+                    • {{ $pagoItem->metodoPago->nom_metodo_pago ?? 'N/A' }}: S/ {{ number_format($pagoItem->monto, 2) }}
+                    @if(stripos($pagoItem->metodoPago->nom_metodo_pago ?? '', 'efectivo') !== false && ($pagoItem->monto_recibido ?? 0) > 0)
+                        <span style="font-size: 6.5px;">(Paga: S/ {{ number_format($pagoItem->monto_recibido, 2) }} | Vto: S/ {{ number_format($pagoItem->vuelto ?? 0, 2) }})</span>
+                    @endif
+                </div>
+            @endforeach
+        @elseif($comprobante->pagos && $comprobante->pagos->count() === 1)
+            @php $singlePago = $comprobante->pagos->first(); @endphp
             <div class="info-line">
-                <strong>Vuelto:</strong> S/ {{ number_format($pedido->vuelto, 2) }}
+                <strong>Método Pago:</strong> {{ substr($singlePago->metodoPago->nom_metodo_pago ?? 'N/A', 0, 25) }}
             </div>
+            @if(stripos($singlePago->metodoPago->nom_metodo_pago ?? '', 'efectivo') !== false && (($singlePago->monto_recibido ?? $pedido->monto_pagado) > 0))
+                <div class="info-line">
+                    <strong>Paga con:</strong> S/ {{ number_format($singlePago->monto_recibido ?? $pedido->monto_pagado, 2) }}
+                </div>
+                <div class="info-line">
+                    <strong>Vuelto:</strong> S/ {{ number_format($singlePago->vuelto ?? $pedido->vuelto ?? 0, 2) }}
+                </div>
+            @endif
+        @else
+            <div class="info-line">
+                <strong>Método Pago:</strong> {{ substr($comprobante->metodoPago->nom_metodo_pago ?? 'N/A', 0, 25) }}
+            </div>
+            @if(stripos($comprobante->metodoPago->nom_metodo_pago ?? '', 'efectivo') !== false && ($pedido->monto_pagado ?? 0) > 0)
+                <div class="info-line">
+                    <strong>Paga con:</strong> S/ {{ number_format($pedido->monto_pagado, 2) }}
+                </div>
+                <div class="info-line">
+                    <strong>Vuelto:</strong> S/ {{ number_format($pedido->vuelto, 2) }}
+                </div>
+            @endif
         @endif
         <div style="margin: 2mm 0;"></div>
 

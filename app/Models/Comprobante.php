@@ -60,6 +60,11 @@ class Comprobante extends Model
     {
         return $this->belongsTo(MetodoPago::class, 'metodo_pago_id');
     }
+
+    public function pagos(): HasMany
+    {
+        return $this->hasMany(ComprobantePago::class, 'comprobante_id');
+    }
     
     public function lastUpdatedBy(): BelongsTo
     {

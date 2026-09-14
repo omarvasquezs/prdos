@@ -368,36 +368,123 @@
                 <small class="text-muted">Máximo 9 dígitos numéricos</small>
               </div>
 
-              <!-- Método de Pago -->
+              <!-- Forma de Pago (Simple vs Mixto) -->
               <div class="mb-3">
-                <label class="form-label fw-bold">Método de Pago *</label>
-                <select v-model="formCobro.metodo_pago_id" class="form-select" required>
-                  <option value="">Seleccionar método de pago...</option>
-                  <option v-for="metodo in metodosPago" :key="metodo.id" :value="metodo.id">
-                    {{ metodo.nom_metodo_pago }}
-                  </option>
-                </select>
-              </div>
-
-              <!-- Monto Pagado y Vuelto (Solo Efectivo) -->
-              <div v-if="esEfectivo()" class="mb-3 p-3 bg-light rounded border">
-                <div class="mb-3">
-                  <label for="monto_pagado" class="form-label fw-bold">Monto Pagado</label>
-                  <div class="input-group">
-                    <span class="input-group-text">S/</span>
-                    <input type="number" id="monto_pagado" v-model.number="formCobro.monto_pagado"
-                      class="form-control form-control-lg" step="0.10" min="0" placeholder="0.00">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <label class="form-label fw-bold mb-0">Método de Pago *</label>
+                  <div class="form-check form-switch m-0">
+                    <input class="form-check-input" type="checkbox" role="switch" id="switchPagoMultiple"
+                      v-model="modoPagoMultiple" @change="onTogglePagoMultiple">
+                    <label class="form-check-label small fw-semibold text-primary" for="switchPagoMultiple" style="cursor: pointer;">
+                      <i class="fas fa-layer-group me-1"></i>Pago Mixto
+                    </label>
                   </div>
                 </div>
-                <div v-if="vuelto() !== null" class="d-flex justify-content-between align-items-center">
-                  <span class="fw-bold">Vuelto:</span>
-                  <span class="fs-4 fw-bold" :class="vuelto() >= 0 ? 'text-success' : 'text-danger'">
-                    S/ {{ parseFloat(vuelto()).toFixed(2) }}
-                  </span>
+
+                <!-- MODO PAGO SIMPLE -->
+                <div v-if="!modoPagoMultiple">
+                  <select v-model="formCobro.metodo_pago_id" class="form-select" required>
+                    <option value="">Seleccionar método de pago...</option>
+                    <option v-for="metodo in metodosPago" :key="metodo.id" :value="metodo.id">
+                      {{ metodo.nom_metodo_pago }}
+                    </option>
+                  </select>
+
+                  <!-- Monto Pagado y Vuelto (Solo Efectivo) -->
+                  <div v-if="esEfectivo()" class="mt-3 p-3 bg-light rounded border">
+                    <div class="mb-3">
+                      <label for="monto_pagado" class="form-label fw-bold">Monto Pagado</label>
+                      <div class="input-group">
+                        <span class="input-group-text">S/</span>
+                        <input type="number" id="monto_pagado" v-model.number="formCobro.monto_pagado"
+                          class="form-control form-control-lg" step="0.10" min="0" placeholder="0.00">
+                      </div>
+                    </div>
+                    <div v-if="vuelto() !== null" class="d-flex justify-content-between align-items-center">
+                      <span class="fw-bold">Vuelto:</span>
+                      <span class="fs-4 fw-bold" :class="vuelto() >= 0 ? 'text-success' : 'text-danger'">
+                        S/ {{ parseFloat(vuelto()).toFixed(2) }}
+                      </span>
+                    </div>
+                    <div v-if="vuelto() < 0" class="text-danger small mt-1">
+                      <i class="fas fa-exclamation-circle me-1"></i>
+                      El monto es insuficiente
+                    </div>
+                  </div>
                 </div>
-                <div v-if="vuelto() < 0" class="text-danger small mt-1">
-                  <i class="fas fa-exclamation-circle me-1"></i>
-                  El monto es insuficiente
+
+                <!-- MODO PAGO MIXTO / MÚLTIPLE -->
+                <div v-else class="p-3 bg-light rounded border">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small text-muted fw-bold text-uppercase">Desglose de métodos</span>
+                    <button type="button" class="btn btn-sm btn-outline-primary" @click="agregarMetodoPagoMultiple">
+                      <i class="fas fa-plus me-1"></i>Agregar método
+                    </button>
+                  </div>
+
+                  <div v-for="(pago, idx) in pagosMultiples" :key="idx" class="card mb-2 shadow-sm border">
+                    <div class="card-body p-2">
+                      <div class="row g-2 align-items-center">
+                        <div class="col-6">
+                          <label class="small text-muted mb-1">Método #{{ idx + 1 }}</label>
+                          <select v-model="pago.metodo_pago_id" class="form-select form-select-sm" required>
+                            <option v-for="metodo in metodosPago" :key="metodo.id" :value="metodo.id">
+                              {{ metodo.nom_metodo_pago }}
+                            </option>
+                          </select>
+                        </div>
+                        <div class="col-5">
+                          <label class="small text-muted mb-1">Monto (S/)</label>
+                          <div class="input-group input-group-sm">
+                            <span class="input-group-text">S/</span>
+                            <input type="number" v-model.number="pago.monto" class="form-control" step="0.10" min="0.01" required>
+                          </div>
+                        </div>
+                        <div class="col-1 text-end pt-3">
+                          <button v-if="pagosMultiples.length > 1" type="button" class="btn btn-outline-danger btn-sm p-1 border-0"
+                            title="Quitar método" @click="eliminarMetodoPagoMultiple(idx)">
+                            <i class="fas fa-trash-alt"></i>
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Subsección para Efectivo en Pago Mixto -->
+                      <div v-if="esMetodoEfectivo(pago.metodo_pago_id)" class="mt-2 pt-2 border-top">
+                        <div class="row g-2 align-items-center">
+                          <div class="col-7">
+                            <span class="small fw-semibold">Paga con:</span>
+                            <div class="input-group input-group-sm mt-1">
+                              <span class="input-group-text">S/</span>
+                              <input type="number" v-model.number="pago.monto_recibido" class="form-control" step="0.10" min="0" placeholder="0.00">
+                            </div>
+                          </div>
+                          <div class="col-5 text-end">
+                            <span class="small fw-semibold d-block">Vuelto:</span>
+                            <span class="fw-bold" :class="vueltoMetodo(pago) !== null && vueltoMetodo(pago) < 0 ? 'text-danger' : 'text-success'">
+                              S/ {{ vueltoMetodo(pago) !== null ? parseFloat(vueltoMetodo(pago)).toFixed(2) : '0.00' }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Resumen de Cuadre de Pago Mixto -->
+                  <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center">
+                    <div>
+                      <div class="small">Total asignado: <strong>S/ {{ totalAsignadoPagos.toFixed(2) }}</strong></div>
+                      <div v-if="Math.abs(montoRestantePagos) >= 0.01" class="small fw-bold" :class="montoRestantePagos > 0 ? 'text-danger' : 'text-warning'">
+                        {{ montoRestantePagos > 0 ? `Faltan: S/ ${montoRestantePagos.toFixed(2)}` : `Excedido: S/ ${Math.abs(montoRestantePagos).toFixed(2)}` }}
+                      </div>
+                      <div v-else class="small text-success fw-bold">
+                        <i class="fas fa-check-circle me-1"></i>¡Monto exacto cubierto!
+                      </div>
+                    </div>
+                    <button v-if="montoRestantePagos > 0" type="button" class="btn btn-sm btn-outline-secondary"
+                      @click="ajustarRestanteAlUltimo">
+                      Cuadrar saldo
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -421,7 +508,7 @@
               </div>
 
               <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-success btn-lg" :disabled="isSubmitting">
+                <button type="submit" class="btn btn-success btn-lg" :disabled="isSubmitting || !esPagoValido">
                   <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"
                     aria-hidden="true"></span>
                   <i v-else class="fas fa-check me-2"></i>
@@ -651,8 +738,11 @@ export default {
         razon_social: '',
         nombre_cliente: '',
         dni_ce_cliente: '',
-        observaciones: ''
+        observaciones: '',
+        monto_pagado: null
       },
+      modoPagoMultiple: false,
+      pagosMultiples: [],
       formMarcarPagado: {
         metodo_pago_id: '',
         monto_pagado: null
@@ -760,6 +850,44 @@ export default {
         return base * 1.105
       }
       return base
+    },
+
+    totalAsignadoPagos() {
+      if (!this.modoPagoMultiple) return this.totalCobrar
+      return this.pagosMultiples.reduce((sum, p) => sum + (parseFloat(p.monto) || 0), 0)
+    },
+
+    montoRestantePagos() {
+      return parseFloat((this.totalCobrar - this.totalAsignadoPagos).toFixed(2))
+    },
+
+    esPagoValido() {
+      if (!this.modoPagoMultiple) {
+        if (!this.formCobro.metodo_pago_id) return false
+        if (this.esEfectivo() && this.vuelto() !== null && this.vuelto() < 0) return false
+        return true
+      }
+
+      if (this.pagosMultiples.length === 0) return false
+      for (const p of this.pagosMultiples) {
+        if (!p.metodo_pago_id || p.monto === null || p.monto === undefined || parseFloat(p.monto) <= 0) {
+          return false
+        }
+        if (this.esMetodoEfectivo(p.metodo_pago_id) && p.monto_recibido !== null && p.monto_recibido !== undefined && p.monto_recibido !== '') {
+          if (parseFloat(p.monto_recibido) < parseFloat(p.monto)) {
+            return false
+          }
+        }
+      }
+      return Math.abs(this.montoRestantePagos) < 0.05
+    }
+  },
+
+  watch: {
+    totalCobrar(newTotal) {
+      if (this.modoPagoMultiple && this.pagosMultiples.length === 1) {
+        this.pagosMultiples[0].monto = parseFloat(newTotal.toFixed(2))
+      }
     }
   },
 
@@ -798,6 +926,9 @@ export default {
       try {
         await this.cargarMetodosPago()
 
+        this.modoPagoMultiple = false
+        this.pagosMultiples = []
+
         // Pre-llenar datos del cliente si existen en el pedido
         if (this.pedido.cliente_nombre) {
           this.formCobro.nombre_cliente = this.pedido.cliente_nombre
@@ -817,6 +948,8 @@ export default {
 
     cerrarModalCobro() {
       this.mostrarModalCobro = false
+      this.modoPagoMultiple = false
+      this.pagosMultiples = []
       this.formCobro = {
         tipo_comprobante: 'N',
         metodo_pago_id: '',
@@ -827,6 +960,63 @@ export default {
         observaciones: '',
         monto_pagado: null
       }
+    },
+
+    inicializarPagosMultiples() {
+      const defaultMetodo = this.formCobro.metodo_pago_id || (this.metodosPago[0]?.id || '')
+      const total = parseFloat(this.totalCobrar.toFixed(2))
+      this.pagosMultiples = [
+        {
+          metodo_pago_id: defaultMetodo,
+          monto: total,
+          monto_recibido: null
+        }
+      ]
+    },
+
+    onTogglePagoMultiple() {
+      if (this.modoPagoMultiple && this.pagosMultiples.length === 0) {
+        this.inicializarPagosMultiples()
+      }
+    },
+
+    agregarMetodoPagoMultiple() {
+      const restantes = Math.max(0, this.montoRestantePagos)
+      const usedIds = this.pagosMultiples.map(p => p.metodo_pago_id)
+      const available = this.metodosPago.find(m => !usedIds.includes(m.id))
+      const metodoId = available ? available.id : (this.metodosPago[0]?.id || '')
+
+      this.pagosMultiples.push({
+        metodo_pago_id: metodoId,
+        monto: restantes > 0 ? restantes : 0,
+        monto_recibido: null
+      })
+    },
+
+    eliminarMetodoPagoMultiple(index) {
+      if (this.pagosMultiples.length > 1) {
+        this.pagosMultiples.splice(index, 1)
+      }
+    },
+
+    ajustarRestanteAlUltimo() {
+      if (this.pagosMultiples.length > 0) {
+        const last = this.pagosMultiples[this.pagosMultiples.length - 1]
+        last.monto = parseFloat(((last.monto || 0) + this.montoRestantePagos).toFixed(2))
+      }
+    },
+
+    esMetodoEfectivo(metodoId) {
+      const metodo = this.metodosPago.find(m => m.id === metodoId)
+      return metodo && metodo.nom_metodo_pago.toLowerCase().includes('efectivo')
+    },
+
+    vueltoMetodo(pago) {
+      if (!pago.monto_recibido || !pago.monto) return null
+      const recibido = parseFloat(pago.monto_recibido)
+      const monto = parseFloat(pago.monto)
+      if (isNaN(recibido) || isNaN(monto)) return null
+      return recibido - monto
     },
 
 
@@ -955,14 +1145,30 @@ export default {
     },
 
     async generarComprobante() {
-      if (!this.formCobro.metodo_pago_id) {
+      if (!this.modoPagoMultiple && !this.formCobro.metodo_pago_id) {
         alert('Por favor selecciona un método de pago')
+        return
+      }
+
+      if (this.modoPagoMultiple && !this.esPagoValido) {
+        alert('Por favor verifica que la suma de los métodos de pago cubra exactamente el total.')
         return
       }
 
       this.isSubmitting = true
       try {
-        const response = await axios.post(`/api/pedidos/${this.pedido.id}/comprobante`, this.formCobro, {
+        let payload = { ...this.formCobro }
+        if (this.modoPagoMultiple) {
+          payload.pagos = this.pagosMultiples.map(p => ({
+            metodo_pago_id: p.metodo_pago_id,
+            monto: parseFloat(p.monto),
+            monto_recibido: p.monto_recibido ? parseFloat(p.monto_recibido) : null
+          }))
+          delete payload.metodo_pago_id
+          delete payload.monto_pagado
+        }
+
+        const response = await axios.post(`/api/pedidos/${this.pedido.id}/comprobante`, payload, {
           responseType: 'blob'
         })
 

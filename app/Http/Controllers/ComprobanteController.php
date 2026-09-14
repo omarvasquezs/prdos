@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Comprobante;
+use App\Models\ComprobantePago;
 use App\Models\MetodoPago;
 use App\Models\Pedido;
 use App\Models\ReporteIngreso;
@@ -30,7 +31,11 @@ class ComprobanteController extends Controller
     {
         $request->validate([
             'tipo_comprobante' => 'required|string|in:B,F,N',
-            'metodo_pago_id' => 'required|integer|exists:metodo_pago,id',
+            'metodo_pago_id' => 'nullable|integer|exists:metodo_pago,id',
+            'pagos' => 'nullable|array|min:1',
+            'pagos.*.metodo_pago_id' => 'required_with:pagos|integer|exists:metodo_pago,id',
+            'pagos.*.monto' => 'required_with:pagos|numeric|min:0.01',
+            'pagos.*.monto_recibido' => 'nullable|numeric|min:0',
             'num_ruc' => ['nullable', 'required_if:tipo_comprobante,F', 'digits:11', new RucValidation],
             'razon_social' => 'nullable|required_if:tipo_comprobante,F|string|max:255',
             'nombre_cliente' => 'nullable|string|max:255',
@@ -38,6 +43,12 @@ class ComprobanteController extends Controller
             'observaciones' => 'nullable|string',
             'monto_pagado' => 'nullable|numeric|min:0',
         ]);
+
+        if (!$request->filled('metodo_pago_id') && (!$request->has('pagos') || empty($request->pagos))) {
+            return response()->json([
+                'error' => 'Debe seleccionar al menos un método de pago.'
+            ], 422);
+        }
 
         try {
             DB::beginTransaction();
@@ -51,32 +62,56 @@ class ComprobanteController extends Controller
             if ($request->tipo_comprobante === 'F') {
                 $comprobanteTotal = $pedido->total * 1.105; // Add 10.5% IGV
             }
+            $comprobanteTotal = round($comprobanteTotal, 2);
 
-            // Calculate vuelto if monto_pagado is present
-            $vuelto = null;
-            $montoPagado = null;
-
-            if ($request->filled('monto_pagado') && $request->monto_pagado > 0) {
-                $montoPagado = $request->monto_pagado;
-
-                // Allow a small margin of error for float comparison or accept that customer pays the calculated total
-                if ($montoPagado < $comprobanteTotal) {
-                    // Note: Ideally the frontend should know this new total before sending.
-                    // But if the user entered the exact amount from the "Order" screen (which is B logic),
-                    // and now we are charging more, this might fail.
-                    // However, the prompt implies "Mi cliente quiere...", so the cashier likely knows or simply enters the amount given.
-                    // We will enforce the check against the NEW total.
-                    return response()->json([
-                        'error' => 'El monto pagado es insuficiente. Total Factura: ' . number_format($comprobanteTotal, 2),
-                    ], 422);
-                }
-                $vuelto = $montoPagado - $comprobanteTotal;
+            // Normalize pagos list
+            if ($request->has('pagos') && count($request->pagos) > 0) {
+                $pagosList = $request->pagos;
+            } else {
+                $pagosList = [[
+                    'metodo_pago_id' => (int) $request->metodo_pago_id,
+                    'monto' => $comprobanteTotal,
+                    'monto_recibido' => $request->filled('monto_pagado') ? (float) $request->monto_pagado : null,
+                ]];
             }
+
+            // Validate that sum of pagos matches comprobanteTotal
+            $sumaPagos = round(collect($pagosList)->sum('monto'), 2);
+            if (abs($sumaPagos - $comprobanteTotal) > 0.05) {
+                return response()->json([
+                    'error' => 'La suma de los métodos de pago (S/ ' . number_format($sumaPagos, 2) . ') no coincide con el total a cobrar (S/ ' . number_format($comprobanteTotal, 2) . ').',
+                ], 422);
+            }
+
+            // Calculate vueltos and validate received amounts
+            $totalMontoRecibido = 0;
+            $totalVuelto = 0;
+            foreach ($pagosList as &$pagoItem) {
+                $monto = (float) $pagoItem['monto'];
+                $pagoItem['vuelto'] = null;
+                if (isset($pagoItem['monto_recibido']) && $pagoItem['monto_recibido'] !== null && $pagoItem['monto_recibido'] > 0) {
+                    $recibido = (float) $pagoItem['monto_recibido'];
+                    if ($recibido < $monto) {
+                        return response()->json([
+                            'error' => 'El monto recibido es insuficiente para el método de pago especificado.',
+                        ], 422);
+                    }
+                    $pagoItem['vuelto'] = round($recibido - $monto, 2);
+                    $totalVuelto += $pagoItem['vuelto'];
+                    $totalMontoRecibido += $recibido;
+                } else {
+                    $pagoItem['monto_recibido'] = null;
+                    $totalMontoRecibido += $monto;
+                }
+            }
+            unset($pagoItem);
+
+            $primaryMetodoId = count($pagosList) === 1 ? $pagosList[0]['metodo_pago_id'] : null;
 
             // 1. Create Comprobante
             $comprobante = new Comprobante();
             $comprobante->tipo_comprobante = $request->tipo_comprobante;
-            $comprobante->metodo_pago_id = $request->metodo_pago_id;
+            $comprobante->metodo_pago_id = $primaryMetodoId;
             $comprobante->num_ruc = $request->num_ruc;
             $comprobante->razon_social = $request->razon_social;
             $comprobante->nombre_cliente = $request->nombre_cliente;
@@ -92,25 +127,36 @@ class ComprobanteController extends Controller
             $comprobante->generateCode();
             $comprobante->save();
 
-            // Reload comprobante to ensure all relationships are loaded
-            $comprobante->load('metodoPago');
+            // 3. Create ComprobantePago records
+            foreach ($pagosList as $pagoItem) {
+                ComprobantePago::create([
+                    'comprobante_id' => $comprobante->id,
+                    'metodo_pago_id' => $pagoItem['metodo_pago_id'],
+                    'monto' => $pagoItem['monto'],
+                    'monto_recibido' => $pagoItem['monto_recibido'],
+                    'vuelto' => $pagoItem['vuelto'],
+                ]);
+            }
 
-            // 3. Create ReporteIngreso
-            ReporteIngreso::create([
-                'cod_comprobante' => $comprobante->cod_comprobante,
-                'metodo_pago_id' => $comprobante->metodo_pago_id,
-                'fecha' => now(),
-                'costo_total' => $comprobante->costo_total
-            ]);
+            // 4. Create ReporteIngreso records (one per payment method)
+            foreach ($pagosList as $pagoItem) {
+                ReporteIngreso::create([
+                    'cod_comprobante' => $comprobante->cod_comprobante,
+                    'metodo_pago_id' => $pagoItem['metodo_pago_id'],
+                    'fecha' => now(),
+                    'costo_total' => $pagoItem['monto']
+                ]);
+            }
 
-            // 4. Mark pedido as cerrado (paid) and save payment details
+            // 5. Mark pedido as cerrado (paid) and save payment details
             $pedido->estado = 'C'; // Cerrado
             $pedido->fecha_cierre = now();
-            $pedido->monto_pagado = $montoPagado;
-            $pedido->vuelto = $vuelto;
+            $pedido->metodo_pago_id = $primaryMetodoId;
+            $pedido->monto_pagado = $totalMontoRecibido > 0 ? $totalMontoRecibido : null;
+            $pedido->vuelto = $totalVuelto > 0 ? $totalVuelto : null;
             $pedido->save();
 
-            // 5. Mark mesa as disponible (empty) - only for presencial orders
+            // 6. Mark mesa as disponible (empty) - only for presencial orders
             if ($pedido->tipo_atencion === 'P' && $pedido->mesa) {
                 $pedido->mesa->estado = 'D'; // Disponible
                 $pedido->mesa->save();
@@ -118,59 +164,57 @@ class ComprobanteController extends Controller
 
             DB::commit();
 
-            // 6. Emitir a Nubefact (Solo si es Boleta o Factura)
+            // 7. Emitir a Nubefact (Solo si es Boleta o Factura)
             if (in_array($comprobante->tipo_comprobante, ['B', 'F'])) {
                 try {
                     $this->nubefactService->emitirComprobante($comprobante);
                 } catch (\Exception $e) {
                     Log::error('Error enviando a Nubefact: ' . $e->getMessage());
-                    // No fallamos la request, solo logueamos el error. El comprobante ya existe localmente.
                 }
             }
 
-            // 7. Generate PDF (after successful transaction)
+            // Reload comprobante with relationships
+            $comprobante->load(['metodoPago', 'pagos.metodoPago']);
+
+            // 8. Generate PDF (after successful transaction)
             try {
-                // Calculate a dynamic paper height to avoid large empty space
                 $itemsCount = $pedido->items->count();
-                // Estimate extra height if descriptions exist
                 $descExtra = 0;
                 foreach ($pedido->items as $it) {
                     $desc = $it->produto->description ?? '';
                     if ($desc) {
-                        // approx 34 chars per line -> add lines-1
                         $lines = (int) ceil(strlen($desc) / 32);
-                        $descExtra += max(0, $lines) * 8; // 8pt per line
+                        $descExtra += max(0, $lines) * 8;
                     }
                 }
-                $baseHeight = 360; // base points
-                $perItem = 25;     // per item points
-                $qrHeight = 100;   // QR code + margins
+                $baseHeight = 360;
+                $perItem = 25;
+                $qrHeight = 100;
 
-                // Extra space for delivery/pickup client info
                 $clientInfoExtra = 0;
                 if ($pedido->tipo_atencion === 'D') {
-                    $clientInfoExtra = 50; // name + phone + address (increased for safety)
+                    $clientInfoExtra = 50;
                 } elseif ($pedido->tipo_atencion === 'R') {
-                    $clientInfoExtra = 30; // name + phone
+                    $clientInfoExtra = 30;
                 }
 
-                // Extra height for delivery cost line
                 $deliveryCostExtra = 0;
                 if (($pedido->costo_delivery ?? 0) > 0) {
                     $deliveryCostExtra = 15;
                 }
 
-                // Extra height for payment details (cash)
                 $paymentDetailsExtra = 0;
-                if (stripos($comprobante->metodoPago->nom_metodo_pago ?? '', 'efectivo') !== false && ($pedido->monto_pagado ?? 0) > 0) {
+                if ($totalVuelto > 0) {
                     $paymentDetailsExtra = 25;
                 }
 
-                $dynamicHeight = max(450, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight + $clientInfoExtra + $deliveryCostExtra + $paymentDetailsExtra);
+                $pagosExtra = count($pagosList) * 16;
+
+                $dynamicHeight = max(450, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight + $clientInfoExtra + $deliveryCostExtra + $paymentDetailsExtra + $pagosExtra);
                 $pdf = Pdf::loadView('pdf.comprobante', [
                     'comprobante' => $comprobante,
                     'pedido' => $pedido
-                ])->setPaper([0, 0, 164.4, $dynamicHeight], 'portrait'); // 58mm width, dynamic height
+                ])->setPaper([0, 0, 164.4, $dynamicHeight], 'portrait');
 
                 return $pdf->stream('comprobante-' . $comprobante->cod_comprobante . '.pdf');
             } catch (\Exception $e) {
@@ -196,7 +240,7 @@ class ComprobanteController extends Controller
     {
         try {
             $comprobante = Comprobante::where('cod_comprobante', $codComprobante)
-                ->with('metodoPago')
+                ->with(['metodoPago', 'pagos.metodoPago'])
                 ->firstOrFail();
 
             $pedido = Pedido::with('items.producto', 'mesa')
@@ -230,13 +274,16 @@ class ComprobanteController extends Controller
                 $deliveryCostExtra = 15;
             }
 
-            // Extra height for payment details (cash)
+            // Extra height for payment details
             $paymentDetailsExtra = 0;
-            if (stripos($comprobante->metodoPago->nom_metodo_pago ?? '', 'efectivo') !== false && ($pedido->monto_pagado ?? 0) > 0) {
+            if (($pedido->vuelto ?? 0) > 0) {
                 $paymentDetailsExtra = 25;
             }
 
-            $dynamicHeight = max(360, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight + $clientInfoExtra + $deliveryCostExtra + $paymentDetailsExtra);
+            $pagosCount = $comprobante->pagos ? $comprobante->pagos->count() : 1;
+            $pagosExtra = $pagosCount * 16;
+
+            $dynamicHeight = max(360, $baseHeight + ($itemsCount * $perItem) + $descExtra + $qrHeight + $clientInfoExtra + $deliveryCostExtra + $paymentDetailsExtra + $pagosExtra);
 
             $pdf = Pdf::loadView('pdf.comprobante', [
                 'comprobante' => $comprobante,
@@ -305,14 +352,29 @@ class ComprobanteController extends Controller
                 $creditNote->generateCode();
                 $creditNote->save();
 
-                // 2. Create Reporte Ingreso for the Credit Note
-                // This ensures it appears in the movements list.
-                ReporteIngreso::create([
-                    'cod_comprobante' => $creditNote->cod_comprobante,
-                    'metodo_pago_id' => $creditNote->metodo_pago_id,
-                    'fecha' => now(),
-                    'costo_total' => $creditNote->costo_total
-                ]);
+                // 2. Create Reporte Ingreso and ComprobantePago for the Credit Note
+                if ($comprobante->pagos()->exists()) {
+                    foreach ($comprobante->pagos as $p) {
+                        ReporteIngreso::create([
+                            'cod_comprobante' => $creditNote->cod_comprobante,
+                            'metodo_pago_id' => $p->metodo_pago_id,
+                            'fecha' => now(),
+                            'costo_total' => $p->monto
+                        ]);
+                        ComprobantePago::create([
+                            'comprobante_id' => $creditNote->id,
+                            'metodo_pago_id' => $p->metodo_pago_id,
+                            'monto' => $p->monto,
+                        ]);
+                    }
+                } else {
+                    ReporteIngreso::create([
+                        'cod_comprobante' => $creditNote->cod_comprobante,
+                        'metodo_pago_id' => $creditNote->metodo_pago_id,
+                        'fecha' => now(),
+                        'costo_total' => $creditNote->costo_total
+                    ]);
+                }
 
                 // Marcar original como anulado
                 $comprobante->anulado = true;
@@ -322,14 +384,6 @@ class ComprobanteController extends Controller
                 // Emitir Nota de Crédito a Nubefact
                 try {
                     $result = $this->nubefactService->emitirComprobante($creditNote);
-
-                    if (!$result['success']) {
-                        // Si falla Nubefact, ¿hacemos rollback o permitimos que quede pendiente?
-                        // Por consistencia, permitimos que se guarde y muestre el error.
-                        // El usuario podrá reintentar o ver el error.
-                        // Pero como estamos dentro de un transaction, si lanzamos exception se borra todo.
-                        // Mejor capturamos y retornamos warning.
-                    }
                 } catch (\Exception $e) {
                     Log::error('Error enviando Nota de Crédito a Nubefact: ' . $e->getMessage());
                 }
